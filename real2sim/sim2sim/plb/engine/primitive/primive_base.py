@@ -171,6 +171,7 @@ class Primitive:
     @ti.complex_kernel
     def no_grad_set_action_kernel(self, s, action):
         self.set_action_kernel(s, action)
+
     @ti.complex_kernel_grad(no_grad_set_action_kernel)
     def no_grad_set_action_kernel_grad(self, s, action):
         return

@@ -21,20 +21,20 @@ class Solver:
         self.env = env
         self.logger = logger
 
-    def solve(self, init_actions, callbacks=()):
+    def solve(self, init_parameters, actions, callbacks=()):
         env = self.env
-        optim = OPTIMS[self.optim_cfg.type](init_actions, self.optim_cfg)
+        optim = OPTIMS[self.optim_cfg.type](init_parameters, self.optim_cfg)
         # set softness ..
         env_state = env.get_state()
         self.total_steps = 0
 
-        def forward(sim_state, action):
+        def forward(sim_state, parameter, action):
             if self.logger is not None:
                 self.logger.reset()
 
-            env.set_state(sim_state, self.cfg.softness, False)
             # set parameter
             env.simulator.set_parameter(1.5)
+            env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
                     loss_info = env.compute_loss()
@@ -45,25 +45,23 @@ class Solver:
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
-            env.simulator.get_parameter_grad()
-            return loss, env.primitives.get_grad(len(action))
+            return loss, env.simulator.get_parameter_grad()
 
-        best_action = None
+        best_parameters = None
         best_loss = 1e10
 
-        actions = init_actions
+        parameters = init_parameters
         for iter in range(self.cfg.n_iters):
-            self.params = actions.copy()
-            loss, grad = forward(env_state['state'], actions)
+            loss, grad = forward(env_state['state'], parameters, actions)
             if loss < best_loss:
                 best_loss = loss
-                best_action = actions.copy()
-            actions = optim.step(grad)
+                best_parameters = parameters
+            parameters = optim.step(grad)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_action
+        return best_parameters
 
 
     @staticmethod
@@ -101,21 +99,22 @@ def solve_action(env, path, logger, args):
     cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
     taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-    init_actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
-    T = init_actions.shape[0]
+    actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
+    T = actions.shape[0]
     args.num_steps = T * 5
     target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
     taichi_env.loss.update_target_density(target_grids)
+    init_parameters = np.array([0.1])
 
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                     **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    action = solver.solve(init_actions)
-    np.save(f"{output_path}/action.npy", action)
-    print(action)
+    parameters = solver.solve(init_parameters, actions)
+    np.save(f"{output_path}/parameters.npy", parameters)
+    print(parameters)
     
     frames = []
-    for idx, act in enumerate(action):
+    for idx, act in enumerate(actions):
         start_time = datetime.datetime.now()
         env.step(act)
         if idx % 5 == 0:
