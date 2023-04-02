@@ -56,7 +56,7 @@ class MPMSimulator:
         self.primitive_dx = 1 / self.primitive_n_grid
 
         # optimizing parameter
-        self.ground_friction = cfg.ground_friction
+        # self.ground_friction = cfg.ground_friction
         self.optimize_ground_friction = ti.field(dtype, shape=(), needs_grad=True)
         self.optimize_ground_friction[None] = cfg.ground_friction
 
@@ -211,10 +211,10 @@ class MPMSimulator:
                 v_in2 = v_out
                 for d in ti.static(range(self.dim)):
                     if I[d] < bound and v_out[d] < 0:
-                        if ti.static(d != 1 or self.ground_friction == 0):
+                        if ti.static(d != 1) or self.optimize_ground_friction[None] == 0:
                             v_out[d] = 0  # Boundary conditions
                         else:
-                            if ti.static(self.ground_friction < 10):
+                            if self.optimize_ground_friction[None] < 10:
                                 # TODO: 1e-30 problems ...
                                 normal = ti.Vector.zero(self.dtype, self.dim)
                                 normal[d] = 1.
@@ -482,10 +482,10 @@ class MPMSimulator:
     def set_parameter_kernel(self, ground_friction: ti.f64):
         # optimizing parameter
         self.optimize_ground_friction[None] = ground_friction
-    
-    def set_parameter(self, ground_friction):
-        self.ground_friction = ground_friction
-        self.set_parameter_kernel(ground_friction)
+
+    # def set_parameter(self, ground_friction):
+    #     # optimizing parameter
+    #     self.ground_friction = ground_friction
 
     @ti.kernel
     def get_parameter_grad_kernel(self, grad: ti.ext_arr()):

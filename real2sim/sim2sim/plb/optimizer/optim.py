@@ -18,7 +18,8 @@ class Optimizer:
 
     def step(self, grads):
         assert grads.shape == self.parameters.shape
-        self.parameters[:] = self._step(grads).clip(*self.bounds)
+        # self.parameters[:] = self._step(grads).clip(*self.bounds)
+        self.parameters[:] = self._step(grads)
         return self.parameters.copy()
 
     @classmethod

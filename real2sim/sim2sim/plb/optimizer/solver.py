@@ -14,6 +14,7 @@ OPTIMS = {
     'Momentum': Momentum
 }
 
+
 class Solver:
     def __init__(self, env: TaichiEnv, logger=None, cfg=None, **kwargs):
         self.cfg = make_cls_config(self, cfg, **kwargs)
@@ -33,7 +34,7 @@ class Solver:
                 self.logger.reset()
 
             # set parameter
-            env.simulator.set_parameter(1.5)
+            env.set_parameter(parameter[0])
             env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
@@ -49,19 +50,22 @@ class Solver:
 
         best_parameters = None
         best_loss = 1e10
+        parameters_list = []
 
         parameters = init_parameters
         for iter in range(self.cfg.n_iters):
+            parameters_list.append(parameters.tolist())
             loss, grad = forward(env_state['state'], parameters, actions)
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
+            print(parameters)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_parameters
+        return best_parameters, parameters_list
 
 
     @staticmethod
@@ -101,7 +105,7 @@ def solve_action(env, path, logger, args):
 
     actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
     T = actions.shape[0]
-    args.num_steps = T * 5
+    args.num_steps = T * 50
     target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
     taichi_env.loss.update_target_density(target_grids)
     init_parameters = np.array([0.1])
@@ -109,9 +113,10 @@ def solve_action(env, path, logger, args):
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                     **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    parameters = solver.solve(init_parameters, actions)
-    np.save(f"{output_path}/parameters.npy", parameters)
-    print(parameters)
+    best_parameters, parameters_list = solver.solve(init_parameters, actions)
+    np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
+    print(best_parameters)
+    env.taichi_env.set_parameter(best_parameters[-1][0])
     
     frames = []
     for idx, act in enumerate(actions):
