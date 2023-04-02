@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- If I create new save_calibration.py scripts like save_calibration_1.py/save_calibration_2.py, I don't have to use "group if"-->
+    <arg name="node" default="eye_to_hand"/>
+    <param name="node" value="$(arg node)"/>
+    <group if="$(eval node=='eye_to_hand')">
+        <node pkg="xarm_launch" name="$(arg node)" type="launch_realsense_1.sh"/>
+	<node pkg="xarm_launch" name="eye_to_hand_save_calibration" type="save_calibration.py"/>
+    </group>
+    <group if="$(eval node=='eye_on_hand')">
+	<node pkg="xarm_launch" name="$(arg node)" type="launch_realsense_2.sh"/>
+	<node pkg="xarm_launch" name="eye_on_hand_save_calibration" type="save_calibration.py"/> 
+    </group>
+</launch>
+

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="with_camera" default="false"/>
+    <arg unless="$(arg with_camera)" name="rviz_config" default="$(find xarm_launch)/config/weblab_xarm.rviz"/>
+    <arg if="$(arg with_camera)" name="rviz_config" default="$(find xarm_launch)/config/weblab_xarm_with_camera.rviz"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)"/>
+</launch>

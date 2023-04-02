@@ -1,0 +1,16 @@
+<launch> 
+    <node pkg="nodelet" type="nodelet" args="manager" name="standalone_nodelet" output="screen"/>
+    <node pkg="nodelet" type="nodelet" name="depth_image_proc" args="load depth_image_proc/point_cloud_xyz standalone_nodelet" output="screen">
+        <remap from="camera_info" to="/masked_depth/camera_info"/>
+        <remap from="image_rect" to="/masked_depth"/>
+        <remap from="points" to="/masked_point_cloud"/>
+    </node>
+    <node pkg="xarm_vcd" type="process.py" name="process" output="screen"/>
+    <node pkg="xarm_vcd" type="server.py" name="server" output="screen"/>
+    <node pkg="xarm_vcd" type="voxelized_pc" name="voxelized_pc" output="screen"/>
+    <node pkg="xarm_vcd" type="translated_cloud.py" name="translated_cloud" output="screen"/>
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="screen"/>
+    
+     <!--<node pkg="rviz" type="rviz" name="rviz_pc" args="-d /root/config/pointcloud.rviz"/> -->
+    <!-- <node pkg="rviz" type="rviz" name="rviz0928" args="-d /root/catkin_ws/cfg/0923.rviz"/> -->
+</launch>

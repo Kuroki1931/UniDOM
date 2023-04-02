@@ -1,0 +1,1105 @@
+roslaunch dual_xarm7_gripper_moveit_config realMove_exec.launch robot_ip_1:=192.168.10.210 robot_ip_2:=192.168.10.211
+... logging to /root/.ros/log/863e4862-2054-11ed-8b11-40b0764478fe/roslaunch-xarm-dual-1786.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+
+xacro: in-order processing became default in ROS Melodic. You can drop the option.
+xacro: in-order processing became default in ROS Melodic. You can drop the option.
+started roslaunch server http://192.168.10.90:38207/
+
+SUMMARY
+========
+
+PARAMETERS
+ * /L_xarm7/DOF: 7
+ * /L_xarm7/add_gripper: False
+ * /L_xarm7/baud_checkset: True
+ * /L_xarm7/default_gripper_baud: 2000000
+ * /L_xarm7/enforce_limits: True
+ * /L_xarm7/joint_names: ['L_joint1', 'L_j...
+ * /L_xarm7/type: xarm_control/XArmHW
+ * /L_xarm7/velocity_control: False
+ * /L_xarm7/xarm_report_type: normal
+ * /L_xarm7/xarm_robot_ip: 192.168.10.210
+ * /L_xarm7_traj_controller/action_monitor_rate: 10
+ * /L_xarm7_traj_controller/constraints/L_joint1/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint1/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint2/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint2/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint3/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint3/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint4/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint4/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint5/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint5/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint6/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint6/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/L_joint7/goal: 0.01
+ * /L_xarm7_traj_controller/constraints/L_joint7/trajectory: 1
+ * /L_xarm7_traj_controller/constraints/goal_time: 0.5
+ * /L_xarm7_traj_controller/constraints/stopped_velocity_tolerance: 0.05
+ * /L_xarm7_traj_controller/joints: ['L_joint1', 'L_j...
+ * /L_xarm7_traj_controller/state_publish_rate: 25
+ * /L_xarm7_traj_controller/stop_trajectory_duration: 0.2
+ * /L_xarm7_traj_controller/type: position_controll...
+ * /R_xarm7/DOF: 7
+ * /R_xarm7/add_gripper: False
+ * /R_xarm7/baud_checkset: True
+ * /R_xarm7/default_gripper_baud: 2000000
+ * /R_xarm7/enforce_limits: True
+ * /R_xarm7/joint_names: ['R_joint1', 'R_j...
+ * /R_xarm7/type: xarm_control/XArmHW
+ * /R_xarm7/velocity_control: False
+ * /R_xarm7/xarm_report_type: normal
+ * /R_xarm7/xarm_robot_ip: 192.168.10.211
+ * /R_xarm7_traj_controller/action_monitor_rate: 10
+ * /R_xarm7_traj_controller/constraints/R_joint1/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint1/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint2/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint2/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint3/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint3/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint4/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint4/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint5/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint5/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint6/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint6/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/R_joint7/goal: 0.01
+ * /R_xarm7_traj_controller/constraints/R_joint7/trajectory: 1
+ * /R_xarm7_traj_controller/constraints/goal_time: 0.5
+ * /R_xarm7_traj_controller/constraints/stopped_velocity_tolerance: 0.05
+ * /R_xarm7_traj_controller/joints: ['R_joint1', 'R_j...
+ * /R_xarm7_traj_controller/state_publish_rate: 25
+ * /R_xarm7_traj_controller/stop_trajectory_duration: 0.2
+ * /R_xarm7_traj_controller/type: position_controll...
+ * /joint_state_controller/publish_rate: 50
+ * /joint_state_controller/type: joint_state_contr...
+ * /joint_state_publisher/use_gui: False
+ * /move_group/L_xarm7/default_planner_config: RRTConnect
+ * /move_group/L_xarm7/planner_configs: ['SBL', 'EST', 'L...
+ * /move_group/L_xarm_gripper/planner_configs: ['SBL', 'EST', 'L...
+ * /move_group/R_xarm7/default_planner_config: RRTConnect
+ * /move_group/R_xarm7/planner_configs: ['SBL', 'EST', 'L...
+ * /move_group/R_xarm_gripper/planner_configs: ['SBL', 'EST', 'L...
+ * /move_group/allow_trajectory_execution: True
+ * /move_group/capabilities: 
+ * /move_group/controller_list: [{'default': True...
+ * /move_group/disable_capabilities: 
+ * /move_group/generic_hw_control_loop/cycle_time_error_threshold: 0.01
+ * /move_group/generic_hw_control_loop/loop_hz: 300
+ * /move_group/hardware_interface/joints: ['L_joint1', 'L_j...
+ * /move_group/hardware_interface/sim_control_mode: 1
+ * /move_group/jiggle_fraction: 0.05
+ * /move_group/joint_state_controller/publish_rate: 50
+ * /move_group/joint_state_controller/type: joint_state_contr...
+ * /move_group/max_range: 5.0
+ * /move_group/max_safe_path_cost: 1
+ * /move_group/moveit_controller_manager: moveit_simple_con...
+ * /move_group/moveit_manage_controllers: True
+ * /move_group/moveit_sim_hw_interface/joint_model_group: controllers_initi...
+ * /move_group/moveit_sim_hw_interface/joint_model_group_pose: controllers_initi...
+ * /move_group/octomap_resolution: 0.025
+ * /move_group/planner_configs/BFMT/balanced: 0
+ * /move_group/planner_configs/BFMT/cache_cc: 1
+ * /move_group/planner_configs/BFMT/extended_fmt: 1
+ * /move_group/planner_configs/BFMT/heuristics: 1
+ * /move_group/planner_configs/BFMT/nearest_k: 1
+ * /move_group/planner_configs/BFMT/num_samples: 1000
+ * /move_group/planner_configs/BFMT/optimality: 1
+ * /move_group/planner_configs/BFMT/radius_multiplier: 1.0
+ * /move_group/planner_configs/BFMT/type: geometric::BFMT
+ * /move_group/planner_configs/BKPIECE/border_fraction: 0.9
+ * /move_group/planner_configs/BKPIECE/failed_expansion_score_factor: 0.5
+ * /move_group/planner_configs/BKPIECE/min_valid_path_fraction: 0.5
+ * /move_group/planner_configs/BKPIECE/range: 0.0
+ * /move_group/planner_configs/BKPIECE/type: geometric::BKPIECE
+ * /move_group/planner_configs/BiEST/range: 0.0
+ * /move_group/planner_configs/BiEST/type: geometric::BiEST
+ * /move_group/planner_configs/BiTRRT/cost_threshold: 1e300
+ * /move_group/planner_configs/BiTRRT/frountier_node_ratio: 0.1
+ * /move_group/planner_configs/BiTRRT/frountier_threshold: 0.0
+ * /move_group/planner_configs/BiTRRT/init_temperature: 100
+ * /move_group/planner_configs/BiTRRT/range: 0.0
+ * /move_group/planner_configs/BiTRRT/temp_change_factor: 0.1
+ * /move_group/planner_configs/BiTRRT/type: geometric::BiTRRT
+ * /move_group/planner_configs/EST/goal_bias: 0.05
+ * /move_group/planner_configs/EST/range: 0.0
+ * /move_group/planner_configs/EST/type: geometric::EST
+ * /move_group/planner_configs/FMT/cache_cc: 1
+ * /move_group/planner_configs/FMT/extended_fmt: 1
+ * /move_group/planner_configs/FMT/heuristics: 0
+ * /move_group/planner_configs/FMT/nearest_k: 1
+ * /move_group/planner_configs/FMT/num_samples: 1000
+ * /move_group/planner_configs/FMT/radius_multiplier: 1.1
+ * /move_group/planner_configs/FMT/type: geometric::FMT
+ * /move_group/planner_configs/KPIECE/border_fraction: 0.9
+ * /move_group/planner_configs/KPIECE/failed_expansion_score_factor: 0.5
+ * /move_group/planner_configs/KPIECE/goal_bias: 0.05
+ * /move_group/planner_configs/KPIECE/min_valid_path_fraction: 0.5
+ * /move_group/planner_configs/KPIECE/range: 0.0
+ * /move_group/planner_configs/KPIECE/type: geometric::KPIECE
+ * /move_group/planner_configs/LBKPIECE/border_fraction: 0.9
+ * /move_group/planner_configs/LBKPIECE/min_valid_path_fraction: 0.5
+ * /move_group/planner_configs/LBKPIECE/range: 0.0
+ * /move_group/planner_configs/LBKPIECE/type: geometric::LBKPIECE
+ * /move_group/planner_configs/LBTRRT/epsilon: 0.4
+ * /move_group/planner_configs/LBTRRT/goal_bias: 0.05
+ * /move_group/planner_configs/LBTRRT/range: 0.0
+ * /move_group/planner_configs/LBTRRT/type: geometric::LBTRRT
+ * /move_group/planner_configs/LazyPRM/range: 0.0
+ * /move_group/planner_configs/LazyPRM/type: geometric::LazyPRM
+ * /move_group/planner_configs/LazyPRMstar/type: geometric::LazyPR...
+ * /move_group/planner_configs/PDST/type: geometric::PDST
+ * /move_group/planner_configs/PRM/max_nearest_neighbors: 10
+ * /move_group/planner_configs/PRM/type: geometric::PRM
+ * /move_group/planner_configs/PRMstar/type: geometric::PRMstar
+ * /move_group/planner_configs/ProjEST/goal_bias: 0.05
+ * /move_group/planner_configs/ProjEST/range: 0.0
+ * /move_group/planner_configs/ProjEST/type: geometric::ProjEST
+ * /move_group/planner_configs/RRT/goal_bias: 0.05
+ * /move_group/planner_configs/RRT/range: 0.0
+ * /move_group/planner_configs/RRT/type: geometric::RRT
+ * /move_group/planner_configs/RRTConnect/range: 0.0
+ * /move_group/planner_configs/RRTConnect/type: geometric::RRTCon...
+ * /move_group/planner_configs/RRTstar/delay_collision_checking: 1
+ * /move_group/planner_configs/RRTstar/goal_bias: 0.05
+ * /move_group/planner_configs/RRTstar/range: 0.0
+ * /move_group/planner_configs/RRTstar/type: geometric::RRTstar
+ * /move_group/planner_configs/SBL/range: 0.0
+ * /move_group/planner_configs/SBL/type: geometric::SBL
+ * /move_group/planner_configs/SPARS/dense_delta_fraction: 0.001
+ * /move_group/planner_configs/SPARS/max_failures: 1000
+ * /move_group/planner_configs/SPARS/sparse_delta_fraction: 0.25
+ * /move_group/planner_configs/SPARS/stretch_factor: 3.0
+ * /move_group/planner_configs/SPARS/type: geometric::SPARS
+ * /move_group/planner_configs/SPARStwo/dense_delta_fraction: 0.001
+ * /move_group/planner_configs/SPARStwo/max_failures: 5000
+ * /move_group/planner_configs/SPARStwo/sparse_delta_fraction: 0.25
+ * /move_group/planner_configs/SPARStwo/stretch_factor: 3.0
+ * /move_group/planner_configs/SPARStwo/type: geometric::SPARStwo
+ * /move_group/planner_configs/STRIDE/degree: 16
+ * /move_group/planner_configs/STRIDE/estimated_dimension: 0.0
+ * /move_group/planner_configs/STRIDE/goal_bias: 0.05
+ * /move_group/planner_configs/STRIDE/max_degree: 18
+ * /move_group/planner_configs/STRIDE/max_pts_per_leaf: 6
+ * /move_group/planner_configs/STRIDE/min_degree: 12
+ * /move_group/planner_configs/STRIDE/min_valid_path_fraction: 0.2
+ * /move_group/planner_configs/STRIDE/range: 0.0
+ * /move_group/planner_configs/STRIDE/type: geometric::STRIDE
+ * /move_group/planner_configs/STRIDE/use_projected_distance: 0
+ * /move_group/planner_configs/TRRT/frountierNodeRatio: 0.1
+ * /move_group/planner_configs/TRRT/frountier_threshold: 0.0
+ * /move_group/planner_configs/TRRT/goal_bias: 0.05
+ * /move_group/planner_configs/TRRT/init_temperature: 10e-6
+ * /move_group/planner_configs/TRRT/k_constant: 0.0
+ * /move_group/planner_configs/TRRT/max_states_failed: 10
+ * /move_group/planner_configs/TRRT/min_temperature: 10e-10
+ * /move_group/planner_configs/TRRT/range: 0.0
+ * /move_group/planner_configs/TRRT/temp_change_factor: 2.0
+ * /move_group/planner_configs/TRRT/type: geometric::TRRT
+ * /move_group/planning_plugin: ompl_interface/OM...
+ * /move_group/planning_scene_monitor/publish_geometry_updates: True
+ * /move_group/planning_scene_monitor/publish_planning_scene: True
+ * /move_group/planning_scene_monitor/publish_state_updates: True
+ * /move_group/planning_scene_monitor/publish_transforms_updates: True
+ * /move_group/request_adapters: default_planner_r...
+ * /move_group/sensors: [{}, {}]
+ * /move_group/start_state_max_bounds_error: 0.1
+ * /move_group/trajectory_execution/allowed_execution_duration_scaling: 1.2
+ * /move_group/trajectory_execution/allowed_goal_duration_margin: 0.5
+ * /move_group/trajectory_execution/allowed_start_tolerance: 0.01
+ * /robot_description: <?xml version="1....
+ * /robot_description_kinematics/L_xarm7/kinematics_solver: kdl_kinematics_pl...
+ * /robot_description_kinematics/L_xarm7/kinematics_solver_search_resolution: 0.005
+ * /robot_description_kinematics/L_xarm7/kinematics_solver_timeout: 0.005
+ * /robot_description_kinematics/R_xarm7/kinematics_solver: kdl_kinematics_pl...
+ * /robot_description_kinematics/R_xarm7/kinematics_solver_search_resolution: 0.005
+ * /robot_description_kinematics/R_xarm7/kinematics_solver_timeout: 0.005
+ * /robot_description_planning/cartesian_limits/max_rot_vel: 1.57
+ * /robot_description_planning/cartesian_limits/max_trans_acc: 2.25
+ * /robot_description_planning/cartesian_limits/max_trans_dec: -5
+ * /robot_description_planning/cartesian_limits/max_trans_vel: 1
+ * /robot_description_planning/joint_limits/L_drive_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_drive_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_drive_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_drive_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/L_joint1/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint1/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint1/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint1/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint2/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint2/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint2/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint2/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint3/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint3/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint3/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint3/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint4/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint4/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint4/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint4/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint5/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint5/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint5/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint5/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint6/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint6/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint6/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint6/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_joint7/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_joint7/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_joint7/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_joint7/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/L_left_finger_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_left_finger_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_left_finger_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_left_finger_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/L_left_inner_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_left_inner_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_left_inner_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_left_inner_knuckle_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/L_right_finger_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_right_finger_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_right_finger_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_right_finger_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/L_right_inner_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_right_inner_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_right_inner_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_right_inner_knuckle_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/L_right_outer_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/L_right_outer_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/L_right_outer_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/L_right_outer_knuckle_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_drive_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_drive_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_drive_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_drive_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_joint1/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint1/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint1/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint1/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint2/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint2/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint2/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint2/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint3/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint3/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint3/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint3/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint4/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint4/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint4/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint4/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint5/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint5/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint5/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint5/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint6/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint6/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint6/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint6/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_joint7/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_joint7/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_joint7/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_joint7/max_velocity: 3.14
+ * /robot_description_planning/joint_limits/R_left_finger_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_left_finger_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_left_finger_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_left_finger_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_left_inner_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_left_inner_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_left_inner_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_left_inner_knuckle_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_right_finger_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_right_finger_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_right_finger_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_right_finger_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_right_inner_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_right_inner_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_right_inner_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_right_inner_knuckle_joint/max_velocity: 2
+ * /robot_description_planning/joint_limits/R_right_outer_knuckle_joint/has_acceleration_limits: False
+ * /robot_description_planning/joint_limits/R_right_outer_knuckle_joint/has_velocity_limits: True
+ * /robot_description_planning/joint_limits/R_right_outer_knuckle_joint/max_acceleration: 0
+ * /robot_description_planning/joint_limits/R_right_outer_knuckle_joint/max_velocity: 2
+ * /robot_description_semantic: <?xml version="1....
+ * /robot_hardware: ['L_xarm7', 'R_xa...
+ * /rosdistro: melodic
+ * /rosversion: 1.14.13
+ * /source_list: ['L_xarm7/joint_s...
+
+NODES
+  /
+    joint_state_publisher (joint_state_publisher/joint_state_publisher)
+    move_group (moveit_ros_move_group/move_group)
+    robot_state_publisher (robot_state_publisher/robot_state_publisher)
+    rviz_xarm_dual_1786_746803164934737128 (rviz/rviz)
+    traj_controller_spawner (controller_manager/spawner)
+    xarm_combined_traj_controller (xarm_controller/xarm_combined_traj_controller)
+  /L_xarm7/
+    uf_driver (xarm_api/xarm_driver_node)
+  /R_xarm7/
+    uf_driver (xarm_api/xarm_driver_node)
+
+auto-starting new master
+process[master]: started with pid [1802]
+ROS_MASTER_URI=http://localhost:11311
+
+setting /run_id to 863e4862-2054-11ed-8b11-40b0764478fe
+process[rosout-1]: started with pid [1813]
+started core service [/rosout]
+process[L_xarm7/uf_driver-2]: started with pid [1820]
+[ INFO] [1660978294.884119416]: namespace: /L_xarm7
+[ INFO] [1660978294.886546746]: xarm_driver_node start
+SDK_VERSION: 1.9.11
+Tcp control connection successful
+FIRMWARE_VERSION: v1.6.9, PROTOCOL: V1, DETAIL: 7,7,XS1203,XX0000,v1.6.9
+Tcp Report Rich connection successful
+report_data_size: 433, size_is_not_confirm: 0
+Tcp Report Norm connection successful
+report_data_size: 145, size_is_not_confirm: 0
+[ INFO] [1660978295.206985334]: [TCP STATUS] CONTROL: 1, REPORT: 1
+process[R_xarm7/uf_driver-3]: started with pid [1821]
+[ INFO] [1660978295.273470944]: namespace: /R_xarm7
+[ INFO] [1660978295.275860586]: xarm_driver_node start
+SDK_VERSION: 1.9.11
+Tcp control connection successful
+FIRMWARE_VERSION: v1.9.0, PROTOCOL: V1, DETAIL: 7,7,XS1203,XX0000,v1.9.0
+Tcp Report Rich connection successful
+change prot_flag to 3
+report_data_size: 494, size_is_not_confirm: 0
+Tcp Report Norm connection successful
+report_data_size: 145, size_is_not_confirm: 0
+[ INFO] [1660978295.597886476]: [TCP STATUS] CONTROL: 1, REPORT: 1
+process[xarm_combined_traj_controller-4]: started with pid [1837]
+process[traj_controller_spawner-5]: started with pid [1853]
+[INFO] [1660978296.325074]: Controller Spawner: Waiting for service controller_manager/load_controller
+process[joint_state_publisher-6]: started with pid [1859]
+SDK_VERSION: 1.9.11
+Tcp control connection successful
+process[robot_state_publisher-7]: started with pid [1868]
+FIRMWARE_VERSION: v1.6.9, PROTOCOL: V1, DETAIL: 7,7,XS1203,XX0000,v1.6.9
+Tcp Report Rich connection successful
+Tcp Report Norm connection successful
+[ INFO] [1660978297.034348777]: [TCP STATUS] CONTROL: 1, REPORT: 1
+report_data_size: 433, size_is_not_confirm: 0
+report_data_size: 145, size_is_not_confirm: 0
+L_joint1, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+L_joint2, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-2.059000, max_position=2.094400
+L_joint3, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+L_joint4, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-0.191980, max_position=3.927000
+L_joint5, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+L_joint6, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-1.692970, max_position=3.141593
+L_joint7, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+[set_state], xArm is ready to move
+SDK_VERSION: 1.9.11
+Tcp control connection successful
+process[move_group-8]: started with pid [1885]
+[ INFO] [1660978297.284267503]: Loading robot model 'xarm7'...
+[ INFO] [1660978297.285583041]: No root/virtual joint specified in SRDF. Assuming fixed joint
+FIRMWARE_VERSION: v1.9.0, PROTOCOL: V1, DETAIL: 7,7,XS1203,XX0000,v1.9.0
+Tcp Report Rich connection successful
+change prot_flag to 3
+Tcp Report Norm connection successful
+[ INFO] [1660978297.431159560]: [TCP STATUS] CONTROL: 1, REPORT: 1
+[ WARN] [1660978297.467515961]: Could not identify parent group for end-effector 'L_xarm_gripper'
+[ WARN] [1660978297.467552855]: Could not identify parent group for end-effector 'R_xarm_gripper'
+R_joint1, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+R_joint2, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-2.059000, max_position=2.094400
+R_joint3, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+R_joint4, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-0.191980, max_position=3.927000
+R_joint5, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+R_joint6, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-1.692970, max_position=3.141593
+R_joint7, ctrl_method=0, has_soft_limits=0, has_velocity_limits=1, max_velocity=3.140000, has_position_limits=1, min_position=-6.283185, max_position=6.283185
+[motion_enable], xArm is not ready to move
+[set_state], xArm is ready to move
+[INFO] [1660978297.534835]: Controller Spawner: Waiting for service controller_manager/switch_controller
+[INFO] [1660978297.541768]: Controller Spawner: Waiting for service controller_manager/unload_controller
+[INFO] [1660978297.548137]: Loading controller: L_xarm7_traj_controller
+report_data_size: 494, size_is_not_confirm: 0
+report_data_size: 145, size_is_not_confirm: 0
+[INFO] [1660978297.627089]: Loading controller: R_xarm7_traj_controller
+process[rviz_xarm_dual_1786_746803164934737128-9]: started with pid [1912]
+[INFO] [1660978297.662814]: Controller Spawner: Loaded controllers: L_xarm7_traj_controller, R_xarm7_traj_controller
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+[ INFO] [1660978297.724204514]: rviz version 1.13.25
+[ INFO] [1660978297.724276526]: compiled against Qt version 5.9.5
+[ INFO] [1660978297.724306579]: compiled against OGRE version 1.9.0 (Ghadamon)
+[ INFO] [1660978297.741537068]: Forcing OpenGl version 0.
+[ INFO] [1660978298.114772445]: Publishing maintained planning scene on 'monitored_planning_scene'
+[ INFO] [1660978298.116523104]: MoveGroup debug mode is ON
+Starting planning scene monitors...
+[ INFO] [1660978298.116551997]: Starting planning scene monitor
+[ INFO] [1660978298.119808427]: Listening to '/planning_scene'
+[ INFO] [1660978298.119825498]: Starting world geometry update monitor for collision objects, attached objects, octomap updates.
+[ INFO] [1660978298.122688091]: Listening to '/collision_object'
+[ INFO] [1660978298.125469991]: Listening to '/planning_scene_world' for planning scene world geometry
+[ERROR] [1660978298.126410907]: No sensor plugin specified for octomap updater 0; ignoring.
+[ERROR] [1660978298.126426335]: No sensor plugin specified for octomap updater 1; ignoring.
+[ INFO] [1660978298.524550947]: Listening to '/attached_collision_object' for attached collision objects
+Planning scene monitors started.
+[ INFO] [1660978298.563916732]: Initializing OMPL interface using ROS parameters
+[ INFO] [1660978298.626658187]: Using planning interface 'OMPL'
+[ INFO] [1660978298.633447538]: Param 'default_workspace_bounds' was not set. Using default value: 10
+[ INFO] [1660978298.634351337]: Param 'start_state_max_bounds_error' was set to 0.1
+[ INFO] [1660978298.634827389]: Param 'start_state_max_dt' was not set. Using default value: 0.5
+[ INFO] [1660978298.635725378]: Param 'start_state_max_dt' was not set. Using default value: 0.5
+[ INFO] [1660978298.636209096]: Param 'jiggle_fraction' was set to 0.05
+[ INFO] [1660978298.636676290]: Param 'max_sampling_attempts' was not set. Using default value: 100
+[ INFO] [1660978298.636746360]: Using planning request adapter 'Add Time Parameterization'
+[ INFO] [1660978298.636776107]: Using planning request adapter 'Fix Workspace Bounds'
+[ INFO] [1660978298.636805712]: Using planning request adapter 'Fix Start State Bounds'
+[ INFO] [1660978298.636842760]: Using planning request adapter 'Fix Start State In Collision'
+[ INFO] [1660978298.636879784]: Using planning request adapter 'Fix Start State Path Constraints'
+[ INFO] [1660978298.790721265]: Stereo is NOT SUPPORTED
+[ INFO] [1660978298.790783122]: OpenGL device: GeForce GTX 1070/PCIe/SSE2
+[ INFO] [1660978298.790800766]: OpenGl version: 4.6 (GLSL 4.6).
+[ INFO] [1660978298.981913614]: Added FollowJointTrajectory controller for L_xarm7_controller
+[ INFO] [1660978299.258601845]: Added FollowJointTrajectory controller for R_xarm7_controller
+[ INFO] [1660978299.258793892]: Returned 2 controllers in list
+[ INFO] [1660978299.272888174]: Trajectory execution is managing controllers
+Loading 'move_group/ApplyPlanningSceneService'...
+Loading 'move_group/ClearOctomapService'...
+Loading 'move_group/MoveGroupCartesianPathService'...
+Loading 'move_group/MoveGroupExecuteTrajectoryAction'...
+Loading 'move_group/MoveGroupGetPlanningSceneService'...
+Loading 'move_group/MoveGroupKinematicsService'...
+Loading 'move_group/MoveGroupMoveAction'...
+Loading 'move_group/MoveGroupPickPlaceAction'...
+Loading 'move_group/MoveGroupPlanService'...
+Loading 'move_group/MoveGroupQueryPlannersService'...
+Loading 'move_group/MoveGroupStateValidationService'...
+[ INFO] [1660978299.348662656]: 
+
+********************************************************
+* MoveGroup using: 
+*     - ApplyPlanningSceneService
+*     - ClearOctomapService
+*     - CartesianPathService
+*     - ExecuteTrajectoryAction
+*     - GetPlanningSceneService
+*     - KinematicsService
+*     - MoveAction
+*     - PickPlaceAction
+*     - MotionPlanService
+*     - QueryPlannersService
+*     - StateValidationService
+********************************************************
+
+[ INFO] [1660978299.348757616]: MoveGroup context using planning plugin ompl_interface/OMPLPlanner
+[ INFO] [1660978299.348786944]: MoveGroup context initialization complete
+
+You can start planning now!
+
+[INFO] [1660978299.512604]: Started controllers: L_xarm7_traj_controller, R_xarm7_traj_controller
+[ INFO] [1660978342.631866147]: Loading robot model 'xarm7'...
+[ INFO] [1660978342.631933681]: No root/virtual joint specified in SRDF. Assuming fixed joint
+[ WARN] [1660978342.756490340]: Could not identify parent group for end-effector 'L_xarm_gripper'
+[ WARN] [1660978342.756533478]: Could not identify parent group for end-effector 'R_xarm_gripper'
+[ INFO] [1660978343.350502822]: Starting planning scene monitor
+[ INFO] [1660978343.354243023]: Listening to '/move_group/monitored_planning_scene'
+[ INFO] [1660978343.420611438]: Constructing new MoveGroup connection for group 'L_xarm7' in namespace ''
+[ INFO] [1660978344.467929473]: Ready to take commands for planning group L_xarm7.
+[ INFO] [1660978344.468030318]: Looking around: no
+[ INFO] [1660978344.468073972]: Replanning: no
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ INFO] [1660978768.376659604]: Received request to compute Cartesian path
+[ INFO] [1660978768.377169225]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.379750878]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.475600276]: Received request to compute Cartesian path
+[ INFO] [1660978768.475720445]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.476540619]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.576176473]: Received request to compute Cartesian path
+[ INFO] [1660978768.576389294]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.578940569]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.675902376]: Received request to compute Cartesian path
+[ INFO] [1660978768.676017121]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.676768217]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.775801173]: Received request to compute Cartesian path
+[ INFO] [1660978768.775928821]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.776811348]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.876124264]: Received request to compute Cartesian path
+[ INFO] [1660978768.876311950]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.878771845]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978768.976567063]: Received request to compute Cartesian path
+[ INFO] [1660978768.976771103]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978768.978874118]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.076125428]: Received request to compute Cartesian path
+[ INFO] [1660978769.076341445]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.079132147]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.175964839]: Received request to compute Cartesian path
+[ INFO] [1660978769.176129708]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.177226226]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.275847658]: Received request to compute Cartesian path
+[ INFO] [1660978769.275951833]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.276886578]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.375885015]: Received request to compute Cartesian path
+[ INFO] [1660978769.376058278]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.378383299]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.475746250]: Received request to compute Cartesian path
+[ INFO] [1660978769.475901035]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.477633189]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.575977752]: Received request to compute Cartesian path
+[ INFO] [1660978769.576111189]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.578043428]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.675762458]: Received request to compute Cartesian path
+[ INFO] [1660978769.676495174]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.678592099]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.775848962]: Received request to compute Cartesian path
+[ INFO] [1660978769.775972953]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.777687550]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.876246245]: Received request to compute Cartesian path
+[ INFO] [1660978769.876419843]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.878571315]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978769.975992339]: Received request to compute Cartesian path
+[ INFO] [1660978769.976121740]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978769.977162068]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.076017476]: Received request to compute Cartesian path
+[ INFO] [1660978770.076129407]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.077146335]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.176336918]: Received request to compute Cartesian path
+[ INFO] [1660978770.176541112]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.179279743]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.276423780]: Received request to compute Cartesian path
+[ INFO] [1660978770.276527653]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.277212185]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.376529771]: Received request to compute Cartesian path
+[ INFO] [1660978770.376657077]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.377569182]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.476233182]: Received request to compute Cartesian path
+[ INFO] [1660978770.476398008]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.478192447]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.576199835]: Received request to compute Cartesian path
+[ INFO] [1660978770.576348929]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.578114329]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.676572042]: Received request to compute Cartesian path
+[ INFO] [1660978770.676767436]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.678802139]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.776174985]: Received request to compute Cartesian path
+[ INFO] [1660978770.776290480]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.777604833]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.876631445]: Received request to compute Cartesian path
+[ INFO] [1660978770.876827308]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.879504067]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978770.975924974]: Received request to compute Cartesian path
+[ INFO] [1660978770.976088178]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978770.978007245]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.076277233]: Received request to compute Cartesian path
+[ INFO] [1660978771.076460758]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.078420580]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.176038728]: Received request to compute Cartesian path
+[ INFO] [1660978771.176245501]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.178340869]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.276525857]: Received request to compute Cartesian path
+[ INFO] [1660978771.276730894]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.278659309]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.375838379]: Received request to compute Cartesian path
+[ INFO] [1660978771.375994316]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.378019684]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.476185288]: Received request to compute Cartesian path
+[ INFO] [1660978771.476362222]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.478417801]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.576313095]: Received request to compute Cartesian path
+[ INFO] [1660978771.576494713]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.579311310]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.676395495]: Received request to compute Cartesian path
+[ INFO] [1660978771.676623073]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.678732462]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.776410096]: Received request to compute Cartesian path
+[ INFO] [1660978771.776637450]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.778556235]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.876557486]: Received request to compute Cartesian path
+[ INFO] [1660978771.876751652]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.878617832]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978771.976293099]: Received request to compute Cartesian path
+[ INFO] [1660978771.976527849]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978771.979197910]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.076412780]: Received request to compute Cartesian path
+[ INFO] [1660978772.076533532]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.077403363]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.175700696]: Received request to compute Cartesian path
+[ INFO] [1660978772.175839138]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.177090284]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.275989366]: Received request to compute Cartesian path
+[ INFO] [1660978772.276151520]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.277670002]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.376198950]: Received request to compute Cartesian path
+[ INFO] [1660978772.376411311]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.379205828]: Computed Cartesian path with 7 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.475632193]: Received request to compute Cartesian path
+[ INFO] [1660978772.475787892]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.479532362]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.575910317]: Received request to compute Cartesian path
+[ INFO] [1660978772.576072322]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.580515002]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.676247413]: Received request to compute Cartesian path
+[ INFO] [1660978772.676472534]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.681656378]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.775727844]: Received request to compute Cartesian path
+[ INFO] [1660978772.775943563]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.781858019]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.875834631]: Received request to compute Cartesian path
+[ INFO] [1660978772.875940526]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.878064229]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978772.976085095]: Received request to compute Cartesian path
+[ INFO] [1660978772.976258999]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978772.980065566]: Computed Cartesian path with 13 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.076191148]: Received request to compute Cartesian path
+[ INFO] [1660978773.076402196]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.081823890]: Computed Cartesian path with 13 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.175930122]: Received request to compute Cartesian path
+[ INFO] [1660978773.176104277]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.180081139]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.275964346]: Received request to compute Cartesian path
+[ INFO] [1660978773.276177080]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.279867137]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.375728706]: Received request to compute Cartesian path
+[ INFO] [1660978773.375919959]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.380706923]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.476298580]: Received request to compute Cartesian path
+[ INFO] [1660978773.476503920]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.480762465]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.576241554]: Received request to compute Cartesian path
+[ INFO] [1660978773.576481841]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.580385557]: Computed Cartesian path with 16 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.675914696]: Received request to compute Cartesian path
+[ INFO] [1660978773.676127951]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.682736008]: Computed Cartesian path with 17 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.775499619]: Received request to compute Cartesian path
+[ INFO] [1660978773.775669613]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.780525009]: Computed Cartesian path with 17 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.876259581]: Received request to compute Cartesian path
+[ INFO] [1660978773.876419408]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.881639902]: Computed Cartesian path with 18 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978773.976598403]: Received request to compute Cartesian path
+[ INFO] [1660978773.976769067]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978773.979434642]: Computed Cartesian path with 17 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.075758822]: Received request to compute Cartesian path
+[ INFO] [1660978774.075862515]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.077621681]: Computed Cartesian path with 16 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.176828835]: Received request to compute Cartesian path
+[ INFO] [1660978774.177023401]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.181396750]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.277033942]: Received request to compute Cartesian path
+[ INFO] [1660978774.277239181]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.282613087]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.376058883]: Received request to compute Cartesian path
+[ INFO] [1660978774.376413315]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.377783327]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.476312916]: Received request to compute Cartesian path
+[ INFO] [1660978774.476542192]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.480760237]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.575360475]: Received request to compute Cartesian path
+[ INFO] [1660978774.575449231]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.577853489]: Computed Cartesian path with 17 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.676183496]: Received request to compute Cartesian path
+[ INFO] [1660978774.676361612]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.679984537]: Computed Cartesian path with 18 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.776669150]: Received request to compute Cartesian path
+[ INFO] [1660978774.776834508]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.782420149]: Computed Cartesian path with 17 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.875620211]: Received request to compute Cartesian path
+[ INFO] [1660978774.875747253]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.878517948]: Computed Cartesian path with 16 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978774.976253664]: Received request to compute Cartesian path
+[ INFO] [1660978774.976636634]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978774.981097315]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.076347644]: Received request to compute Cartesian path
+[ INFO] [1660978775.076571183]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.081579577]: Computed Cartesian path with 15 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.176506547]: Received request to compute Cartesian path
+[ INFO] [1660978775.176639172]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.178689947]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.276352174]: Received request to compute Cartesian path
+[ INFO] [1660978775.276554703]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.280707071]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.375686885]: Received request to compute Cartesian path
+[ INFO] [1660978775.375834158]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.379436652]: Computed Cartesian path with 13 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.476056553]: Received request to compute Cartesian path
+[ INFO] [1660978775.476239587]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.480217827]: Computed Cartesian path with 13 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.576242538]: Received request to compute Cartesian path
+[ INFO] [1660978775.576466912]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.582292154]: Computed Cartesian path with 13 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.676342976]: Received request to compute Cartesian path
+[ INFO] [1660978775.676581560]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.681121112]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.776341742]: Received request to compute Cartesian path
+[ INFO] [1660978775.776554759]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.781310403]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.876312471]: Received request to compute Cartesian path
+[ INFO] [1660978775.876501713]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.880608358]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978775.975963496]: Received request to compute Cartesian path
+[ INFO] [1660978775.976162967]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978775.980801989]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978776.076312125]: Received request to compute Cartesian path
+[ INFO] [1660978776.076509705]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978776.081120722]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978776.176050777]: Received request to compute Cartesian path
+[ INFO] [1660978776.176227375]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978776.179972378]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978776.276875053]: Received request to compute Cartesian path
+[ INFO] [1660978776.277081805]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978776.282980755]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[clean_error], xArm is not ready to move
+[ INFO] [1660978776.376680262]: Received request to compute Cartesian path
+[ INFO] [1660978776.376811134]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978776.380054420]: Computed Cartesian path with 14 points (followed 100.000000% of requested trajectory)
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ERROR] [1660978776.465946464]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.466105642]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.475924922]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.476004861]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.486029594]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.486122580]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.496124994]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.496250950]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.506181382]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.506305771]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.516230979]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.516317716]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.526309095]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.526405053]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.536387446]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.536513895]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.546459951]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.546576506]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.556488599]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.556584656]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.566562835]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.566660170]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.576611686]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.576696890]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.586720483]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.586820061]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.596773972]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.596886261]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.606913921]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.607057416]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.616933512]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.617052183]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.626986200]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.627049343]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.636995883]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.637056573]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.647075763]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.647148643]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.657156668]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.657252121]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.667176357]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.667247996]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.677256633]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.677334454]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.687214818]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.687303167]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.697373531]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.697471121]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.707418867]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.707523149]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.717496303]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.717607092]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.727609496]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.727738989]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.737632502]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.737734476]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.747713231]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.747815627]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.757793269]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.757864337]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.767808568]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.767896315]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.777935814]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.778043981]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.788048323]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.788156374]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.798064356]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.798162577]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.808084624]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.808173927]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.818180613]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.818272844]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.828267204]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.828371235]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.838344905]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.838446147]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.848434488]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.848588476]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.858496382]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.858602186]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.868527363]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.868649183]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.878626210]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.878726539]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.888701540]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.888830292]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.898752204]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.898892617]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.908799804]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.908873111]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.918896852]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.918998000]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.928899892]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.928986652]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.938967408]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.939047095]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.949039676]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.949136732]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.959136432]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.959253810]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.969199490]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.969303503]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.979303393]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.979434126]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.989323577]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.989438685]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978776.999385897]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978776.999488762]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.009484022]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.009605609]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.019545929]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.019685443]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.029590403]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.029673964]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.039639951]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.039743030]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.049707171]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.049829577]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.059757659]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.059862209]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.069852312]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.069968549]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.079936297]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.080010053]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.089905560]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.089973473]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.100044268]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.100147729]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.110085435]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.110184406]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.120130713]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.120247956]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.130238035]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.130327846]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.140315017]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.140412610]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.150419940]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.150548939]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.160496674]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.160594075]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.170514957]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.170611749]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.180633514]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.180767921]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.190674717]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.190776056]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.200670784]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.200821575]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.210799932]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.210906986]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.220885905]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.220966759]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.230961274]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.231080383]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.241038951]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.241202775]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.251073647]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.251147849]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.261113838]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.261183150]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.271209821]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.271299057]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.281244500]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.281307482]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.291255316]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.291319376]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.301421982]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.301534634]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.311465855]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.311568045]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.321595846]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.321714313]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.331631815]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.331737820]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.341682775]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.341776001]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.351748153]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.351855747]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.361851334]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.361978246]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.371902516]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.372013071]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.382008445]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.382133007]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.392096159]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.392205433]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.402161274]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.402239734]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.412236157]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.412370467]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.422243042]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.422339558]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.432326164]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.432388870]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.442349800]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.442440588]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.452429332]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.452525604]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.462574545]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.462695405]: [ns: /R_xarm7/] xArm is Ready
+[clean_error], xArm is not ready to move
+[ERROR] [1660978777.472609596]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.472754090]: [ns: /R_xarm7/] xArm is Ready
+[ INFO] [1660978777.476187243]: Received request to compute Cartesian path
+[ INFO] [1660978777.476401631]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.477705671]: Computed Cartesian path with 5 points (followed 100.000000% of requested trajectory)
+[ERROR] [1660978777.482652341]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.482731127]: [ns: /R_xarm7/] xArm is Ready
+[set_state], xArm is ready to move
+[ERROR] [1660978777.509963195]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.510067562]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.511306179]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.511421940]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.521411210]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.521517764]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.531474369]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.531582932]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.541490493]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.541549505]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.551552551]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.551620829]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.561633996]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.561711888]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.571701561]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.571792046]: [ns: /R_xarm7/] xArm is Ready
+[ INFO] [1660978777.575673502]: Received request to compute Cartesian path
+[ INFO] [1660978777.575790306]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.576573113]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ERROR] [1660978777.581779416]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.581854412]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.591826441]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.591880721]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.601875608]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.601944217]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.611952125]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.612032782]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.622053218]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.622141464]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.632127155]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.632233223]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.642179932]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.642304345]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978777.652227759]: [ns: /L_xarm7/] xArm Mode detected! Mode: 0
+[ INFO] [1660978777.652340820]: [ns: /R_xarm7/] xArm is Ready
+[ INFO] [1660978777.676509274]: Received request to compute Cartesian path
+[ INFO] [1660978777.676612076]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.677029577]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ INFO] [1660978777.776276229]: Received request to compute Cartesian path
+[ INFO] [1660978777.776437942]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.777701875]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978777.875869620]: Received request to compute Cartesian path
+[ INFO] [1660978777.875981433]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.876775465]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978777.975994917]: Received request to compute Cartesian path
+[ INFO] [1660978777.976165342]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978777.977305275]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.076293215]: Received request to compute Cartesian path
+[ INFO] [1660978778.076423476]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.077402429]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.175983207]: Received request to compute Cartesian path
+[ INFO] [1660978778.176105718]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.176827105]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ERROR] [1660978778.271599508]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.271690436]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.272907784]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.272964057]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.283068054]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.283179492]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.293109710]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.293206345]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.303222278]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.303313869]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.313299079]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.313419364]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.323370222]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.323486588]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.333473492]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.333591741]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.343500147]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.343595177]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.353551921]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.353633860]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.363718132]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.363815455]: [ns: /R_xarm7/] xArm is Ready
+[clean_error], xArm is not ready to move
+[ERROR] [1660978778.373696245]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.373787259]: [ns: /R_xarm7/] xArm is Ready
+[ INFO] [1660978778.376155897]: Received request to compute Cartesian path
+[ INFO] [1660978778.376333454]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.377709592]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ERROR] [1660978778.388423514]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.388496187]: [ns: /R_xarm7/] xArm is Ready
+[set_state], xArm is ready to move
+[ERROR] [1660978778.408013948]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.408094824]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.409288949]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.409342672]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.419397566]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.419487012]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.429499543]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.429610169]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.439497423]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.439579612]: [ns: /R_xarm7/] xArm is Ready
+[ERROR] [1660978778.449588923]: [ns: /L_xarm7/] xArm State detected! State: 4
+[ INFO] [1660978778.449692541]: [ns: /R_xarm7/] xArm is Ready
+[ INFO] [1660978778.475994040]: Received request to compute Cartesian path
+[ INFO] [1660978778.476196914]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.477827945]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.576650813]: Received request to compute Cartesian path
+[ INFO] [1660978778.576805907]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.577872937]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.676106383]: Received request to compute Cartesian path
+[ INFO] [1660978778.676218840]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.676759082]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.776156303]: Received request to compute Cartesian path
+[ INFO] [1660978778.776320688]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.777317187]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[ INFO] [1660978778.875987222]: Received request to compute Cartesian path
+[ INFO] [1660978778.876084338]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978778.876569003]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ INFO] [1660978779.576399371]: Received request to compute Cartesian path
+[ INFO] [1660978779.576748246]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978779.578450236]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[clean_error], xArm is not ready to move
+[ INFO] [1660978779.675859695]: Received request to compute Cartesian path
+[ INFO] [1660978779.676076432]: Attempting to follow 1 waypoints for link 'L_link7' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[ INFO] [1660978779.677338070]: Computed Cartesian path with 4 points (followed 100.000000% of requested trajectory)
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[clean_error], xArm is not ready to move
+[set_state], xArm is ready to move
+[ INFO] [1660978780.376305214]: Received request to compute Cartesian path

@@ -1,0 +1,33 @@
+version: "2.4"
+
+################################################################################
+
+services:
+  xarm-dual:
+    hostname: xarm-dual
+    runtime: nvidia
+    privileged: true
+    environment:
+      # Display X Server GUI.
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      # Configure Nvidia Docker interface.
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_REQUIRE_CUDA=cuda>=10.1
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    volumes:
+      # Map repository sources.
+      - ..:/root/xarm/
+      - ../../LDOM:/root/LDOM/
+      - ../../real2sim:/root/real2sim/
+      # Use anaconda
+      - /home/robot_dev/anaconda3:/home/robot_dev/anaconda3
+      # ssh
+      - ${HOME}/.ssh/:/tmp/.ssh
+      # Grant display access to X Server.
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host
+    command: ./xarm/docker/scripts/initialize-docker-container.sh

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="camera_name" default="eye_to_hand"/>
+    <param name="~CAMERA_NAME" value="$(arg camera_name)_camera"/>
+    <node pkg="xarm_launch" type="broadcast_xarm2cam.py" name="xarm2cam_$(arg camera_name)_tf"/>
+    <!-- 本来のlink -> frameの流れに従うためにこのframe-> linkをつなげる部分は使わない-->
+    <!-- <node pkg="xarm_launch" type="broadcast_realsense.py" name="$(arg camera_name)_tf"/> --> 
+</launch>
+
+

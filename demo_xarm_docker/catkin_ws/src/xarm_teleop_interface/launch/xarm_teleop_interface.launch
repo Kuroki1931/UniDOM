@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="add_gripper" default="true" />
+    <arg name="sim" default="false" />
+
+    <arg name="control_dof" default="3" />
+    <param name="/teleop/control_dof" value="$(arg control_dof)" />
+
+    <node name="xarm_teleop_interface" pkg="xarm_teleop_interface" type="xarm_teleop_interface.py" output="screen" />
+    <node name="xarm_teleop_gui" pkg="xarm_teleop_interface" type="xarm_teleop_gui.py" output="screen" />
+    <node name="mss_manager" pkg="xarm_teleop_interface" type="mss_manager.py" output="screen" />
+
+    <group if="$(arg add_gripper)">
+        <group if="$(arg sim)">
+            <node name="xarm_gripper_teleop_sim_interface" pkg="xarm_teleop_interface" type="xarm_gripper_teleop_sim_interface.py" />
+        </group>
+        <group unless="$(arg sim)">
+            <node name="xarm_gripper_teleop_interface" pkg="xarm_teleop_interface" type="xarm_gripper_teleop_interface.py" output="screen"/>
+        </group>
+    </group>
+
+</launch>

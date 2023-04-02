@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="dual_xarm7" >
+  <xacro:arg name="prefix_1" default="L_" />
+  <xacro:arg name="prefix_2" default="R_" />
+  <xacro:arg name="ros_namespace" default="xarm"/>
+  <xacro:arg name="limited" default="false"/>
+  <xacro:arg name="effort_control" default="false"/>
+  <xacro:arg name="velocity_control" default="false"/>
+  <xacro:arg name="add_gripper" default="true"/>
+
+  <!-- To add realsense d435i and gripper, set 'add_realsense_d435i' = true -->
+  <xacro:arg name="add_realsense_d435i" default="true"/> 
+
+  <xacro:include filename="$(find xarm_description)/urdf/xarm7_robot_macro.xacro" />
+  <xacro:include filename="$(find xarm_gripper)/urdf/xarm_gripper_model.xacro" />
+
+  <!-- ground instead of world, for the arms to attach -->
+  <link name="ground" />
+
+  <!-- launch left arm -->
+  <xacro:xarm7_robot prefix="$(arg prefix_1)" namespace="$(arg ros_namespace)" limited="$(arg limited)" attach_to="ground" xyz="0 0 0" rpy="0 0 0" effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" rs_d435i="$(arg add_realsense_d435i)"/>
+
+  <!-- launch left gripper -->
+  <xacro:if value="$(arg add_realsense_d435i)">
+    <xacro:load_gripper prefix="$(arg prefix_1)" attach_to="$(arg prefix_1)link_eef" xyz="0 0 0.003" effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" robot_dof="7" />
+  </xacro:if>
+  <xacro:unless value="$(arg add_realsense_d435i)">
+    <xacro:load_gripper prefix="$(arg prefix_1)" attach_to="$(arg prefix_1)link_eef" effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" robot_dof="7" />
+  </xacro:unless>
+
+
+  <!-- launch right arm -->
+  <!-- 2022/12/02日現在の座標関係は、L_link_baseを基準として
+    xyz="1.062 -0.3205 0.0", rpy="3.14159 0.0 0.0"-->
+  <!-- L_xarmのrealsenseで合わせた結果、 xyz="1.062 -0.3205 0.0", rpy="3.14159 0.0 0.0"-->
+  <!-- L_xarmのrealsenseで合わせた後メジャーによりグリッパーの先端同士の距離を見て修正した結果、 xyz="1.049 -0.2962 0.0", rpy="3.14159 0.0 0.0"-->
+  <xacro:xarm7_robot prefix="$(arg prefix_2)" namespace="$(arg ros_namespace)" limited="$(arg limited)" attach_to="L_link_base" xyz="1.049 -0.2962 0.0" rpy="0.0 0.0 3.14159 " effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" rs_d435i="$(arg add_realsense_d435i)"/>
+  <!-- launch right gripper -->
+  <xacro:if value="$(arg add_realsense_d435i)">
+    <xacro:load_gripper prefix="$(arg prefix_2)" attach_to="$(arg prefix_2)link_eef" xyz="0 0 0.003" effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" robot_dof="7" />
+  </xacro:if>
+  <xacro:unless value="$(arg add_realsense_d435i)">
+    <xacro:load_gripper prefix="$(arg prefix_2)" attach_to="$(arg prefix_2)link_eef" effort_control="$(arg effort_control)" velocity_control="$(arg velocity_control)" robot_dof="7" />
+  </xacro:unless>
+
+
+</robot>

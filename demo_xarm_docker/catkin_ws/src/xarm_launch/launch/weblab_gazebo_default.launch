@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="paused" default="false"/>
+    <arg name="gui" default="true"/>
+    <arg name="add_gripper" default="true"/>
+    <arg name="run_demo" default="false"/>
+
+    <include file="$(find xarm_gazebo)/launch/xarm7_beside_table.launch">
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="add_gripper" value="$(arg add_gripper)"/>
+        <arg name="run_demo" value="$(arg run_demo)"/>
+    </include>
+
+    <remap from="arm_controller/follow_joint_trajectory" to="/xarm/xarm7_traj_controller/follow_joint_trajectory"/>
+    <remap from="gripper_controller/follow_joint_trajectory" to="/xarm/gripper_trajectory_controller/follow_joint_trajectory"/>
+
+    <include file="$(find xarm7_gripper_moveit_config)/launch/moveit_rviz_common.launch">
+        <arg name="jnt_stat_source" value="[/xarm/joint_states]"/>
+        <arg name="load_move_group" value="true"/>
+        <arg name="pub_tf" value="false"/>
+        <arg name="gripper_controller" value="true"/>
+        <arg name="show_rviz" value="false"/>
+    </include>
+
+    <include file="$(find xarm_launch)/launch/weblab_rviz_default.launch">
+        <arg name="with_camera" value="false"/>
+    </include>
+
+</launch>

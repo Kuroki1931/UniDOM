@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robot_ip" default="192.168.10.210"/>
+    <arg name="show_rviz" default="false"/>
+
+    <include file="$(find xarm7_gripper_moveit_config)/launch/realMove_exec.launch">
+        <arg name="robot_ip" value="$(arg robot_ip)"/>
+        <arg name="show_rviz" value="$(arg show_rviz)"/>
+    </include>
+
+    <include file="$(find xarm_launch)/launch/weblab_rviz_default.launch">
+        <arg name="with_camera" value="true"/>
+    </include>
+
+    <include file="$(find xarm_launch)/launch/weblab_broadcast.launch">
+	    <arg name="camera_name" value="eye_to_hand"/>
+    </include>
+ 
+    <include file="$(find xarm_launch)/launch/weblab_broadcast.launch">
+	    <arg name="camera_name" value="eye_on_hand"/>
+    </include>
+</launch>

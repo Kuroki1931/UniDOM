@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robot_ip" default="192.168.10.210"/>
+    <arg name="show_rviz" default="false"/>
+
+    <include file="$(find xarm7_gripper_moveit_config)/launch/realMove_exec.launch">
+        <arg name="robot_ip" value="$(arg robot_ip)"/>
+        <arg name="show_rviz" value="$(arg show_rviz)"/>
+    </include>
+
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find xarm_launch)/config/weblab_xarm_calibration.rviz"/> 
+</launch>

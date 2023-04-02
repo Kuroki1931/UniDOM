@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: xarm_description
+    relative_path: urdf/dual_xarm7_with_gripper.urdf.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/xarm7.srdf
+  CONFIG:
+    author_name: Koki Ishimoto
+    author_email: shamozi212@yahoo.co.jp
+    generated_timestamp: 1660333595

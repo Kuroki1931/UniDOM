@@ -1,0 +1,4 @@
+<launch>
+    <node name="teleop" pkg="roomba_control" type="teleop.py" output="screen"/> 
+    <node name="camera" pkg="roomba_control" type="camera.py" output="screen" required="true"/> 
+</launch>

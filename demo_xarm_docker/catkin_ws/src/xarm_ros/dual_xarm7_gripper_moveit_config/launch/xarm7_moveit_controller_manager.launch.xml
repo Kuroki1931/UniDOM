@@ -1,0 +1,10 @@
+<launch>
+  <!-- Define the controller manager plugin to use for trajectory execution -->
+  <param name="moveit_controller_manager" value="moveit_simple_controller_manager/MoveItSimpleControllerManager" />
+  <!-- Disable the exec duration monitoring  -->
+  <param name="trajectory_execution/execution_duration_monitoring" value="false"/>
+  	
+  <!-- loads controller list to the param server -->
+  <rosparam file="$(find dual_xarm7_gripper_moveit_config)/config/controllers.yaml"/>
+</launch>
+
