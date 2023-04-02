@@ -8,7 +8,6 @@ class MPMSimulator:
         assert cfg.dtype == 'float64'
         dtype = self.dtype = ti.f64 if cfg.dtype == 'float64' else ti.f32
         self._yield_stress = cfg.yield_stress
-        self.ground_friction = cfg.ground_friction
         self.default_gravity = cfg.gravity
         self.n_primitive = len(primitives)
 
@@ -55,6 +54,11 @@ class MPMSimulator:
         primitive_res = (self.primitive_n_grid, self.primitive_n_grid) if dim == 2 else (self.primitive_n_grid, self.primitive_n_grid, self.primitive_n_grid)
         self.grid_primitive_m = ti.field(dtype=dtype, shape=primitive_res, needs_grad=True)  # grid node mass
         self.primitive_dx = 1 / self.primitive_n_grid
+
+        # optimizing parameter
+        self.ground_friction = cfg.ground_friction
+        self.optimize_ground_friction = ti.field(dtype, shape=(), needs_grad=True)
+        self.optimize_ground_friction[None] = cfg.ground_friction
 
     def initialize(self):
         self.gravity[None] = self.default_gravity
@@ -217,7 +221,7 @@ class MPMSimulator:
                                 lin = v_out.dot(normal) + 1e-30
                                 vit = v_out - lin * normal - I * 1e-30
                                 lit = self.norm(vit)
-                                v_out = max(1. + ti.static(self.ground_friction) * lin / lit, 0.) * (vit + I * 1e-30)
+                                v_out = max(1. + self.optimize_ground_friction * lin / lit, 0.) * (vit + I * 1e-30)
                                 v_out[1] = 0
                             else:
                                 v_out = ti.Vector.zero(self.dtype, self.dim)
@@ -470,3 +474,20 @@ class MPMSimulator:
     def clear_and_compute_grid_m_grad(self, f):
         self.compute_grid_m_kernel.grad(f)
     """
+
+    # ------------------------------------------------------------------
+    # for optimizing parameter
+    # ------------------------------------------------------------------
+    def set_parameter(self, ground_friction):
+        # optimizing parameter
+        self.ground_friction = ground_friction
+        self.optimize_ground_friction[None] = ground_friction
+
+    @ti.kernel
+    def get_parameter_grad_kernel(self, grad: ti.ext_arr()):
+        grad[0] = self.optimize_ground_friction.grad[None]
+
+    def get_parameter_grad(self):
+        grad = np.zeros((1), dtype=np.float64)
+        self.get_parameter_grad_kernel(grad)
+        return grad

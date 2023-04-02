@@ -33,6 +33,8 @@ class Solver:
                 self.logger.reset()
 
             env.set_state(sim_state, self.cfg.softness, False)
+            # set parameter
+            env.simulator.set_parameter(1.5)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
                     loss_info = env.compute_loss()
@@ -43,6 +45,7 @@ class Solver:
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
+            env.simulator.get_parameter_grad()
             return loss, env.primitives.get_grad(len(action))
 
         best_action = None
@@ -100,7 +103,7 @@ def solve_action(env, path, logger, args):
 
     init_actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
     T = init_actions.shape[0]
-    args.num_steps = T * 10
+    args.num_steps = T * 5
     target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
     taichi_env.loss.update_target_density(target_grids)
 
