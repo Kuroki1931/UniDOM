@@ -297,6 +297,10 @@ ACTION = {
         'order': [0, 2, 1],
         'direction': [-1, 1, -1],
     },
+    'Move': {
+        'order': [0, 2, 1],
+        'direction': [-1, 1, -1],
+    },
 }
 
 '''

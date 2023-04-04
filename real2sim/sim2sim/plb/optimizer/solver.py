@@ -54,12 +54,12 @@ class Solver:
 
         parameters = init_parameters
         for iter in range(self.cfg.n_iters):
-            parameters_list.append(parameters.tolist())
             loss, grad = forward(env_state['state'], parameters, actions)
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
+            parameters_list.append(parameters.tolist())
             print(parameters)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
@@ -115,8 +115,8 @@ def solve_action(env, path, logger, args):
                     **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
     best_parameters, parameters_list = solver.solve(init_parameters, actions)
     np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
-    print(best_parameters)
-    env.taichi_env.set_parameter(best_parameters[-1][0])
+    print(parameters_list[-1][0])
+    env.taichi_env.set_parameter(parameters_list[-1][0])
     
     frames = []
     for idx, act in enumerate(actions):
