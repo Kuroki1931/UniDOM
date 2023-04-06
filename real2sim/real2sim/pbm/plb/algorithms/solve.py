@@ -15,7 +15,6 @@ from plb.algorithms.TD3.run_td3 import train_td3
 from plb.optimizer.solver import solve_action
 from plb.optimizer.solver_nn import solve_nn
 
-from util.lang_goal import LANG_GOAL
 
 os.environ['TI_USE_UNIFIED_MEMORY'] = '0'
 os.environ['TI_DEVICE_MEMORY_FRACTION'] = '0.9'
@@ -37,7 +36,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Move-v1")
+    parser.add_argument("--env_name", type=str, default="Table-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -60,7 +59,6 @@ def get_args():
 def main():
     args = get_args()
 
-    # step = LANG_GOAL[args.env_name]['num_steps']
     step = 70
 
     if args.num_steps is None:

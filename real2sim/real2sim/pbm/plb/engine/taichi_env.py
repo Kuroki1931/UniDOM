@@ -25,11 +25,11 @@ class TaichiEnv:
         idx = self.args.env_name.find('-')
         self.args.task_name = self.args.env_name[:idx]
         self.args.task_version = self.args.env_name[(idx+1):]
-        if self.args.task_name in ['Move']:
+        if self.args.task_name in ['Move', 'Table']:
             from object.cloth import Cloth
             self.real2sim = Cloth()
 
-        hand_position = self.real2sim.hand_position()
+        hand_position = self.real2sim.get_hand_position()
         obj_particle = self.real2sim.get_obj_particle()
         self.cfg = cfg.ENV
         self.primitives = Primitives(cfg.PRIMITIVES, hand_position)

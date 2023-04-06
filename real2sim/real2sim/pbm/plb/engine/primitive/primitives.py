@@ -302,17 +302,14 @@ class Primitives:
     def __init__(self, cfgs, hand_position, max_timesteps=1024):
         outs = []
         self.primitives = []
-        if hand_position:
-            for x, y in zip(cfgs, hand_position):
-                if isinstance(x, CN):
-                    cfg = x
-                else:
-                    cfg = CN(new_allowed=True)
-                    cfg = cfg._load_cfg_from_yaml_str(yaml.safe_dump(x))
-                    cfg['init_pos'] = y
-                outs.append(cfg)
-        else:
-            NotImplementedError
+        for x, y in zip(cfgs, hand_position):
+            if isinstance(x, CN):
+                cfg = x
+            else:
+                cfg = CN(new_allowed=True)
+                cfg = cfg._load_cfg_from_yaml_str(yaml.safe_dump(x))
+                cfg['init_pos'] = y
+            outs.append(cfg)
 
         self.action_dims = [0]
         for i in outs:

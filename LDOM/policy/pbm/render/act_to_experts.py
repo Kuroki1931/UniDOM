@@ -81,13 +81,13 @@ def main(args):
                             density_loss=args.density_loss, contact_loss=args.contact_loss,
                             soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
-    taget_env_name = args.env_name.split('-')[0]
+    target_env_name = args.env_name.split('-')[0]
 
     files = glob.glob('../experts/*/action/*.npy')
 
-    for file in ['/root/real2sim/sim2sim/test/12:11:54.npy']:
-        # if taget_env_name in file:
-        if True:
+    for file in files:
+        print(target_env_name, file)
+        if target_env_name in file:
             env_name = file.split('/')[-3]
             env.reset()
             
