@@ -1,0 +1,26 @@
+SIMULATOR:
+  E: 20000.
+  n_particles: 10000
+  yield_stress: 100.
+SHAPES:
+  - shape: box
+    width: (0.3, 0.01, 0.3)
+    init_pos: (0.5, 0.01, 0.5)
+    color: 100
+PRIMITIVES:
+  - shape: Sphere
+    radius: 0.03
+    init_pos: (0.5, 0.04, 0.5)
+    color: (0.7, 0.7, 0.7)
+    friction: 0.9
+    action:
+      dim: 3
+      scale: (0.01, 0.01, 0.01)
+RENDERER:
+  camera_pos: (0.5, 2.5, 2.2)
+  camera_rot: (1., 0.)
+  use_directional_light: True
+VARIANTS:
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v1.npy
