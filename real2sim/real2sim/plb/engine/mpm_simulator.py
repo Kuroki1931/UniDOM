@@ -3,7 +3,7 @@ import numpy as np
 
 @ti.data_oriented
 class MPMSimulator:
-    def __init__(self, cfg, primitives=()):
+    def __init__(self, cfg, primitives=(), surface_index=None):
         dim = self.dim = cfg.dim
         assert cfg.dtype == 'float64'
         dtype = self.dtype = ti.f64 if cfg.dtype == 'float64' else ti.f32
@@ -61,7 +61,8 @@ class MPMSimulator:
         self.optimize_ground_friction[None] = cfg.ground_friction
 
         # surface index
-        surface_index = [0] * self.n_particles
+        if not surface_index:
+            surface_index = [0] * self.n_particles
         self.surface_index = ti.field(dtype=self.dtype, shape=(self.n_particles))
         self.surface_index.from_numpy(np.array(surface_index))
 
