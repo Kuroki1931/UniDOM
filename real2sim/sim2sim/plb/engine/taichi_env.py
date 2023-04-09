@@ -102,11 +102,8 @@ class TaichiEnv:
         else:
             return self.loss.compute_loss(self.simulator.cur)
     
-    def create_grid_mass(self, env_name):
-        x = self.simulator.get_grid_mass(0)
-        task = env_name.split('-')[0]
-        version = env_name.split('-')[1]
-        np.save(f'plb/envs/assets/{task}3D-{version}.npy', x)
+    def get_grid_mass(self):
+        return self.simulator.get_grid_mass(0)
 
     def get_state(self):
         assert self.simulator.cur == 0
