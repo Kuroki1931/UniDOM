@@ -55,10 +55,10 @@ class Sphere(Primitive):
 
             grid_v_t = input_v - min(normal_component, 0) * D
 
-            if dist <= 0.05:
-                # repulsion_force = (repulsion_distance - dist) * self.repulsion_strength[None] * D
-                repulsion_force = (0.1 - dist) * 10 * D
-                grid_v_t -= repulsion_force
+            
+            # repulsion_force = (repulsion_distance - dist) * self.repulsion_strength[None] * D
+            repulsion_force = (0.1 - dist) * 10 * D
+            grid_v_t -= repulsion_force
 
             grid_v_t_norm = length(grid_v_t)
             grid_v_t_friction = grid_v_t / grid_v_t_norm * max(0, grid_v_t_norm + normal_component * self.friction[None])
