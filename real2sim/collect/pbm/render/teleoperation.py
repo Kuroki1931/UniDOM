@@ -45,6 +45,13 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
+#座標変換用のパッケージのインポート
+import tf2_ros
+from tf2_geometry_msgs import PointStamped
+from geometry_msgs.msg import Quaternion
+#操作点表示用のパッケージのインポート
+from visualization_msgs.msg import Marker
+
 class TeleopCommand:
     START = 1
     STOP = 2
@@ -126,15 +133,57 @@ class Camera():
         print("group_names:",robot.get_group_names(),"\n")
         scene = moveit_commander.PlanningSceneInterface()
         # move home position
-        group_name = "xarm7"
-        end_effector_link = "link7"
+        group_name = "R_xarm7"
+        end_effector_link = "R_link7"
         move_group = moveit_commander.MoveGroupCommander(group_name)
-        pub_jt = rospy.Publisher('/xarm/xarm7_traj_controller/command', JointTrajectory, queue_size=1)
-        # ロボットを動かす
+        pub_jt = rospy.Publisher('/R_xarm7_traj_controller/command', JointTrajectory, queue_size=1)
+        # ロボットを動かすためのcommanderの準備
         move_group = moveit_commander.MoveGroupCommander(group_name)
-        # ロボットをz方向に動かす
-        move_group.set_max_velocity_scaling_factor(1.0) # 速度を最大に設定, これをしないと速度制限のせいでガタガタ動く
+        self.xarm_gripper = moveit_commander.MoveGroupCommander('R_xarm_gripper')
+        # ロボットのplanningの設定
+        move_group.set_max_velocity_scaling_factor(0.01) # 速度を最大に設定, これをしないと速度制限のせいでガタガタ動く
         move_group.set_num_planning_attempts(10)
+        self.xarm_gripper.set_max_velocity_scaling_factor(1.0)
+
+        #座標変換に必要なインスタンスの生成
+        tf_buffer = tf2_ros.Buffer()
+        tf_listener = tf2_ros.TransformListener(tf_buffer)
+
+        #操作点をrvizに表示するようのPublisherを作成
+        self.marker_pub = rospy.Publisher("controller_pos",Marker,queue_size=10)
+
+        
+
+        # 初期位置に移動
+        # real
+        primitive_position = env.taichi_env.primitives[0].get_state(0)
+        print(primitive_position)
+        #R_link_base座標系でのマニピュレーション位置の取得
+        pos_local = PointStamped()
+        pos_local.header.frame_id = "R_link_base"
+        pos_local.header.stamp = rospy.Time()
+        pos_local.point.x = primitive_position[2]-0.1
+        pos_local.point.y = primitive_position[0]-0.5
+        pos_local.point.z = primitive_position[1]+0.175 - 0.4
+        #R_link_base座標系からground座標系に変換
+        try:
+            pos_ground = tf_buffer.transform(pos_local,"ground",rospy.Duration(1))
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.logwarn("tf not found.")
+        target_pose = move_group.get_current_pose(end_effector_link)
+        # target_pose.pose.position.x=primitive_position[2]-0.1
+        # target_pose.pose.position.y=primitive_position[0]-0.5
+        # target_pose.pose.position.z=primitive_position[1]+0.175
+        target_pose.pose.position.x = pos_ground.point.x
+        target_pose.pose.position.y = pos_ground.point.y
+        target_pose.pose.position.z = pos_ground.point.z
+        target_pose.pose.orientation = Quaternion(x=-1.0, y=0.0, z=0.0, w=0.0) #gripperは下向きで固定
+
+        move_group.clear_pose_targets()
+        move_group.set_pose_target(target_pose)
+        move_group.go(wait=True)
+
+
 
         while not rospy.is_shutdown():
             if self.running:
@@ -147,12 +196,9 @@ class Camera():
                 direction = ACTION[env_name]['direction']
                 pos_act = pos_act[order]
                 pos_act = pos_act * direction
-                print(pos_act)
 
-                if self.trigger_c1 > 0.9:
+                if self.trigger_c1 > 0:
                     gripper_act = 1
-                elif self.trigger_c1 > 0:
-                    gripper_act = -1
                 else:
                     gripper_act = 0
                 act = np.append(pos_act, gripper_act)
@@ -176,17 +222,75 @@ class Camera():
 
                 ## real
                 primitive_position = env.taichi_env.primitives[0].get_state(0)
+                print(primitive_position)
+
+                #R_link_base座標系でのマニピュレーション位置の取得
+                pos_local = PointStamped()
+                pos_local.header.frame_id = "R_link_base"
+                pos_local.header.stamp = rospy.Time()
+                pos_local.point.x = primitive_position[2]-0.1
+                pos_local.point.y = primitive_position[0]-0.5
+                pos_local.point.z = primitive_position[1]+0.175 - 0.4
+
+                #R_link_base座標系からground座標系に変換
+                try:
+                    pos_ground = tf_buffer.transform(pos_local,"ground",rospy.Duration(1))
+                except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                    rospy.logwarn("tf not found.")
+
                 target_pose = move_group.get_current_pose(end_effector_link)
-                target_pose.pose.position.x=primitive_position[2]-0.1
-                target_pose.pose.position.y=primitive_position[0]-0.5
-                target_pose.pose.position.z=primitive_position[1]+0.175
+                # target_pose.pose.position.x=primitive_position[2]-0.1
+                # target_pose.pose.position.y=primitive_position[0]-0.5
+                # target_pose.pose.position.z=primitive_position[1]+0.175
+                target_pose.pose.position.x = pos_ground.point.x
+                target_pose.pose.position.y = pos_ground.point.y
+                target_pose.pose.position.z = pos_ground.point.z
+                target_pose.pose.orientation = Quaternion(x=-1.0, y=0.0, z=0.0, w=0.0) #gripperは下向きで固定
+
+                #操作点をRvizに表示
+                controller_marker = Marker()
+                controller_marker.header.frame_id = "ground"
+                controller_marker.header.stamp = rospy.Time.now()
+
+                controller_marker.ns = ""
+                controller_marker.id = 0
+                controller_marker.type = 2 # 球体
+
+                controller_marker.action = Marker.ADD
+
+                controller_marker.pose = target_pose.pose
+
+                controller_marker.color.r = 1.0
+                controller_marker.color.g = 0.0
+                controller_marker.color.b = 0.0
+                controller_marker.color.a = 1.0
+
+                controller_marker.scale.x = 0.01
+                controller_marker.scale.y = 0.01
+                controller_marker.scale.z = 0.01
+
+                controller_marker.lifetime = rospy.Duration()
+                self.marker_pub.publish(controller_marker)
+
+
+                #グリッパーの開閉
+                joint_goal = self.xarm_gripper.get_current_joint_values()
+                # gripper open close level :0 is fully open, 0.85 is closed
+                # ただし、0.85よりも微妙に大きくしてもより閉じるが、大きくしすぎるとjoint limitのせいかエラーが出る
+                if self.trigger_c1:
+                    joint_goal[0] = 0.85
+                else:
+                    joint_goal[0] = 0.0
+
+                self.xarm_gripper.go(joint_goal, wait=False)
+
                 print("target_pose.pose.position",target_pose.pose.position)        
                 pose_goal = copy.deepcopy(target_pose)
                 plan, _fraction = move_group.compute_cartesian_path([pose_goal.pose], 0.01, 0)
                 # TODO: check duration is correct (previously rospy.Duration(1))
                 plan_time = plan.joint_trajectory.points[-1].time_from_start.to_sec()
                 pref_time = 1.0 / 10 * 2.0
-                max_speedup = 100.0 # 10.0
+                max_speedup = 10.0 # 10.0
                 if plan_time > pref_time:
                     new_plan_time = max(pref_time, plan_time / max_speedup)
                     scale = new_plan_time / plan_time

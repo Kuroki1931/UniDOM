@@ -460,7 +460,7 @@ class MPMSimulator:
     @ti.kernel
     def compute_grid_m_kernel(self, f:ti.i32):
         for p in range(0, self.n_particles):
-            if self.surface_index[p] == 0:
+            if self.surface_index[p] == 1:
                 base = (self.x[f, p] * self.inv_dx - 0.5).cast(int)
                 fx = self.x[f, p] * self.inv_dx - base.cast(self.dtype)
                 w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
