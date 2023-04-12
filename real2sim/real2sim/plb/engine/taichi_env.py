@@ -1,3 +1,5 @@
+import os
+import sys
 import numpy as np
 import cv2
 import taichi as ti
@@ -25,6 +27,7 @@ class TaichiEnv:
         idx = self.args.env_name.find('-')
         self.args.task_name = self.args.env_name[:idx]
         self.args.task_version = self.args.env_name[(idx+1):]
+        sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
         if self.args.task_name in ['Move', 'Table']:
             from object.cloth import Cloth
             self.real2sim = Cloth()

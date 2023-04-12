@@ -41,6 +41,20 @@ class Shapes:
             color = np.zeros(len(particles), np.int32)
             color[:] = tmp
         self.colors.append(color)
+    
+    def add_sphere(self, init_pos, radius, n_particles=10000, color=None, init_rot=None):
+        if n_particles is None:
+            if self.dim == 3:
+                volume = (radius ** 3) * 4 * np.pi / 3
+            else:
+                volume = (radius ** 2) * np.pi
+            n_particles = self.get_n_particles(volume)
+
+        p = np.random.normal(size=(n_particles, self.dim))
+        p /= np.linalg.norm(p, axis=-1, keepdims=True)
+        u = np.random.random(size=(n_particles, 1)) ** (1. / self.dim)
+        p = p * u * radius + np.array(init_pos)[:self.dim]
+        self.add_object(p, color, init_rot=init_rot)
 
     def add_box(self, p, init_pos, width, n_particles=10000, color=None, init_rot=None):
         self.add_object(p, color, init_rot=init_rot)
