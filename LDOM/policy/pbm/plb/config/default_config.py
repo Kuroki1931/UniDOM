@@ -44,7 +44,7 @@ RENDERER.target_res = (64, 64, 64)
 
 RENDERER.dx = 1. / 150
 RENDERER.sdf_threshold=0.47 * 0.56
-RENDERER.max_ray_depth=1
+RENDERER.max_ray_depth= 2
 RENDERER.bake_size=6
 RENDERER.use_roulette=False
 

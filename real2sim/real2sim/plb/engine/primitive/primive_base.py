@@ -107,11 +107,6 @@ class Primitive:
             grid_v_t = grid_v_t_friction * flag + grid_v_t * (1 - flag)
             v_out = collider_v_at_grid + input_v * (1 - influence) + grid_v_t * influence
 
-            #print(self.position[f], f)
-            #print(grid_pos, collider_v, v_out, dist, self.friction, D)
-            #if v_out[1] > 1000:
-            #print(input_v, collider_v_at_grid, normal_component, D)
-
         return v_out
 
     @ti.kernel

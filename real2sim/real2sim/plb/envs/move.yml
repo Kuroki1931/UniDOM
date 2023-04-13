@@ -1,7 +1,7 @@
 SIMULATOR:
   E: 20000.
   n_particles: 3000
-  yield_stress: 1000.
+  yield_stress: 500.
 SHAPES:
   - shape: box
     width: (0.3, 0.002, 0.3)

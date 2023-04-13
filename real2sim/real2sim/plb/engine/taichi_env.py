@@ -38,6 +38,7 @@ class TaichiEnv:
         self.cfg = cfg.ENV
         self.primitives = Primitives(cfg.PRIMITIVES, hand_position)
         self.shapes = Shapes(cfg.SHAPES, obj_particle)
+        # self.shapes = Shapes(cfg.SHAPES)
         self.init_particles, self.particle_colors = self.shapes.get()
 
         cfg.SIMULATOR.defrost()

@@ -62,7 +62,7 @@ class MPMSimulator:
 
         # surface index
         if not surface_index:
-            surface_index = [0] * self.n_particles
+            surface_index = [1] * self.n_particles
         self.surface_index = ti.field(dtype=self.dtype, shape=(self.n_particles))
         self.surface_index.from_numpy(np.array(surface_index))
 

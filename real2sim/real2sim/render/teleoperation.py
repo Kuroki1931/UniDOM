@@ -102,10 +102,11 @@ class Camera():
     def __init__(self, args):
         ## initial point clouds
         #記録する点群のトピック名
-        record_pc_topic_name = "/masked_pointcloud"
+        record_pc_topic_name = "/filtered_pointcloud"
         self.pc = None
-        self.pc_sub = rospy.Subscriber(record_pc_topic_name, PointCloud2, self.callback, queue_size=1)
-        time.sleep(0.5)
+        # self.pc_sub = rospy.Subscriber(record_pc_topic_name, PointCloud2, self.callback, queue_size=1)
+        # time.sleep(0.5)
+        # np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc)
 
         ## sim
         rospy.Subscriber(
@@ -128,24 +129,22 @@ class Camera():
         self.scale_z = 6
 
         ## setup
-        print(self.pc)
-        np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc)
         set_random_seed(args.seed)
-        env = make(args.env_name, nn=(args.algo=='nn'), sdf_loss=args.sdf_loss,
+        self.env = make(args.env_name, nn=(args.algo=='nn'), sdf_loss=args.sdf_loss,
                                 density_loss=args.density_loss, contact_loss=args.contact_loss,
                                 soft_contact_loss=args.soft_contact_loss)
-        env.seed(args.seed)
-        env.reset()
+        self.env.seed(args.seed)
+        self.env.reset()
         name = args.env_name.split('-')[0]
         if 'Chopsticks' in name:
             dummy_act = np.array([0]*7)
         else:
             dummy_act = np.array([0]*3)
-        env.step(dummy_act)
-        dummy_img = env.render(mode='rgb_array')
+        self.env.step(dummy_act)
+        dummy_img = self.env.render(mode='rgb_array')
         im = plt.imshow(dummy_img)
 
-        self.env = env
+
         self.im = im
         self.action_list = []
         self.name = name

@@ -18,7 +18,7 @@ class Cloth:
 
     def get_obj_particle(self, n_particles=3000):
         self.obj_init_pos = self.base.mean(axis=0)
-        self.obj_init_pos[1] = 0.001
+        self.obj_init_pos[1] = 0.04
         self.obj_width = self.base.max(axis=0) - self.base.min(axis=0)
         self.obj_width[1] = 0.002
         self.obj_pcds = (np.random.random((n_particles, 3)) * 2 - 1) * (0.5 * self.obj_width) + np.array(self.obj_init_pos)
