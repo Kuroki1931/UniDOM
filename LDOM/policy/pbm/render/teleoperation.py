@@ -105,9 +105,9 @@ class Camera():
         self.env = env
         self.im = im
         self.action_list = []
-        self.scale_x = 3
-        self.scale_y = 3
-        self.scale_z = 3
+        self.scale_x = 6
+        self.scale_y = 6
+        self.scale_z = 6
 
         self.name = name
 

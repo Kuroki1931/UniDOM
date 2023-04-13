@@ -33,6 +33,42 @@ class Sphere(Primitive):
         cfg.radius = 1.
         return cfg
 
+    @ti.func
+    def collider_v(self, f, grid_pos, dt):
+        inv_quat = ti.Vector(
+            [self.rotation[f][0], -self.rotation[f][1], -self.rotation[f][2], -self.rotation[f][3]]).normalized()
+        relative_pos = qrot(inv_quat, grid_pos - self.position[f])
+        new_pos = qrot(self.rotation[f + 1], relative_pos) + self.position[f + 1]
+        collider_v = (new_pos - grid_pos) / dt  # TODO: revise
+        return collider_v
+
+    @ti.func
+    def collide(self, f, grid_pos, v_out, dt):
+        dist = self.sdf(f, grid_pos)
+        influence = min(ti.exp(-dist * self.softness[None]), 1)
+        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.001:
+            D = self.normal(f, grid_pos)
+            collider_v_at_grid = self.collider_v(f, grid_pos, dt)
+
+            input_v = v_out - collider_v_at_grid
+            normal_component = input_v.dot(D)
+
+            grid_v_t = input_v - min(normal_component, 0) * D
+
+            if dist <= 0.05:
+                # repulsion_force = (repulsion_distance - dist) * self.repulsion_strength[None] * D
+                repulsion_force = (0.1 - dist) * 30 * D
+                grid_v_t -= repulsion_force
+
+            grid_v_t_norm = length(grid_v_t)
+            grid_v_t_friction = grid_v_t / grid_v_t_norm * max(0, grid_v_t_norm + normal_component * self.friction[None])
+            flag = ti.cast(normal_component < 0 and ti.sqrt(grid_v_t.dot(grid_v_t)) > 1e-30, self.dtype)
+            grid_v_t = grid_v_t_friction * flag + grid_v_t * (1 - flag)
+            v_out = collider_v_at_grid + input_v * (1 - influence) + grid_v_t * influence
+
+        return v_out
+
+
 class Capsule(Primitive):
     def __init__(self, **kwargs):
         super(Capsule, self).__init__(**kwargs)

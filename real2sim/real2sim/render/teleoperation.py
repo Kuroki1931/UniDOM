@@ -105,24 +105,7 @@ class Camera():
         record_pc_topic_name = "/masked_pointcloud"
         self.pc = None
         self.pc_sub = rospy.Subscriber(record_pc_topic_name, PointCloud2, self.callback, queue_size=1)
-        time.sleep(1)
-        np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc)
-
-        ## setup
-        set_random_seed(args.seed)
-        env = make(args.env_name, nn=(args.algo=='nn'), sdf_loss=args.sdf_loss,
-                                density_loss=args.density_loss, contact_loss=args.contact_loss,
-                                soft_contact_loss=args.soft_contact_loss)
-        env.seed(args.seed)
-        env.reset()
-        name = args.env_name.split('-')[0]
-        if 'Chopsticks' in name:
-            dummy_act = np.array([0]*7)
-        else:
-            dummy_act = np.array([0]*3)
-        env.step(dummy_act)
-        dummy_img = env.render(mode='rgb_array')
-        im = plt.imshow(dummy_img)
+        time.sleep(0.5)
 
         ## sim
         rospy.Subscriber(
@@ -140,18 +123,32 @@ class Camera():
         self.reset = False
         self.remove = False
         self.bridge = CvBridge()
+        self.scale_x = 6
+        self.scale_y = 6
+        self.scale_z = 6
+
+        ## setup
+        print(self.pc)
+        np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc)
+        set_random_seed(args.seed)
+        env = make(args.env_name, nn=(args.algo=='nn'), sdf_loss=args.sdf_loss,
+                                density_loss=args.density_loss, contact_loss=args.contact_loss,
+                                soft_contact_loss=args.soft_contact_loss)
+        env.seed(args.seed)
+        env.reset()
+        name = args.env_name.split('-')[0]
+        if 'Chopsticks' in name:
+            dummy_act = np.array([0]*7)
+        else:
+            dummy_act = np.array([0]*3)
+        env.step(dummy_act)
+        dummy_img = env.render(mode='rgb_array')
+        im = plt.imshow(dummy_img)
 
         self.env = env
         self.im = im
         self.action_list = []
-        self.scale_x = 3
-        self.scale_y = 3
-        self.scale_z = 3
-
         self.name = name
-
-        output_dir = f"../experts/{args.env_name}/action"
-        os.makedirs(output_dir, exist_ok=True)
 
         ## xarm
         moveit_commander.roscpp_initialize(sys.argv)
@@ -181,7 +178,7 @@ class Camera():
 
         ## 初期位置に移動
         # real
-        primitive_position = env.taichi_env.primitives[0].get_state(0)
+        primitive_position = self.env.taichi_env.primitives[0].get_state(0)
         print(primitive_position)
         #R_link_base座標系でのマニピュレーション位置の取得
         pos_local = PointStamped()
@@ -243,7 +240,7 @@ class Camera():
                 print(len(self.action_list))
 
                 ## real
-                primitive_position = env.taichi_env.primitives[0].get_state(0)
+                primitive_position = self.env.taichi_env.primitives[0].get_state(0)
                 print(primitive_position)
 
                 #R_link_base座標系でのマニピュレーション位置の取得
@@ -291,7 +288,6 @@ class Camera():
                 controller_marker.lifetime = rospy.Duration()
                 self.marker_pub.publish(controller_marker)
 
-
                 #グリッパーの開閉
                 joint_goal = self.xarm_gripper.get_current_joint_values()
                 # gripper open close level :0 is fully open, 0.85 is closed
@@ -335,7 +331,7 @@ class Camera():
                 print("### Teleop Stop ###")
 
             if self.reset:
-                np.save(f'/root/real2sim/real2sim/points/actionw.npy', np.array(self.action_list))
+                np.save(f'/root/real2sim/real2sim/points/action.npy', np.array(self.action_list))
                 np.save(f'/root/real2sim/real2sim/points/real_pcds.npy', np.array(self.real_pcds_list))
                 self.action_list = []
                 self.real_pcds_list = []
@@ -347,24 +343,8 @@ class Camera():
                 print("### Teleop Stop ###")
 
     def callback(self, pointcloud):
-        # ground to R_link_base
-        tf_buffercore = tf2_ros.BufferCore()
-        self.tf_buffer = tf2_ros.Buffer() #一度tf_bufferを初期化しないとrviz上でmoveitを動かしたときに点群の座標が移動前のままになる
-        tf_listener = tf2_ros.TransformListener(self.tf_buffer)
-        target_frame = 'R_link_base'
-
-        try:
-            trans = self.tf_buffer.lookup_transform(target_frame, pointcloud.header.frame_id, rospy.Time(0), rospy.Duration(0.5)) #rospy.Time(0), rospy.Duration(5))#pc.header.stamp, rospy.Duration(1))
-        except tf2.LookupException as ex:
-            rospy.logwarn(ex)
-            return
-        except tf2.ExtrapolationException as ex:
-            rospy.logwarn(ex)
-            return
-
-        cloud_out = do_transform_cloud(pointcloud, trans)
         #PointCloud2型をnumpy配列に変換
-        pc = list(pc2.read_points(cloud_out, skip_nans=True, field_names=("x", "y", "z")))
+        pc = list(pc2.read_points(pointcloud, skip_nans=True, field_names=("x", "y", "z")))
         pc = np.array(pc)
         self.pc = pc[:, [1, 2, 0]] + np.array([0.5, 0.15, 0.1])
 

@@ -46,7 +46,7 @@ class Sphere(Primitive):
     def collide(self, f, grid_pos, v_out, dt):
         dist = self.sdf(f, grid_pos)
         influence = min(ti.exp(-dist * self.softness[None]), 1)
-        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.005:
+        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.001:
             D = self.normal(f, grid_pos)
             collider_v_at_grid = self.collider_v(f, grid_pos, dt)
 
@@ -57,7 +57,7 @@ class Sphere(Primitive):
 
             if dist <= 0.05:
                 # repulsion_force = (repulsion_distance - dist) * self.repulsion_strength[None] * D
-                repulsion_force = (0.1 - dist) * 10 * D
+                repulsion_force = (0.1 - dist) * 30 * D
                 grid_v_t -= repulsion_force
 
             grid_v_t_norm = length(grid_v_t)
@@ -65,11 +65,6 @@ class Sphere(Primitive):
             flag = ti.cast(normal_component < 0 and ti.sqrt(grid_v_t.dot(grid_v_t)) > 1e-30, self.dtype)
             grid_v_t = grid_v_t_friction * flag + grid_v_t * (1 - flag)
             v_out = collider_v_at_grid + input_v * (1 - influence) + grid_v_t * influence
-
-            #print(self.position[f], f)
-            #print(grid_pos, collider_v, v_out, dist, self.friction, D)
-            #if v_out[1] > 1000:
-            #print(input_v, collider_v_at_grid, normal_component, D)
 
         return v_out
 
