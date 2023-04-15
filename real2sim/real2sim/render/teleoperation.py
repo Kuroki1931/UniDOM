@@ -42,6 +42,7 @@ os.environ['TI_ENABLE_OPENGL'] = '0'
 RL_ALGOS = ['sac', 'td3', 'ppo']
 DIFF_ALGOS = ['action', 'nn']
 
+
 import datetime, os, cv2
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -104,9 +105,9 @@ class Camera():
         #記録する点群のトピック名
         record_pc_topic_name = "/filtered_pointcloud"
         self.pc = None
-        # self.pc_sub = rospy.Subscriber(record_pc_topic_name, PointCloud2, self.callback, queue_size=1)
-        # time.sleep(0.5)
-        # np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc)
+        self.pc_sub = rospy.Subscriber(record_pc_topic_name, PointCloud2, self.callback, queue_size=1)
+        time.sleep(0.5)
+        np.save('/root/real2sim/real2sim/points/initial_pcds.npy', self.pc) # initial position of object point clouds
 
         ## sim
         rospy.Subscriber(
@@ -178,14 +179,15 @@ class Camera():
         ## 初期位置に移動
         # real
         primitive_position = self.env.taichi_env.primitives[0].get_state(0)
+        np.save('/root/real2sim/real2sim/points/initial_primitive.npy', primitive_position) # initial position of object point clouds
         print(primitive_position)
         #R_link_base座標系でのマニピュレーション位置の取得
         pos_local = PointStamped()
         pos_local.header.frame_id = "R_link_base"
         pos_local.header.stamp = rospy.Time()
-        pos_local.point.x = primitive_position[2]-0.1
-        pos_local.point.y = primitive_position[0]-0.5
-        pos_local.point.z = primitive_position[1]-0.15
+        pos_local.point.x = primitive_position[2] - 0.1 - 0.04
+        pos_local.point.y = primitive_position[0] - 0.5
+        pos_local.point.z = primitive_position[1] - 0.14
         #R_link_base座標系からground座標系に変換
         try:
             pos_ground = tf_buffer.transform(pos_local,"ground",rospy.Duration(1))
@@ -202,6 +204,7 @@ class Camera():
         move_group.go(wait=True)
 
         self.real_pcds_list = []
+        self.sim_pcds_list = []
 
         while not rospy.is_shutdown():
             if self.running:
@@ -246,9 +249,9 @@ class Camera():
                 pos_local = PointStamped()
                 pos_local.header.frame_id = "R_link_base"
                 pos_local.header.stamp = rospy.Time()
-                pos_local.point.x = primitive_position[2]-0.1
+                pos_local.point.x = primitive_position[2]-0.1 - 0.04
                 pos_local.point.y = primitive_position[0]-0.5
-                pos_local.point.z = primitive_position[1]-0.15
+                pos_local.point.z = primitive_position[1]-0.14
 
                 #R_link_base座標系からground座標系に変換
                 try:
@@ -319,9 +322,13 @@ class Camera():
                     pub_jt.publish(plan.joint_trajectory)
                 
                 self.real_pcds_list.append(self.pc)
+                self.sim_pcds_list.append(self.env.taichi_env.simulator.get_x(0))
+                print(len(self.real_pcds_list), len(self.sim_pcds_list))
 
             if self.remove:
                 self.action_list = []
+                self.real_pcds_list = []
+                self.sim_pcds_list = []
                 self.env.reset()
                 self.running = False
                 self.reset = False
@@ -332,8 +339,10 @@ class Camera():
             if self.reset:
                 np.save(f'/root/real2sim/real2sim/points/action.npy', np.array(self.action_list))
                 np.save(f'/root/real2sim/real2sim/points/real_pcds.npy', np.array(self.real_pcds_list))
+                np.save(f'/root/real2sim/real2sim/points/sim_pcds.npy', np.array(self.sim_pcds_list))
                 self.action_list = []
                 self.real_pcds_list = []
+                self.sim_pcds_list = []
                 self.env.reset()
                 self.running = False
                 self.reset = False
@@ -345,7 +354,7 @@ class Camera():
         #PointCloud2型をnumpy配列に変換
         pc = list(pc2.read_points(pointcloud, skip_nans=True, field_names=("x", "y", "z")))
         pc = np.array(pc)
-        self.pc = pc[:, [1, 2, 0]] + np.array([0.5, 0.15, 0.1])
+        self.pc = pc[:, [1, 2, 0]] + np.array([0.5, 0.14, 0.1])
 
     def render_env(self):
         img = self.env.render(mode='rgb_array')

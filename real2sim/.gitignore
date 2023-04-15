@@ -156,3 +156,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 log/
+
+experts/
+output/
+points/

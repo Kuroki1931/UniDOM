@@ -32,8 +32,8 @@ class TaichiEnv:
             from object.cloth import Cloth
             self.real2sim = Cloth()
 
-        hand_position = self.real2sim.get_hand_position()
         obj_particle = self.real2sim.get_obj_particle()
+        hand_position = self.real2sim.get_hand_position()
         surface_index = self.real2sim.get_surface_index()
         self.cfg = cfg.ENV
         self.primitives = Primitives(cfg.PRIMITIVES, hand_position)
