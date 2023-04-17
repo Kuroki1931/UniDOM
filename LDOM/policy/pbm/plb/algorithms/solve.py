@@ -15,7 +15,7 @@ from plb.algorithms.TD3.run_td3 import train_td3
 from plb.optimizer.solver import solve_action
 from plb.optimizer.solver_nn import solve_nn
 
-from util.lang_goal import LANG_GOAL
+# from util.lang_goal import LANG_GOAL
 
 os.environ['TI_USE_UNIFIED_MEMORY'] = '0'
 os.environ['TI_DEVICE_MEMORY_FRACTION'] = '0.9'

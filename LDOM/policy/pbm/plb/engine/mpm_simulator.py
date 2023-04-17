@@ -25,7 +25,8 @@ class MPMSimulator:
 
         # material
         E, nu = cfg.E, cfg.nu
-        self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
+        # self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
+        self._mu, self._lam = cfg.mu, cfg.lam
         self.mu = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
         self.lam = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
         self.yield_stress = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)

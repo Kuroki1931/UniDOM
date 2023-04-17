@@ -2,6 +2,7 @@ import datetime
 import taichi as ti
 import numpy as np
 import pickle
+import shutil
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
@@ -34,7 +35,7 @@ class Solver:
                 self.logger.reset()
 
             # set parameter
-            env.set_parameter(parameter[0])
+            env.set_parameter(parameter[0], parameter[1], parameter[2]) # mu, lam, yield_stress
             env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
@@ -59,8 +60,9 @@ class Solver:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
+            parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
-            print(parameters)
+            print('loss:', loss, 'mu:', parameters[0], 'lam:', parameters[1], 'yield_stress:', parameters[2])
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
@@ -103,21 +105,16 @@ def solve_action(env, path, logger, args):
     cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
     taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-    actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
-    target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
+    actions = np.load('/root/real2sim/real2sim/points/action.npy')[:100, :3]
+    target_grids = np.load('/root/real2sim/real2sim/points/real_densities.npy')[:100]
+    target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
     T = actions.shape[0]
-    args.num_steps = T * 50
+    args.num_steps = T * 100
     taichi_env.loss.update_target_density(target_grids)
-    init_parameters = np.array([0.1])
+    init_parameters = np.array([args.mu, args.lam, args.yield_stress]) # mu, lam, yield_stress
 
-    solver = Solver(taichi_env, logger, None,
-                    n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
-                    **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    best_parameters, parameters_list = solver.solve(init_parameters, actions)
-    np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
-    print(parameters_list[-1][0])
-    env.taichi_env.set_parameter(parameters_list[-1][0])
-    
+    # save initial gif
+    env.taichi_env.set_parameter(init_parameters[0], init_parameters[1], init_parameters[2])
     frames = []
     for idx, act in enumerate(actions):
         start_time = datetime.datetime.now()
@@ -131,6 +128,36 @@ def solve_action(env, path, logger, args):
         take_time = take_time.total_seconds()
         print('take time', take_time)
     print(output_path)
-    frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
-    
+    frames[0].save(f'{output_path}/initial_mu{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
+                   save_all=True, append_images=frames[1:], loop=0)
+    env.reset()
+
+    # optimize
+    solver = Solver(taichi_env, logger, None,
+                    n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
+                    **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
+    best_parameters, parameters_list = solver.solve(init_parameters, actions)
+    np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
+    print(parameters_list[-1])
+
+    # save optimized gif
+    # parameters_list = [[], [579.9315, 1639.84595, 2000]]
+    env.taichi_env.set_parameter(parameters_list[-1][0], parameters_list[-1][1], parameters_list[-1][2])
+    frames = []
+    for idx, act in enumerate(actions):
+        start_time = datetime.datetime.now()
+        env.step(act)
+        if idx % 5 == 0:
+            img = env.render(mode='rgb_array')
+            pimg = Image.fromarray(img)
+            frames.append(pimg)
+        end_time = datetime.datetime.now()
+        take_time = end_time - start_time
+        take_time = take_time.total_seconds()
+        print('take time', take_time)
+    print(output_path)
+    frames[0].save(f'{output_path}/optimized_mu{parameters_list[-1][0]}_lam{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
+                   save_all=True, append_images=frames[1:], loop=0)
+    shutil.copytree('/root/real2sim/real2sim/points', f'{output_path}/points')
+
     return

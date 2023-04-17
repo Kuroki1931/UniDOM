@@ -24,10 +24,11 @@ class MPMSimulator:
 
         # material
         E, nu = cfg.E, cfg.nu
-        self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
-        self.mu = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
-        self.lam = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
-        self.yield_stress = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
+        # self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
+        self._mu, self._lam = cfg.mu, cfg.lam
+        self.mu = ti.field(dtype=dtype, shape=(), needs_grad=True)
+        self.lam = ti.field(dtype=dtype, shape=(), needs_grad=True)
+        self.yield_stress = ti.field(dtype=dtype, shape=(), needs_grad=True)
 
         max_steps = self.max_steps = cfg.max_steps
         self.substeps = int(2e-3 // self.dt)
@@ -61,8 +62,6 @@ class MPMSimulator:
         self.optimize_ground_friction[None] = cfg.ground_friction
 
         # surface index
-        if not surface_index:
-            surface_index = [1] * self.n_particles
         self.surface_index = ti.field(dtype=self.dtype, shape=(self.n_particles))
         self.surface_index.from_numpy(np.array(surface_index))
 
@@ -177,14 +176,14 @@ class MPMSimulator:
             fx = self.x[f, p] * self.inv_dx - base.cast(self.dtype)
             # Quadratic kernels  [http://mpm.graphics   Eqn. 123, with x=fx, fx-1,fx-2]
             w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
-            new_F = self.compute_von_mises(self.F_tmp[p], self.U[p], self.sig[p], self.V[p], self.yield_stress[p], self.mu[p])
+            new_F = self.compute_von_mises(self.F_tmp[p], self.U[p], self.sig[p], self.V[p], self.yield_stress[None], self.mu[None])
             self.F[f + 1, p] = new_F
 
             J = (new_F).determinant()
 
             r = self.U[p] @ self.V[p].transpose()
-            stress = 2 * self.mu[p] * (new_F - r) @ new_F.transpose() + \
-                     ti.Matrix.identity(self.dtype, self.dim) * self.lam[p] * J * (J - 1)
+            stress = 2 * self.mu[None] * (new_F - r) @ new_F.transpose() + \
+                     ti.Matrix.identity(self.dtype, self.dim) * self.lam[None] * J * (J - 1)
 
             stress = (-self.dt * self.p_vol * 4 * self.inv_dx * self.inv_dx) * stress
             affine = stress + self.p_mass * self.C[f, p]
@@ -486,19 +485,19 @@ class MPMSimulator:
     # for optimizing parameter
     # ------------------------------------------------------------------
     @ti.kernel
-    def set_parameter_kernel(self, ground_friction: ti.f64):
+    def set_parameter_kernel(self, mu: ti.f64, lam: ti.f64, yield_stress: ti.f64):
         # optimizing parameter
-        self.optimize_ground_friction[None] = ground_friction
-
-    # def set_parameter(self, ground_friction):
-    #     # optimizing parameter
-    #     self.ground_friction = ground_friction
+        self.mu[None] = mu
+        self.lam[None] = lam
+        self.yield_stress[None] = yield_stress
 
     @ti.kernel
     def get_parameter_grad_kernel(self, grad: ti.ext_arr()):
-        grad[0] = self.optimize_ground_friction.grad[None]
+        grad[0] = self.mu.grad[None]
+        grad[1] = self.lam.grad[None]
+        grad[2] = self.yield_stress.grad[None]
 
     def get_parameter_grad(self):
-        grad = np.zeros((1), dtype=np.float64)
+        grad = np.zeros((3), dtype=np.float64)
         self.get_parameter_grad_kernel(grad)
         return grad

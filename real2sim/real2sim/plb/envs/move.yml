@@ -1,7 +1,10 @@
 SIMULATOR:
-  E: 20000.
+  # E: 20000.
   n_particles: 3000
-  yield_stress: 1000.
+  yield_stress: 1762.2
+  gravity: (0, -3, 0)
+  mu: 354.0
+  lam: 2220.4
 SHAPES:
   - shape: box
     width: (0.3, 0.002, 0.3)

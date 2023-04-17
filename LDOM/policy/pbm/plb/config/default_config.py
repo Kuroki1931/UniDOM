@@ -20,6 +20,8 @@ _C.SIMULATOR.E = 5e3
 _C.SIMULATOR.nu = 0.2  # Young's modulus and Poisson's ratio
 _C.SIMULATOR.ground_friction = 1.5
 _C.SIMULATOR.gravity = (0, -1, 0)
+_C.SIMULATOR.mu = 354.0
+_C.SIMULATOR.lam = 2220.4
 
 
 # ---------------------------------------------------------------------------- #

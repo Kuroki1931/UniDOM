@@ -489,10 +489,6 @@ class MPMSimulator:
         # optimizing parameter
         self.optimize_ground_friction[None] = ground_friction
 
-    # def set_parameter(self, ground_friction):
-    #     # optimizing parameter
-    #     self.ground_friction = ground_friction
-
     @ti.kernel
     def get_parameter_grad_kernel(self, grad: ti.ext_arr()):
         grad[0] = self.optimize_ground_friction.grad[None]

@@ -46,26 +46,28 @@ class Solver:
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
-            return loss, env.simulator.get_parameter_grad()
+            return loss, loss_info['reward'], env.simulator.get_parameter_grad()
 
         best_parameters = None
         best_loss = 1e10
         parameters_list = []
+        reward_list = []
 
         parameters = init_parameters
         for iter in range(self.cfg.n_iters):
-            loss, grad = forward(env_state['state'], parameters, actions)
+            loss, reward, grad = forward(env_state['state'], parameters, actions)
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
             parameters_list.append(parameters.tolist())
-            print(parameters)
+            reward_list.append(reward)
+            print('loss', loss, 'reward', reward, parameters)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_parameters, parameters_list
+        return best_parameters, parameters_list, reward_list
 
 
     @staticmethod
@@ -105,16 +107,18 @@ def solve_action(env, path, logger, args):
 
     actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
     target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
+    target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
     T = actions.shape[0]
-    args.num_steps = T * 50
+    args.num_steps = T * 30
     taichi_env.loss.update_target_density(target_grids)
     init_parameters = np.array([0.1])
 
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                     **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    best_parameters, parameters_list = solver.solve(init_parameters, actions)
+    best_parameters, parameters_list, reward_list = solver.solve(init_parameters, actions)
     np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
+    np.save(f"{output_path}/rewards.npy", np.array(reward_list))
     print(parameters_list[-1][0])
     env.taichi_env.set_parameter(parameters_list[-1][0])
     

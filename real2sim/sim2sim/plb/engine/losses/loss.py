@@ -44,6 +44,8 @@ class Loss:
         self.contact_weight = ti.field(dtype=dtype, shape=())
         self.soft_contact_loss = False
 
+        self.substeps = sim.substeps
+
     def load_target_density(self, path=None, grids=None):
         if path is not None or grids is not None:
             if path is not None and len(path) > 0:

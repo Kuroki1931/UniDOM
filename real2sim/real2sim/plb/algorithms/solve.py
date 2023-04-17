@@ -41,14 +41,15 @@ def get_args():
     parser.add_argument("--density_loss", type=float, default=10)
     parser.add_argument("--contact_loss", type=float, default=1)
     parser.add_argument("--soft_contact_loss", action='store_true')
-
     parser.add_argument("--num_steps", type=int, default=None)
+    parser.add_argument("--mu", type=float, default=1000.)
+    parser.add_argument("--lam", type=float, default=2000.)
+    parser.add_argument("--yield_stress", type=float, default=1000.)
 
     # differentiable physics parameters
-    parser.add_argument("--lr", type=float, default=0.1)
+    parser.add_argument("--lr", type=float, default=50.)
     parser.add_argument("--softness", type=float, default=6666.)
     parser.add_argument("--optim", type=str, default='Adam', choices=['Adam', 'Momentum'])
-    parser.add_argument("--create_grid_mass", action='store_true')
 
     args=parser.parse_args()
 

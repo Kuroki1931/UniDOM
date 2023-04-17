@@ -64,10 +64,8 @@ def main():
                             soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
     env.reset()
-    import pickle
-    with open('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54.pickle', 'rb') as f: 
-        states = pickle.load(f)
-    pcds = states['plasticine_pc']
+    
+    pcds = np.load('/root/real2sim/real2sim/points/real_pcds.npy', allow_pickle=True)
     grid_mass_list = []
     for i in range(pcds.shape[0]):
         env.taichi_env.initialize()
@@ -77,7 +75,7 @@ def main():
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
         grid_mass_list.append(grid_mass)
-
+    np.save('/root/real2sim/real2sim/points/real_densities.npy', np.array(grid_mass_list))
 
 
 if __name__ == '__main__':
