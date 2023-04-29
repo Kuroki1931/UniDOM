@@ -2,7 +2,6 @@ import datetime
 import taichi as ti
 import numpy as np
 import pickle
-import shutil
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
@@ -15,7 +14,6 @@ OPTIMS = {
     'Momentum': Momentum
 }
 
-
 class Solver:
     def __init__(self, env: TaichiEnv, logger=None, cfg=None, **kwargs):
         self.cfg = make_cls_config(self, cfg, **kwargs)
@@ -23,51 +21,47 @@ class Solver:
         self.env = env
         self.logger = logger
 
-    def solve(self, init_parameters, actions, callbacks=()):
+    def solve(self, init_actions=None, callbacks=()):
         env = self.env
-        optim = OPTIMS[self.optim_cfg.type](init_parameters, self.optim_cfg)
+        if init_actions is None:
+            init_actions = self.init_actions(env, self.cfg)
+        # initialize ...
+        optim = OPTIMS[self.optim_cfg.type](init_actions, self.optim_cfg)
         # set softness ..
         env_state = env.get_state()
         self.total_steps = 0
 
-        def forward(sim_state, parameter, action):
+        def forward(sim_state, action):
             if self.logger is not None:
                 self.logger.reset()
 
-            # set parameter
-            env.set_parameter(parameter[0], parameter[1], parameter[2]) # mu, lam, yield_stress
             env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
-                    loss_info = env.compute_loss()
-
                     env.step(action[i])
                     self.total_steps += 1
-
+                    loss_info = env.compute_loss()
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
-            return loss, env.simulator.get_parameter_grad()
+            return loss, env.primitives.get_grad(len(action))
 
-        best_parameters = None
+        best_action = None
         best_loss = 1e10
-        parameters_list = []
 
-        parameters = init_parameters
+        actions = init_actions
         for iter in range(self.cfg.n_iters):
-            loss, grad = forward(env_state['state'], parameters, actions)
+            self.params = actions.copy()
+            loss, grad = forward(env_state['state'], actions)
             if loss < best_loss:
                 best_loss = loss
-                best_parameters = parameters
-            parameters = optim.step(grad)
-            parameters = np.clip(parameters, 0.01, 9999999999999999)
-            parameters_list.append(parameters.tolist())
-            print('loss:', loss, 'mu:', parameters[0], 'lam:', parameters[1], 'yield_stress:', parameters[2])
+                best_action = actions.copy()
+            actions = optim.step(grad)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_parameters, parameters_list
+        return best_action
 
 
     @staticmethod
@@ -99,51 +93,20 @@ def solve_action(env, path, logger, args):
     now = datetime.datetime.now()
     output_path = f'{path}/{env.spec.id}/{now}'
     os.makedirs(output_path, exist_ok=True)
-
     env.reset()
     img = env.render(mode='rgb_array')
     cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
     taichi_env: TaichiEnv = env.unwrapped.taichi_env
-
-    actions = np.load('/root/real2sim/real2sim/points/action.npy')[:100, :3]
-    target_grids = np.load('/root/real2sim/real2sim/points/real_densities.npy')[:100]
-    target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
-    T = actions.shape[0]
-    args.num_steps = T * 100
-    taichi_env.loss.update_target_density(target_grids)
-    init_parameters = np.array([args.mu, args.lam, args.yield_stress]) # mu, lam, yield_stress
-
-    # save initial gif
-    env.taichi_env.set_parameter(init_parameters[0], init_parameters[1], init_parameters[2])
-    frames = []
-    for idx, act in enumerate(actions):
-        start_time = datetime.datetime.now()
-        env.step(act)
-        if idx % 5 == 0:
-            img = env.render(mode='rgb_array')
-            pimg = Image.fromarray(img)
-            frames.append(pimg)
-        end_time = datetime.datetime.now()
-        take_time = end_time - start_time
-        take_time = take_time.total_seconds()
-        print('take time', take_time)
-    print(output_path)
-    frames[0].save(f'{output_path}/initial_mu{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
-                   save_all=True, append_images=frames[1:], loop=0)
-    env.reset()
-
-    # optimize
+    T = env._max_episode_steps
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                     **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    best_parameters, parameters_list = solver.solve(init_parameters, actions)
-    np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
-    print(parameters_list[-1])
-
-    # save optimized gif
-    env.taichi_env.set_parameter(parameters_list[-1][0], parameters_list[-1][1], parameters_list[-1][2])
+    action = solver.solve()
+    np.save(f"{output_path}/action.npy", action)
+    print(action)
+    
     frames = []
-    for idx, act in enumerate(actions):
+    for idx, act in enumerate(action):
         start_time = datetime.datetime.now()
         env.step(act)
         if idx % 5 == 0:
@@ -154,9 +117,47 @@ def solve_action(env, path, logger, args):
         take_time = end_time - start_time
         take_time = take_time.total_seconds()
         print('take time', take_time)
-    print(output_path)
-    frames[0].save(f'{output_path}/optimized_mu{parameters_list[-1][0]}_lam{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
-                   save_all=True, append_images=frames[1:], loop=0)
-    shutil.copytree('/root/real2sim/real2sim/points', f'{output_path}/points')
+    frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
 
-    return
+    # create dataset for bc
+    env.reset()
+    action_list = []
+    plasticine_pc_list = []
+    primitive_pc_list = []
+    reward_list = []
+    loss_info_list = []
+    last_iou_list = []
+
+    for i in range(len(action)):
+        action_list.append(action[i])
+
+        plasticine_pc, primtiive_pc = env.get_obs(0)
+        plasticine_pc_list.append(plasticine_pc.tolist())
+        primitive_pc_list.append(primtiive_pc.tolist())
+
+        obs, r, done, loss_info = env.step(action[i])
+        last_iou = loss_info['incremental_iou']
+        reward_list.append(r)
+        loss_info_list.append(loss_info)
+
+    experts_output_dir = f'/root/dmlc/policy/pbm/experts/{args.env_name}'
+    if not os.path.exists(experts_output_dir):
+        os.makedirs(experts_output_dir, exist_ok=True)
+
+    print('length', i, 'r', r, 'last_iou', last_iou)
+    bc_data = {
+        'action': np.array(action_list),
+        'rewards': np.array(reward_list),
+        'env_name': args.env_name,
+        'plasticine_pc': np.array(plasticine_pc_list),
+        'primitive_pc': np.array(primitive_pc_list),
+        'loss_info_list': loss_info_list
+    }
+    
+    print(action.shape, np.array(reward_list).shape, np.array(plasticine_pc_list).shape, np.array(primitive_pc_list).shape)
+    now = datetime.datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    with open(f'{experts_output_dir}/expert_{last_iou:.4f}_{current_time}.pickle', 'wb') as f:
+        pickle.dump(bc_data, f)
+    with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
+        f.write(str(last_iou))

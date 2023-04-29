@@ -23,6 +23,7 @@ services:
       - ..:/root/xarm/
       - ../../LDOM:/root/LDOM/
       - ../../real2sim:/root/real2sim/
+      - ../../ExPCP:/root/ExPCP/
       # Use anaconda
       - /home/robot_dev/anaconda3:/home/robot_dev/anaconda3
       # ssh

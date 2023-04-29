@@ -185,7 +185,7 @@ class Camera():
         pos_local = PointStamped()
         pos_local.header.frame_id = "R_link_base"
         pos_local.header.stamp = rospy.Time()
-        pos_local.point.x = primitive_position[2] - 0.1 - 0.04
+        pos_local.point.x = primitive_position[2] - 0.1
         pos_local.point.y = primitive_position[0] - 0.5
         pos_local.point.z = primitive_position[1] - 0.14
         #R_link_base座標系からground座標系に変換
@@ -249,7 +249,7 @@ class Camera():
                 pos_local = PointStamped()
                 pos_local.header.frame_id = "R_link_base"
                 pos_local.header.stamp = rospy.Time()
-                pos_local.point.x = primitive_position[2]-0.1 - 0.04
+                pos_local.point.x = primitive_position[2]-0.1
                 pos_local.point.y = primitive_position[0]-0.5
                 pos_local.point.z = primitive_position[1]-0.14
 
