@@ -1,0 +1,297 @@
+- ENV:
+      loss:
+        target_path: envs/assets/Move3D-v501.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v502.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v503.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v504.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v505.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v506.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v507.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v508.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v509.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v510.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v511.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v512.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v513.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v514.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v515.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v516.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v517.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v518.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v519.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v520.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v521.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v522.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v523.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v524.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v525.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v526.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v527.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v528.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v529.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v530.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v531.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v532.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v533.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v534.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v535.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v536.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v537.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v538.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v539.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v540.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v541.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v542.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v543.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v544.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v545.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v546.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v547.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v548.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v549.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v550.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v551.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v552.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v553.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v554.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v555.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v556.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v557.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v558.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v559.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v560.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v561.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v562.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v563.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v564.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v565.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v566.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v567.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v568.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v569.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v570.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v571.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v572.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v573.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v574.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v575.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v576.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v577.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v578.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v579.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v580.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v581.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v582.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v583.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v584.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v585.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v586.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v587.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v588.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v589.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v590.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v591.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v592.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v593.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v594.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v595.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v596.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v597.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v598.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v599.npy

@@ -180,7 +180,7 @@ def main():
                             soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
     env.reset()
-    steps = 10
+    steps = 600
 
     base_path = '/root/ExPCP/policy/pbm/goal_state'
     os.makedirs(base_path, exist_ok=True)

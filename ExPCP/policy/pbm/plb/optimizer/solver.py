@@ -62,7 +62,7 @@ class Solver:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return actions
+        return best_action
 
 
     @staticmethod
@@ -103,8 +103,8 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
-        mu = np.random.uniform(1000, 4000)
-        lam = np.random.uniform(1000, 4000)
+        mu = np.random.uniform(500, 4000)
+        lam = np.random.uniform(500, 4000)
         yield_stress = np.random.uniform(200, 1000)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
@@ -130,58 +130,61 @@ def solve_action(env, path, logger, args):
         np.save(f"{output_path}/action.npy", action)
         print(action)
         
-        frames = []
-        for idx, act in enumerate(action):
-            env.step(act)
-            if idx % 10 == 0:
-                img = env.render(mode='rgb_array')
-                pimg = Image.fromarray(img)
-                I1 = ImageDraw.Draw(pimg)
-                I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                frames.append(pimg)
-        frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        try:
+            frames = []
+            for idx, act in enumerate(action):
+                env.step(act)
+                if idx % 10 == 0:
+                    img = env.render(mode='rgb_array')
+                    pimg = Image.fromarray(img)
+                    I1 = ImageDraw.Draw(pimg)
+                    I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    frames.append(pimg)
+            frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
 
-        # create dataset for bc
-        env.reset()
-        action_list = []
-        plasticine_pc_list = []
-        primitive_pc_list = []
-        reward_list = []
-        loss_info_list = []
+            # create dataset for bc
+            env.reset()
+            action_list = []
+            plasticine_pc_list = []
+            primitive_pc_list = []
+            reward_list = []
+            loss_info_list = []
 
-        for i in range(len(action)):
-            action_list.append(action[i])
+            for i in range(len(action)):
+                action_list.append(action[i])
 
-            plasticine_pc = env.taichi_env.simulator.get_x(0)
-            primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
-            plasticine_pc_list.append(plasticine_pc.tolist())
-            primitive_pc_list.append(primtiive_pc.tolist())
+                plasticine_pc = env.taichi_env.simulator.get_x(0)
+                primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
+                plasticine_pc_list.append(plasticine_pc.tolist())
+                primitive_pc_list.append(primtiive_pc.tolist())
 
-            obs, r, done, loss_info = env.step(action[i])
-            last_iou = loss_info['incremental_iou']
-            reward_list.append(r)
-            loss_info_list.append(loss_info)
+                obs, r, done, loss_info = env.step(action[i])
+                last_iou = loss_info['incremental_iou']
+                reward_list.append(r)
+                loss_info_list.append(loss_info)
 
-        experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
-        if not os.path.exists(experts_output_dir):
-            os.makedirs(experts_output_dir, exist_ok=True)
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
+            if not os.path.exists(experts_output_dir):
+                os.makedirs(experts_output_dir, exist_ok=True)
 
-        print('length', i, 'r', r, 'last_iou', last_iou)
-        bc_data = {
-            'action': np.array(action_list),
-            'mu': mu,
-            'lam': lam,
-            'yield_stress': yield_stress,
-            'rewards': np.array(reward_list),
-            'env_name': args.env_name,
-            'plasticine_pc': np.array(plasticine_pc_list),
-            'primitive_pc': np.array(primitive_pc_list),
-            'loss_info_list': loss_info_list
-        }
+            print('length', i, 'r', r, 'last_iou', last_iou)
+            bc_data = {
+                'action': np.array(action_list),
+                'mu': mu,
+                'lam': lam,
+                'yield_stress': yield_stress,
+                'rewards': np.array(reward_list),
+                'env_name': args.env_name,
+                'plasticine_pc': np.array(plasticine_pc_list),
+                'primitive_pc': np.array(primitive_pc_list),
+                'loss_info_list': loss_info_list
+            }
 
-        now = datetime.datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        with open(f'{experts_output_dir}/expert_{last_iou:.4f}_{current_time}.pickle', 'wb') as f:
-            pickle.dump(bc_data, f)
-        with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
-            f.write(str(last_iou))
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            with open(f'{experts_output_dir}/expert_{last_iou:.4f}_{current_time}.pickle', 'wb') as f:
+                pickle.dump(bc_data, f)
+            with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
+                f.write(str(last_iou))
+        except:
+            pass
