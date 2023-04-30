@@ -95,7 +95,7 @@ class PlasticineEnv(gym.Env):
         cfg.defrost()
         # set target path id according to version
         name = list(cfg.ENV.loss.target_path)
-        name[-5] = str(version)
+        
         cfg.ENV.loss.target_path = os.path.join(PATH, '../', ''.join(name))
         cfg.VARIANTS = None
         cfg.freeze()
