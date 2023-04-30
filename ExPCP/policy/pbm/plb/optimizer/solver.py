@@ -2,6 +2,7 @@ import datetime
 import taichi as ti
 import numpy as np
 import pickle
+import json
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
@@ -61,7 +62,7 @@ class Solver:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_action
+        return actions
 
 
     @staticmethod
@@ -90,74 +91,97 @@ def solve_action(env, path, logger, args):
     import datetime, os, cv2
     import matplotlib.pyplot as plt
     from PIL import Image
-    now = datetime.datetime.now()
-    output_path = f'{path}/{env.spec.id}/{now}'
-    os.makedirs(output_path, exist_ok=True)
-    env.reset()
-    img = env.render(mode='rgb_array')
-    cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
-    taichi_env: TaichiEnv = env.unwrapped.taichi_env
-    T = env._max_episode_steps
-    solver = Solver(taichi_env, logger, None,
-                    n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
-                    **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-    action = solver.solve()
-    np.save(f"{output_path}/action.npy", action)
-    print(action)
-    
-    frames = []
-    for idx, act in enumerate(action):
-        start_time = datetime.datetime.now()
-        env.step(act)
-        if idx % 5 == 0:
-            img = env.render(mode='rgb_array')
-            pimg = Image.fromarray(img)
-            frames.append(pimg)
-        end_time = datetime.datetime.now()
-        take_time = end_time - start_time
-        take_time = take_time.total_seconds()
-        print('take time', take_time)
-    frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
+    from PIL import ImageDraw
+    for _ in range(5):
+        now = datetime.datetime.now()
+        output_path = f'{path}/{env.spec.id}/{now}'
+        os.makedirs(output_path, exist_ok=True)
+        env.reset()
+        img = env.render(mode='rgb_array')
+        cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
+        taichi_env: TaichiEnv = env.unwrapped.taichi_env
+        T = env._max_episode_steps
 
-    # create dataset for bc
-    env.reset()
-    action_list = []
-    plasticine_pc_list = []
-    primitive_pc_list = []
-    reward_list = []
-    loss_info_list = []
-    last_iou_list = []
+        # set randam parameter: mu, lam, yield_stress
+        mu = np.random.uniform(1000, 4000)
+        lam = np.random.uniform(1000, 4000)
+        yield_stress = np.random.uniform(200, 1000)
+        print('parameter', mu, lam, yield_stress)
+        env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-    for i in range(len(action)):
-        action_list.append(action[i])
+        # init_actions
+        idx = args.env_name.find('-')
+        args.task_name = args.env_name[:idx]
+        args.task_version = args.env_name[(idx+1):]
+        with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
+            stick_pos = json.load(f)
+        stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
+        pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
+        initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
+        init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
+        init_actions = np.diff(init_actions, n=1, axis=0)
+        init_actions = np.vstack([init_actions, init_actions[0][None, :]])
+        init_actions /= np.linalg.norm(init_actions[0])
 
-        plasticine_pc, primtiive_pc = env.get_obs(0)
-        plasticine_pc_list.append(plasticine_pc.tolist())
-        primitive_pc_list.append(primtiive_pc.tolist())
+        solver = Solver(taichi_env, logger, None,
+                        n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
+                        **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
+        action = solver.solve(init_actions)
+        np.save(f"{output_path}/action.npy", action)
+        print(action)
+        
+        frames = []
+        for idx, act in enumerate(action):
+            env.step(act)
+            if idx % 10 == 0:
+                img = env.render(mode='rgb_array')
+                pimg = Image.fromarray(img)
+                I1 = ImageDraw.Draw(pimg)
+                I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                frames.append(pimg)
+        frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
 
-        obs, r, done, loss_info = env.step(action[i])
-        last_iou = loss_info['incremental_iou']
-        reward_list.append(r)
-        loss_info_list.append(loss_info)
+        # create dataset for bc
+        env.reset()
+        action_list = []
+        plasticine_pc_list = []
+        primitive_pc_list = []
+        reward_list = []
+        loss_info_list = []
 
-    experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
-    if not os.path.exists(experts_output_dir):
-        os.makedirs(experts_output_dir, exist_ok=True)
+        for i in range(len(action)):
+            action_list.append(action[i])
 
-    print('length', i, 'r', r, 'last_iou', last_iou)
-    bc_data = {
-        'action': np.array(action_list),
-        'rewards': np.array(reward_list),
-        'env_name': args.env_name,
-        'plasticine_pc': np.array(plasticine_pc_list),
-        'primitive_pc': np.array(primitive_pc_list),
-        'loss_info_list': loss_info_list
-    }
-    
-    print(action.shape, np.array(reward_list).shape, np.array(plasticine_pc_list).shape, np.array(primitive_pc_list).shape)
-    now = datetime.datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    with open(f'{experts_output_dir}/expert_{last_iou:.4f}_{current_time}.pickle', 'wb') as f:
-        pickle.dump(bc_data, f)
-    with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
-        f.write(str(last_iou))
+            plasticine_pc = env.taichi_env.simulator.get_x(0)
+            primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
+            plasticine_pc_list.append(plasticine_pc.tolist())
+            primitive_pc_list.append(primtiive_pc.tolist())
+
+            obs, r, done, loss_info = env.step(action[i])
+            last_iou = loss_info['incremental_iou']
+            reward_list.append(r)
+            loss_info_list.append(loss_info)
+
+        experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
+        if not os.path.exists(experts_output_dir):
+            os.makedirs(experts_output_dir, exist_ok=True)
+
+        print('length', i, 'r', r, 'last_iou', last_iou)
+        bc_data = {
+            'action': np.array(action_list),
+            'mu': mu,
+            'lam': lam,
+            'yield_stress': yield_stress,
+            'rewards': np.array(reward_list),
+            'env_name': args.env_name,
+            'plasticine_pc': np.array(plasticine_pc_list),
+            'primitive_pc': np.array(primitive_pc_list),
+            'loss_info_list': loss_info_list
+        }
+
+        now = datetime.datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        with open(f'{experts_output_dir}/expert_{last_iou:.4f}_{current_time}.pickle', 'wb') as f:
+            pickle.dump(bc_data, f)
+        with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
+            f.write(str(last_iou))

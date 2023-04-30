@@ -26,7 +26,6 @@ os.environ['TI_ENABLE_OPENGL'] = '0'
 RL_ALGOS = ['sac', 'td3', 'ppo']
 DIFF_ALGOS = ['action', 'nn']
 
-STEP = 70
 
 def set_random_seed(seed):
     random.seed(seed)
@@ -37,7 +36,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Move-v1")
+    parser.add_argument("--env_name", type=str, default="Table-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -48,7 +47,7 @@ def get_args():
     parser.add_argument("--num_steps", type=int, default=None)
 
     # differentiable physics parameters
-    parser.add_argument("--lr", type=float, default=0.1)
+    parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--softness", type=float, default=6666.)
     parser.add_argument("--optim", type=str, default='Adam', choices=['Adam', 'Momentum'])
     args=parser.parse_args()
@@ -59,11 +58,11 @@ def main():
     args = get_args()
 
     # step = LANG_GOAL[args.env_name]['num_steps']
-    step = 70
+    step = 150
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-            args.num_steps = step * 10
+            args.num_steps = step * 30
         else:
             args.num_steps = 500000
 

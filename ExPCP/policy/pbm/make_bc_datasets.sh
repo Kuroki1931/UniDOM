@@ -1,8 +1,7 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Rollingpin-v3'
-PATH_NAME='../output'
+ENV_NAME='Move-v'
 
 POSE_NUM=10
 EACH_POSE_NUM=2
@@ -18,5 +17,6 @@ do
     BASE=$(( ${i}*${EACH_POSE_NUM} ))
     seq 0 1 $((${EACH_POSE_NUM}-1)) | xargs -P ${EACH_POSE_NUM} -I{} bash each_make_bc_datasets.sh {} \
                                                                                      ${ALGO} \
-                                                                                     ${ENV_NAME}
+                                                                                     ${ENV_NAME} \
+                                                                                     ${BASE}
 done

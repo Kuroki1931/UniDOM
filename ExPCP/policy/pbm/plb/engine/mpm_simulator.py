@@ -10,6 +10,7 @@ class MPMSimulator:
         self._yield_stress = cfg.yield_stress
         self.ground_friction = cfg.ground_friction
         self.default_gravity = cfg.gravity
+        self._mu, self._lam = cfg.mu, cfg.lam
         self.n_primitive = len(primitives)
 
         quality = cfg.quality
@@ -26,7 +27,6 @@ class MPMSimulator:
         # material
         E, nu = cfg.E, cfg.nu
         # self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
-        self._mu, self._lam = cfg.mu, cfg.lam
         self.mu = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
         self.lam = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
         self.yield_stress = ti.field(dtype=dtype, shape=(n_particles,), needs_grad=False)
@@ -471,3 +471,8 @@ class MPMSimulator:
     def clear_and_compute_grid_m_grad(self, f):
         self.compute_grid_m_kernel.grad(f)
     """
+    def set_parameter_kernel(self, mu: ti.f64, lam: ti.f64, yield_stress: ti.f64):
+        # optimizing parameter
+        self.yield_stress.fill(yield_stress)
+        self.mu.fill(mu)
+        self.lam.fill(lam)

@@ -59,7 +59,7 @@ def get_args():
 x_range = [0.35, 0.65]
 y_range = [0.4935, 0.5065]
 z_range = [0, 0.013]
-stick_radius = 0.015
+stick_radius = 0.06
 
 # Calculate the initial state points of the rope
 NUM_POINTS = 3000
@@ -68,59 +68,35 @@ init_pos = [(x_range[0]+x_range[1])/2, (y_range[0]+y_range[1])/2, (z_range[0]+z_
 rope_initial_state = (np.random.random((NUM_POINTS, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
 rope_length = x_range[1] - x_range[0]
 
-def sample_point_in_circle(angle):
+def closest_tangent_point(angle):
+    # stick pos
     angle_radians = math.radians(angle)
     center = [x_range[0], (y_range[0] + y_range[1]) / 2]
-    radius = 0.6 * rope_length
-    r = math.sqrt(random.uniform(0, radius**2))  # Use the square root to maintain uniform distribution
-    x = center[0] + r * math.cos(angle_radians)
-    y = center[1] + r * math.sin(angle_radians)
-    return np.array([x, y, 0])
+    radius = 0.5 * rope_length
+    r = math.sqrt(random.uniform((radius**2)/5, radius**2))  # Use the square root to maintain uniform distribution
+    X = center[0] + r * math.cos(angle_radians)
+    Y = center[1] + r * math.sin(angle_radians)
+    stick_pos = np.array([X, Y, 0])
 
-def closest_tangent_point(add_stick_pos):
-    center = [x_range[0], (y_range[0] + y_range[1]) / 2]
-    l = stick_radius + (y_range[1] - y_range[0])/2
-    X = add_stick_pos[0]
-    Y = add_stick_pos[1]
+    # tarngent pos
+    radius = stick_radius + (y_range[1] - y_range[0])/2
     x = center[0]
     y = center[1]
 
-    def points_of_tangency():
-        distance = math.sqrt((X - x)**2 + (Y - y)**2)
-
-        if distance <= l:
-            return None
-
-        ratio = l / distance
-        M_x = X + (x - X) * ratio
-        M_y = Y + (y - Y) * ratio
-
-        d = math.sqrt(l**2 - (l * ratio)**2)
-        perpendicular_x = (Y - y)
-        perpendicular_y = -(X - x)
-
-        norm = math.sqrt(perpendicular_x**2 + perpendicular_y**2)
-        perpendicular_x /= norm
-        perpendicular_y /= norm
-
-        T1_x = M_x + d * perpendicular_x
-        T1_y = M_y + d * perpendicular_y
-
-        T2_x = M_x - d * perpendicular_x
-        T2_y = M_y - d * perpendicular_y
-
-        return (T1_x, T1_y), (T2_x, T2_y)
-
-    tangent_points = points_of_tangency()
-    if tangent_points is None:
-        return None
-
-    T1, T2 = tangent_points
-
-    if abs(T1[1] - y) < abs(T2[1] - y):
-        return T1
+    distance = math.sqrt((X - x)**2 + (Y - y)**2)
+    theta = math.acos(radius / distance)
+    theta_a = math.pi/2 - theta
+    d = math.sqrt(distance**2 - radius**2)
+    if angle > 0:
+        theta_b = angle_radians - theta_a
+        T1_x = x + d * math.cos(theta_b)
+        T1_y = y + d * math.sin(theta_b)
     else:
-        return T2
+        theta_b = angle_radians + theta_a
+        T1_x = x + d * math.cos(theta_b)
+        T1_y = y + d * math.sin(theta_b)
+
+    return (T1_x, T1_y), stick_pos
 
 def goal_state_pattern1(tangent_point, add_stick_pos):
     # rope1
@@ -172,21 +148,28 @@ def goal_state_pattern1(tangent_point, add_stick_pos):
         z_on_arc = random.uniform(z_range[0], z_range[1])
         points_on_arc.append((x_on_arc, y_on_arc, z_on_arc))
         
-        r = radius + random.uniform(-(y_range[1] - y_range[0])/2, (y_range[1] - y_range[0])/2)
+        uniform_samples = np.random.uniform(0, 1)
+        transformed_samples = uniform_samples ** 2
+        A = -(y_range[1] - y_range[0])/2
+        B = (y_range[1] - y_range[0])/2
+        scaled_samples = transformed_samples * (B - A) + A
+        r = radius + scaled_samples
+
         x_around_arc = add_stick_pos[0] + r * math.cos(angle1 + t)
         y_around_arc = add_stick_pos[1] + r * math.sin(angle1 + t)
         z_around_arc = random.uniform(z_range[0], z_range[1])
         points_around_arc.append((x_around_arc, y_around_arc, z_around_arc))
     rope2_points = np.array(points_around_arc)
 
-    # rope3
-    rest_rope_length = rope_length - rope1_length - arc_length
-    width = [rest_rope_length, y_range[1] - y_range[0], z_range[1] - z_range[0]]
-    init_pos = [rope2_pos[0]-rest_rope_length/2, rope2_pos[1], (z_range[0]+z_range[1])/2]
-    rope3_num_points = int(NUM_POINTS/rest_rope_length*rope1_length)
-    rope3_state = (np.random.random((rope3_num_points, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
-
-    return np.concatenate([rotated_rope1, rope2_points, rope3_state])
+    # # rope3
+    # rest_rope_length = rope_length - rope1_length - arc_length
+    # if rest_rope_length > 0:
+    #     width = [rest_rope_length, y_range[1] - y_range[0], z_range[1] - z_range[0]]
+    #     init_pos = [rope2_pos[0]-rest_rope_length/2, rope2_pos[1], (z_range[0]+z_range[1])/2]
+    #     rope3_num_points = int(NUM_POINTS/rest_rope_length*rope1_length)
+    #     rope3_state = (np.random.random((rope3_num_points, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
+    #     return np.concatenate([rotated_rope1, rope2_points, rope3_state])
+    return np.concatenate([rotated_rope1, rope2_points])
 
 
 def main():
@@ -211,16 +194,15 @@ def main():
         index += 1
     else:
         index_list = []
-        index = 0
+        index = 1
 
     for _ in range(steps):
         index_list.append(index)
 
-        angle_ranges = [(-70, -30), (30, 70)]
+        angle_ranges = [(40, 60)]
         selected_range = random.choice(angle_ranges)
         stick_angle = random.uniform(selected_range[0], selected_range[1])
-        add_stick_pos = sample_point_in_circle(stick_angle)
-        tangent_point = closest_tangent_point(add_stick_pos)
+        tangent_point, add_stick_pos = closest_tangent_point(stick_angle)
         goal_state = goal_state_pattern1(tangent_point, add_stick_pos)
         goal_state = goal_state[:, [0, 2, 1]]
 
@@ -240,6 +222,7 @@ def main():
         with open(f'{base_path}/goal_state1/{index}/randam_value.txt', mode="w") as f:
             json.dump(random_value, f, indent=4)
         np.save(f'{base_path}/goal_state1/{index}/Move3D-v{index}', grid_mass)
+        np.save(f'{base_path}/goal_state1/{index}/goal_state', goal_state)
 
         # Saving the list to a text file
         with open(index_path, 'w') as file:

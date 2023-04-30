@@ -19,6 +19,20 @@ class TaichiEnv:
         from .shapes import Shapes
         from .losses import Loss
         from .nn.mlp import MLP
+        from ..algorithms.solve import get_args
+
+        self.args = get_args()
+        idx = self.args.env_name.find('-')
+        self.args.task_name = self.args.env_name[:idx]
+        self.args.task_version = self.args.env_name[(idx+1):]
+        if self.args.task_name in ['Move']:
+            import json
+            with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{self.args.task_version[1:]}/randam_value.txt', mode="r") as f:
+                stick_pos = json.load(f)
+                try:
+                    cfg.PRIMITIVES[2]['init_pos'] = str(tuple(np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])))
+                except IndexError:
+                    pass
        
         self.cfg = cfg.ENV
         self.primitives = Primitives(cfg.PRIMITIVES)
@@ -122,3 +136,6 @@ class TaichiEnv:
         if self.loss:
             self.loss.reset()
             self.loss.clear()
+
+    def set_parameter(self, mu, lam, yield_stress):
+        self.simulator.set_parameter_kernel(mu, lam, yield_stress)

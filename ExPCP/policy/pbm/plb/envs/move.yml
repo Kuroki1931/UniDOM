@@ -12,26 +12,27 @@ SHAPES:
 PRIMITIVES:
   - shape: Sphere
     radius: 0.02
-    init_pos: (0.655, 0.039, 0.5)
+    init_pos: (0.64, 0.0065, 0.52)
+    # init_pos: (0.65, 0.04, 0.5)
     color: (0.7, 0.7, 0.7)
     friction: 0.9
     action:
       dim: 3
-      scale: (0.01, 0.01, 0.01)
+      scale: (0.0015, 0.00001, 0.0015)
   - shape: Sphere
-    radius: 0.01
-    init_pos: (0.36, 0.0065, 0.5)
+    radius: 0.02
+    init_pos: (0.35, 0.0065, 0.5)
     color: (0.7, 0.7, 0.7)
     friction: 0.9
-  # - shape: Cylinder
-  #   h: 0.01
-  #   r: 0.06
-  #   init_pos: (0.36, 0.00, 0.5)
-  #   color: (0.8, 0.8, 0.8)
-  #   friction: 0.1
+  - shape: Cylinder
+    h: 0.06
+    r: 0.06
+    init_pos: (0.36, 0.00, 0.5)
+    color: (0.8, 0.8, 0.8)
+    friction: 0.1
 RENDERER:
-  camera_pos: (0.5, 2.5, 2.2)
-  camera_rot: (1., 0.)
+  camera_pos: (0.5, 2.0, 0.5)
+  camera_rot: (1.57, 0.)
   use_directional_light: True
 VARIANTS:
   - ENV:
@@ -40,3 +41,27 @@ VARIANTS:
   - ENV:
       loss:
         target_path: envs/assets/Move3D-v2.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v3.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v4.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v5.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v6.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v7.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v8.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v9.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v10.npy

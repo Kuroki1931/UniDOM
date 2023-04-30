@@ -4,7 +4,7 @@ from gym import register
 
 ENVS = []
 for env_name in ['Move', 'Torus', 'Rope', 'Writer', "Pinch", "Rollingpin", "Chopsticks", "Table", 'TripleMove', 'Assembly']:
-    for id in range(5):
+    for id in range(1000):
         register(
             id = f'{env_name}-v{id+1}',
             entry_point=f"plb.envs.env:PlasticineEnv",
