@@ -16,6 +16,11 @@ echo $NAME
 
 set -euC
 
+# python3 -m plb.algorithms.solve \
+#     --algo ${2} \
+#     --env_name ${NAME} \
+#     --create_grid_mass
+
 python3 -m plb.algorithms.solve \
     --algo ${2} \
     --env_name ${NAME} \

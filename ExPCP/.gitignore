@@ -35,6 +35,7 @@ rl2seq
 *HW1*
 
 output/
+goal_state/
 *.pickle
 *.gif
 

@@ -1,24 +1,34 @@
 SIMULATOR:
-  E: 20000.
-  n_particles: 1000
+  n_particles: 3000
   yield_stress: 1762.2
   gravity: (0, -3, 0)
   mu: 354.0
   lam: 2220.4
 SHAPES:
   - shape: box
-    width: (0.3, 0.002, 0.3)
-    init_pos: (0.5, 0.01, 0.5)
+    width: (0.3, 0.015, 0.015)
+    init_pos: (0.5, 0.0065, 0.5)
     color: 100
 PRIMITIVES:
   - shape: Sphere
     radius: 0.02
-    init_pos: (0.5, 0.04, 0.5)
+    init_pos: (0.655, 0.039, 0.5)
     color: (0.7, 0.7, 0.7)
     friction: 0.9
     action:
       dim: 3
       scale: (0.01, 0.01, 0.01)
+  - shape: Sphere
+    radius: 0.01
+    init_pos: (0.36, 0.0065, 0.5)
+    color: (0.7, 0.7, 0.7)
+    friction: 0.9
+  # - shape: Cylinder
+  #   h: 0.01
+  #   r: 0.06
+  #   init_pos: (0.36, 0.00, 0.5)
+  #   color: (0.8, 0.8, 0.8)
+  #   friction: 0.1
 RENDERER:
   camera_pos: (0.5, 2.5, 2.2)
   camera_rot: (1., 0.)
@@ -27,3 +37,6 @@ VARIANTS:
   - ENV:
       loss:
         target_path: envs/assets/Move3D-v1.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Move3D-v2.npy

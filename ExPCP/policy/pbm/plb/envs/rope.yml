@@ -18,6 +18,7 @@ PRIMITIVES:
     action:
       dim: 3
       scale: (0.03, 0.03, 0.03) # (x, z, y)
+      
 
 ENV:
   loss:
