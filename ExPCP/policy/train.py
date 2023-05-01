@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import numpy as np
 import torch
@@ -121,6 +121,8 @@ def train(args):
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{args.experts_dir}/')
+    exp_dir.mkdir(exist_ok=True)
+    exp_dir = exp_dir.joinpath(f'./no_para/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{timestr}/')
     exp_dir.mkdir(exist_ok=True)

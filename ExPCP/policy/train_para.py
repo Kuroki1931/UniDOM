@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import CLS_SSG_Model
+from models.cls_ssg_model import CLS_SSG_Model_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -123,6 +123,8 @@ def train(args):
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{args.experts_dir}/')
     exp_dir.mkdir(exist_ok=True)
+    exp_dir = exp_dir.joinpath(f'./para/')
+    exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{timestr}/')
     exp_dir.mkdir(exist_ok=True)
     
@@ -149,7 +151,7 @@ def train(args):
     action_size = 3
     num_point = args.num_plasticine_point + args.num_goal_point
 
-    model = CLS_SSG_Model(args.batch_size, action_size)
+    model = CLS_SSG_Model_PARA(args.batch_size, action_size)
     train_ds = load_dataset(f'data/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
     validation_ds = load_dataset(f'data/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
 
