@@ -1,25 +1,25 @@
 import os
 import sys
+import json
 import random
 import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
-import pickle
 import argparse
 import logging
 import tensorflow as tf
 from tensorflow import keras
 from pathlib import Path
-from clip import tokenize
 
 from tqdm import tqdm
 from models.cls_ssg_model import CLS_SSG_Model
 from PIL import Image
+from PIL import ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
@@ -47,14 +47,14 @@ def parse_args():
     parser = argparse.ArgumentParser('training')
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--batch_size', type=int, default=256, help='batch size in training')
+    parser.add_argument('--batch_size', type=int, default=128, help='batch size in training')
     parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
     parser.add_argument('--save_epoch', default=200, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
-    parser.add_argument('--num_goal_point', type=int, default=2600, help='Point Number of Primitive')
+    parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
+    parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--experts_dir', type=str, default='2023-05-01_03-25', help='experiment root')
+    parser.add_argument('--experts_dir', type=str, default='2023-05-01_04-33', help='experiment root')
     parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
@@ -70,7 +70,7 @@ def parse_args():
     parser.add_argument("--density_loss", type=float, default=500)
     parser.add_argument("--contact_loss", type=float, default=1)
     parser.add_argument("--soft_contact_loss", action='store_true')
-    parser.add_argument("--num_steps", type=int, default=100)
+    parser.add_argument("--num_steps", type=int, default=150)
     # differentiable physics parameters
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--softness", type=float, default=6666.)
@@ -78,7 +78,6 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-LANG_EMBEDDING_SIZE = 1024
 
 
 def load_dataset(in_file, batch_size, num_point):
@@ -190,13 +189,33 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(5)):
-                version = 500 + 1
-                log_string(f'Test version: {version}')
+            for i in tqdm(range(2)):
+                version = 500 + i
+                test_env = args.env_name.split('-')[0]
+                goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
+
                 env.reset()
-                output_dir = exp_dir.joinpath(f'{test_env_name}/')
+                env.taichi_env.initialize()
+                env.taichi_env.simulator.reset(goal_state)
+                state = env.taichi_env.get_state()
+                with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/randam_value.txt', mode="r") as f:
+                    stick_pos = json.load(f)
+                state['state'][-1][0] = stick_pos['add_stick_x']
+                state['state'][-1][2] = stick_pos['add_stick_y']
+                env.taichi_env.set_state(**state)
+                log_string(f'Test version: {version}')
+
+                # set randam parameter: mu, lam, yield_stress
+                np.random.seed(version)
+                mu = np.random.uniform(500, 4000)
+                lam = np.random.uniform(500, 4000)
+                yield_stress = np.random.uniform(200, 1000)
+                print('parameter', mu, lam, yield_stress)
+                env.taichi_env.set_parameter(mu, lam, yield_stress)
+
+                output_dir = exp_dir.joinpath(f'{test_env}/')
                 output_dir.mkdir(exist_ok=True)
-                output_dir = output_dir.joinpath(f'{test_lang_}/')
+                output_dir = output_dir.joinpath(f'{version}/')
                 output_dir.mkdir(exist_ok=True)
 
                 pc_encode = np.zeros((args.num_plasticine_point + args.num_goal_point, 2))
@@ -204,31 +223,36 @@ def train(args):
                 pc_encode[args.num_plasticine_point:, 1] = 1
 
                 imgs = []
-                for t in range(num_steps):
-                    print(t, '/', num_steps)
-                    test_plasticine_pc, test_primtiive_pc = env.get_obs(0, t)
-                    if test_primtiive_pc.shape[0] == 0 or test_plasticine_pc.shape[0] == 0:
-                        env.step(np.array([0, 0, 0])) # plasticinelab bug?
-                        continue
+                for t in range(args.num_steps):
+                    print(t, '/', args.num_steps)
+                    test_plasticine_pc = env.taichi_env.simulator.get_x(0)
+                    test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
 
-                    test_points = sample_pc(test_plasticine_pc, test_primtiive_pc, args.num_plasticine_point, args.num_goal_point)
-                    vector = test_points - np.mean(test_primtiive_pc, axis=0)
+                    test_points = sample_pc(test_plasticine_pc, goal_state, args.num_plasticine_point, args.num_goal_point)
+                    vector = test_points - test_primtiive_pc
                     vector_encode = np.hstack([vector, pc_encode])
+
+                    parameters = np.array([mu, lam, yield_stress])
+
                     act = model.forward_pass([
 			            tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
 			            tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32),
-                        tf.cast(tf.convert_to_tensor(test_lang_goal_emb[None]), tf.float32)
+                        tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
 			        ], False, 1)
                     act = act.numpy()[0]
                     print(act)
-
+                    _, _, _, loss_info = env.step(act)
                     last_iou = loss_info['incremental_iou']
                     
                     if t % 5 == 0:
                         log_string(f'action {t}: {str(act)}')
                         print(f"Saving gif at {t} steps")
-                        imgs.append(Image.fromarray(env.render(mode='rgb_array')))
-                
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        imgs.append(pimg)
+
                 imgs[0].save(f"{output_dir}/{epoch}_{last_iou:.4f}_{t}.gif", save_all=True, append_images=imgs[1:], loop=0)
                 with open(f'{output_dir}/last_iou_{t}.txt', 'w') as f:
                     f.write(str(last_iou))

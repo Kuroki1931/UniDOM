@@ -26,8 +26,8 @@ from util.preprocess import sample_pc
 def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
-    parser.add_argument('--num_goal_point', type=int, default=2600, help='Point Number of Primitive')
+    parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
+    parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
     
     return parser.parse_args()
 
@@ -57,7 +57,7 @@ def main(args):
     env_count = {}
     files = glob.glob('/root/ExPCP/policy/pbm/experts/*/expert*.pickle')
     with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
-        for path in files:
+        for path in files[:10]:
             with open(path, 'rb') as f: 
                 data = pickle.load(f)           
             env_name = data['env_name']
