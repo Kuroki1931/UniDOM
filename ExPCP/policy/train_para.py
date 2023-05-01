@@ -187,7 +187,7 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(2)):
+            for i in tqdm(range(1)):
                 version = 500 + i
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")

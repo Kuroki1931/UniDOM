@@ -47,7 +47,7 @@ def parse_args():
     parser = argparse.ArgumentParser('training')
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--batch_size', type=int, default=128, help='batch size in training')
+    parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
     parser.add_argument('--epoch', default=50, type=int, help='number of epoch in training')
     parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
@@ -186,7 +186,7 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(2)):
+            for i in tqdm(range(1)):
                 version = 500 + i
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
