@@ -186,21 +186,24 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(1)):
+            for i in tqdm(range(500, 505)):
                 version = 500 + i
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
-
-                env.taichi_env.initialize()
-                env.taichi_env.simulator.reset(goal_state)
-                state = env.taichi_env.get_state()
-                # with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/randam_value.txt', mode="r") as f:
-                #     stick_pos = json.load(f)
-                # state['state'][-1][0] = stick_pos['add_stick_x']
-                # state['state'][-1][2] = stick_pos['add_stick_y']
-                env.taichi_env.set_state(**state)
-                log_string(f'Test version: {version}')
                 env.reset()
+
+                # set goal state
+                env.taichi_env.initialize()
+                env.taichi_env.initialize_update_target(f'envs/assets/{test_env}3D-v{version}.npy')
+                env.taichi_env.loss.reset()
+
+                # set stick pos
+                state = env.taichi_env.get_state()
+                with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/randam_value.txt', mode="r") as f:
+                    stick_pos = json.load(f)
+                state['state'][-1][0] = stick_pos['add_stick_x']
+                state['state'][-1][2] = stick_pos['add_stick_y']
+                env.taichi_env.set_state(**state)
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(version)
