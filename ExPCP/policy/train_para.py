@@ -99,12 +99,13 @@ def load_dataset(in_file, batch_size, num_point):
     def _preprocess_fn(sample):
         points = sample['points']
         vector_encode = sample['vector_encode']
+        parameters = sample['parameters']
         action = sample['action']
 
         points = tf.reshape(points, (num_point, 3))
         vector_encode = tf.reshape(vector_encode, (num_point, 5))
 
-        return points, vector_encode, action
+        return points, vector_encode, parameters, action
 
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
@@ -161,7 +162,7 @@ def train(args):
 			f'{exp_dir}/model/weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True)
 	]
 
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5)])
+    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5), (args.batch_size, 3)])
     print(model.summary())
 
     model.compile(
@@ -227,9 +228,12 @@ def train(args):
                     vector = test_points - test_primtiive_pc
                     vector_encode = np.hstack([vector, pc_encode])
 
+                    parameters = np.array([mu, lam, yield_stress])
+
                     act = model.forward_pass([
 			            tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
 			            tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32),
+                        tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
 			        ], False, 1)
                     act = act.numpy()[0]
                     print(act)
