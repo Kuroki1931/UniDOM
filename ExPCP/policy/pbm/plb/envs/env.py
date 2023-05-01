@@ -32,9 +32,6 @@ class PlasticineEnv(gym.Env):
         self.taichi_env.set_state(**self._init_state)
         self._recorded_actions = []
         return self._get_obs()
-    
-    def initialize_update_target(self, target_density_path):
-        self.taichi_env.initialize_update_target(target_density_path)
 
     def _get_obs(self, t=0):
         x = self.taichi_env.simulator.get_x(t)
