@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import CLS_SSG_Model
+from models.cls_ssg_model import CLS_SSG_Model_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -47,9 +47,9 @@ def parse_args():
     parser = argparse.ArgumentParser('training')
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
+    parser.add_argument('--batch_size', type=int, default=128, help='batch size in training')
     parser.add_argument('--epoch', default=50, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=1, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
     parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
@@ -99,12 +99,13 @@ def load_dataset(in_file, batch_size, num_point):
     def _preprocess_fn(sample):
         points = sample['points']
         vector_encode = sample['vector_encode']
+        parameters = sample['parameters']
         action = sample['action']
 
         points = tf.reshape(points, (num_point, 3))
         vector_encode = tf.reshape(vector_encode, (num_point, 5))
 
-        return points, vector_encode, action
+        return points, vector_encode, parameters, action
 
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
@@ -122,7 +123,7 @@ def train(args):
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{args.experts_dir}/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./no_para/')
+    exp_dir = exp_dir.joinpath(f'./para/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{timestr}/')
     exp_dir.mkdir(exist_ok=True)
@@ -150,11 +151,11 @@ def train(args):
     action_size = 3
     num_point = args.num_plasticine_point + args.num_goal_point
 
-    model = CLS_SSG_Model(args.batch_size, action_size)
+    model = CLS_SSG_Model_PARA(args.batch_size, action_size)
     train_ds = load_dataset(f'data/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
     validation_ds = load_dataset(f'data/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
 
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5)])
+    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5), (args.batch_size, 3)])
     print(model.summary())
 
     model.compile(
@@ -185,7 +186,7 @@ def train(args):
         
         if (epoch+1) % args.save_epoch == 0:
             for i in tqdm(range(500, 505)):
-                version = i + 1
+                version = 500 + i
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
                 env.reset()
@@ -230,9 +231,12 @@ def train(args):
                     vector = test_points - test_primtiive_pc
                     vector_encode = np.hstack([vector, pc_encode])
 
+                    parameters = np.array([mu, lam, yield_stress])
+
                     act = model.forward_pass([
 			            tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
 			            tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32),
+                        tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
 			        ], False, 1)
                     act = act.numpy()[0]
                     print(act)

@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import numpy as np
 import torch
@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import CLS_SSG_Model
+from models.cls_ssg_model import CLS_SSG_Model_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -69,7 +69,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/no_para/2023-05-01_13-45/model/weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/para/2023-05-01_13-45/model/weights.ckpt'
 
 
 def test(args):
@@ -81,9 +81,9 @@ def test(args):
     action_size = 3
     num_point = args.num_plasticine_point + args.num_goal_point
 
-    model = CLS_SSG_Model(args.batch_size, action_size)
+    model = CLS_SSG_Model_PARA(args.batch_size, action_size)
    
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5)])
+    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5), (args.batch_size, 3)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -144,10 +144,12 @@ def test(args):
             test_points = sample_pc(test_plasticine_pc, goal_state, args.num_plasticine_point, args.num_goal_point)
             vector = test_points - test_primtiive_pc
             vector_encode = np.hstack([vector, pc_encode])
+            parameters = np.array([mu, lam, yield_stress])
 
             act = model.forward_pass([
                 tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
-                tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32)
+                tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32),
+                tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
             ], False, 1)
             act = act.numpy()[0]
             print(act)

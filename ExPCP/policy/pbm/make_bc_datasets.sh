@@ -3,8 +3,13 @@
 ALGO='action'
 ENV_NAME='Move-v'
 
+<<<<<<< HEAD
 POSE_NUM=32
 EACH_POSE_NUM=8
+=======
+POSE_NUM=78
+EACH_POSE_NUM=6
+>>>>>>> f4e96ed12613cad00e894537c4d2a9bf64d7f9ae
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm

@@ -77,8 +77,8 @@ class TaichiEnv:
         self.simulator.initialize()
         self.renderer.initialize()
         if self.loss:
-            self.loss.initialize(target_density_path)
-            self.renderer.set_target_density(np.load(target_density_path)/self.simulator.p_mass)
+            self.loss.load_target_density(target_density_path)
+            self.renderer.set_target_density(np.load(f'/root/ExPCP/policy/pbm/plb/{target_density_path}')/self.simulator.p_mass)
 
         # call set_state instead of reset..
         self.simulator.reset(self.init_particles)
