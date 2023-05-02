@@ -1,5 +1,5 @@
 SIMULATOR:
-  n_particles: 3000
+  n_particles: 10000
   yield_stress: 1762.2
   gravity: (0, -3, 0)
   mu: 354.0
@@ -9,6 +9,7 @@ SHAPES:
     width: (0.3, 0.015, 0.015)
     init_pos: (0.5, 0.0065, 0.5)
     color: 100
+    n_particles: 3000
 PRIMITIVES:
   - shape: Sphere
     radius: 0.02
