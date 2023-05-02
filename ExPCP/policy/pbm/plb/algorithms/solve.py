@@ -58,11 +58,11 @@ def main():
     args = get_args()
 
     # step = LANG_GOAL[args.env_name]['num_steps']
-    step = 150
+    step = 200
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-            args.num_steps = step * 30
+            args.num_steps = step * 10
         else:
             args.num_steps = 500000
 

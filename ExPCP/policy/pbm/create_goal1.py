@@ -35,7 +35,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Table-v1")
+    parser.add_argument("--env_name", type=str, default="Move-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -211,7 +211,6 @@ def main():
         state = env.taichi_env.get_state()
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
-        grid_mass[:5, :5, :5] = 0
         np.save(f'/root/ExPCP/policy/pbm/plb/envs/assets/Move3D-v{index}', grid_mass)
 
         os.makedirs(f'{base_path}/goal_state1/{index}', exist_ok=True)

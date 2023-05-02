@@ -92,9 +92,12 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     from PIL import ImageDraw
-    for _ in range(5):
+    for _ in range(50):
+        idx = args.env_name.find('-')
+        args.task_name = args.env_name[:idx]
+        args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        output_path = f'{path}/{env.spec.id}/{now}'
+        output_path = f'{path}/{args.task_name}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
         img = env.render(mode='rgb_array')
@@ -105,23 +108,26 @@ def solve_action(env, path, logger, args):
         # set randam parameter: mu, lam, yield_stress
         mu = np.random.uniform(500, 4000)
         lam = np.random.uniform(500, 4000)
-        yield_stress = np.random.uniform(200, 1000)
+        yield_stress = np.random.uniform(200, 1200)
+        mu = 500
+        lam = 500
+        yield_stress = 500
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
         # init_actions
-        idx = args.env_name.find('-')
-        args.task_name = args.env_name[:idx]
-        args.task_version = args.env_name[(idx+1):]
-        with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
-            stick_pos = json.load(f)
-        stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
-        pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
-        initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
-        init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
-        init_actions = np.diff(init_actions, n=1, axis=0)
-        init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-        init_actions /= np.linalg.norm(init_actions[0])
+        if args.task_name in ['Move']:
+            with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
+                stick_pos = json.load(f)
+            stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
+            pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
+            initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
+            init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
+            init_actions = np.diff(init_actions, n=1, axis=0)
+            init_actions = np.vstack([init_actions, init_actions[0][None, :]])
+            init_actions /= np.linalg.norm(init_actions[0])
+        else:
+            init_actions = None
 
         solver = Solver(taichi_env, logger, None,
                         n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,

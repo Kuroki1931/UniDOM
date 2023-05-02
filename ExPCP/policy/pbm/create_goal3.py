@@ -35,7 +35,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Table-v1")
+    parser.add_argument("--env_name", type=str, default="Move-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -56,9 +56,9 @@ def get_args():
     return args
 
 # Define the range of the initial state of the rope
-x_range = [0.35, 0.65]
-y_range = [0.4935, 0.5065]
-z_range = [0, 0.013]
+x_range = [0.4, 0.6]
+y_range = [0.485, 0.515]
+z_range = [0, 0.03]
 stick_radius = 0.015
 
 # Calculate the initial state points of the rope
@@ -69,10 +69,12 @@ rope_initial_state = (np.random.random((NUM_POINTS, 3)) * 2 - 1) * (0.5 * np.arr
 rope_length = x_range[1] - x_range[0]
 
 def goal_state_pattern3(extension_ratio):
-    x_range[1] *= extension_ratio
+    X_range = x_range.copy()
+    X_range[1] = x_range[0] + (x_range[1] - x_range[0]) * extension_ratio
+    print('range', X_range)
 
-    width = [x_range[1] - x_range[0], y_range[1] - y_range[0], z_range[1] - z_range[0]]
-    init_pos = [(x_range[0]+x_range[1])/2, (y_range[0]+y_range[1])/2, (z_range[0]+z_range[1])/2]
+    width = [X_range[1] - X_range[0], (y_range[1] - y_range[0])/np.sqrt(extension_ratio), (z_range[1] - z_range[0])/np.sqrt(extension_ratio)]
+    init_pos = [(X_range[0]+X_range[1])/2, (y_range[0]+y_range[1])/2, (z_range[0]+z_range[1])/2]
 
     goal_state = (np.random.random((NUM_POINTS, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
     return goal_state
@@ -86,7 +88,7 @@ def main():
                             soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
     env.reset()
-    steps = 10
+    steps = 300
 
     base_path = '/root/ExPCP/policy/pbm/goal_state'
     os.makedirs(base_path, exist_ok=True)
@@ -100,12 +102,13 @@ def main():
         index += 1
     else:
         index_list = []
-        index = 0
+        index = 1
 
     for _ in range(steps):
         index_list.append(index)
 
-        extension_ratio = random.uniform(1.1, 1.2)
+        set_random_seed(index)
+        extension_ratio = random.uniform(1.1, 1.5)
         goal_state = goal_state_pattern3(extension_ratio)
         goal_state = goal_state[:, [0, 2, 1]]
 
@@ -114,7 +117,7 @@ def main():
         state = env.taichi_env.get_state()
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
-        np.save(f'/root/ExPCP/policy/pbm/plb/envs/assets/Move3D-v{index}', grid_mass)
+        np.save(f'/root/ExPCP/policy/pbm/plb/envs/assets/Rope3D-v{index}', grid_mass)
 
         os.makedirs(f'{base_path}/goal_state3/{index}', exist_ok=True)
         random_value = {
@@ -122,7 +125,8 @@ def main():
         }
         with open(f'{base_path}/goal_state3/{index}/randam_value.txt', mode="w") as f:
             json.dump(random_value, f, indent=4)
-        np.save(f'{base_path}/goal_state3/{index}/Move3D-v{index}', grid_mass)
+        np.save(f'{base_path}/goal_state3/{index}/Rope3D-v{index}', grid_mass)
+        np.save(f'{base_path}/goal_state3/{index}/goal_state', goal_state)
 
         # Saving the list to a text file
         with open(index_path, 'w') as file:

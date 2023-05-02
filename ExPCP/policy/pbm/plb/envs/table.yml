@@ -1,6 +1,5 @@
 SIMULATOR:
   E: 5000.
-  n_particles: 10000
   yield_stress: 50.
   ground_friction: 1.5
 

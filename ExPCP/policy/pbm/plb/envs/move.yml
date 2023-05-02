@@ -1,5 +1,4 @@
 SIMULATOR:
-  n_particles: 10000
   yield_stress: 1762.2
   gravity: (0, -3, 0)
   mu: 354.0
