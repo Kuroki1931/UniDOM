@@ -155,15 +155,6 @@ def train(args):
     train_ds = load_dataset(f'data/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
     validation_ds = load_dataset(f'data/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
 
-    callbacks = [
-		keras.callbacks.EarlyStopping(
-			'mean_squared_error', min_delta=0.01, patience=10),
-		keras.callbacks.TensorBoard(
-			f'{exp_dir}', update_freq=50),
-		keras.callbacks.ModelCheckpoint(
-			f'{exp_dir}/model/weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True)
-	]
-
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5), (args.batch_size, 3)])
     print(model.summary())
 
@@ -180,13 +171,20 @@ def train(args):
 			validation_data = validation_ds,
 			validation_steps = 10,
 			validation_freq = 10,
-			callbacks = callbacks,
+			callbacks = [
+                keras.callbacks.EarlyStopping(
+                    'mean_squared_error', min_delta=0.01, patience=10),
+                keras.callbacks.TensorBoard(
+                    f'{exp_dir}', update_freq=50),
+                keras.callbacks.ModelCheckpoint(
+                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq='epoch')
+            ],
 			epochs = 1,
 			verbose = 1
 		)
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
-        if (epoch+1) % args.save_epoch == 0 or epoch == 0:
+        if (epoch+1) % args.save_epoch == 0:
             for i in tqdm(range(500, 505)):
                 version = 500 + i
                 test_env = args.env_name.split('-')[0]

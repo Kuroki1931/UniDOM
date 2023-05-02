@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
     parser.add_argument('--epoch', default=50, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=1, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
     parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
@@ -154,15 +154,6 @@ def train(args):
     train_ds = load_dataset(f'data/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
     validation_ds = load_dataset(f'data/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
 
-    callbacks = [
-		keras.callbacks.EarlyStopping(
-			'mean_squared_error', min_delta=0.01, patience=10),
-		keras.callbacks.TensorBoard(
-			f'{exp_dir}', update_freq=50),
-		keras.callbacks.ModelCheckpoint(
-			f'{exp_dir}/model/weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True)
-	]
-
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5)])
     print(model.summary())
 
@@ -179,15 +170,22 @@ def train(args):
 			validation_data = validation_ds,
 			validation_steps = 10,
 			validation_freq = 10,
-			callbacks = callbacks,
+			callbacks = [
+                keras.callbacks.EarlyStopping(
+                    'mean_squared_error', min_delta=0.01, patience=10),
+                keras.callbacks.TensorBoard(
+                    f'{exp_dir}', update_freq=50),
+                keras.callbacks.ModelCheckpoint(
+                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq='epoch')
+            ],
 			epochs = 1,
 			verbose = 1
 		)
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
-        if (epoch+1) % args.save_epoch == 0 or epoch == 0:
+        if (epoch+1) % args.save_epoch == 0:
             for i in tqdm(range(500, 505)):
-                version = 500 + i
+                version = i + 1
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
                 env.reset()

@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import numpy as np
 import torch
@@ -69,7 +69,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/no_para/2023-05-01_11-54/model/weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/no_para/2023-05-01_13-45/model/weights.ckpt'
 
 
 def test(args):
@@ -151,10 +151,13 @@ def test(args):
             ], False, 1)
             act = act.numpy()[0]
             print(act)
-            _, _, _, loss_info = env.step(act)
+            try:
+                _, _, _, loss_info = env.step(act)
+            except:
+                continue
             last_iou = loss_info['incremental_iou']
             
-            if t % 5 == 0:
+            if t % 100 == 0:
                 print(f"Saving gif at {t} steps")
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
