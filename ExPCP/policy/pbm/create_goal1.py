@@ -35,7 +35,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Move-v1")
+    parser.add_argument("--env_name", type=str, default="Table-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -56,13 +56,13 @@ def get_args():
     return args
 
 # Define the range of the initial state of the rope
-x_range = [0.35, 0.65]
-y_range = [0.4935, 0.5065]
-z_range = [0, 0.013]
-stick_radius = 0.06
+x_range = [0.25, 0.75]
+y_range = [0.475, 0.525]
+z_range = [0, 0.05]
+stick_radius = 0.07
 
 # Calculate the initial state points of the rope
-NUM_POINTS = 3000
+NUM_POINTS = 5000
 width = [x_range[1] - x_range[0], y_range[1] - y_range[0], z_range[1] - z_range[0]]
 init_pos = [(x_range[0]+x_range[1])/2, (y_range[0]+y_range[1])/2, (z_range[0]+z_range[1])/2]
 rope_initial_state = (np.random.random((NUM_POINTS, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
@@ -72,8 +72,8 @@ def closest_tangent_point(angle):
     # stick pos
     angle_radians = math.radians(angle)
     center = [x_range[0], (y_range[0] + y_range[1]) / 2]
-    radius = 0.5 * rope_length
-    r = math.sqrt(random.uniform((radius**2)/5, radius**2))  # Use the square root to maintain uniform distribution
+    radius = 0.6 * rope_length
+    r = math.sqrt(random.uniform((radius**2)/8, radius**2))  # Use the square root to maintain uniform distribution
     X = center[0] + r * math.cos(angle_radians)
     Y = center[1] + r * math.sin(angle_radians)
     stick_pos = np.array([X, Y, 0])
@@ -161,14 +161,15 @@ def goal_state_pattern1(tangent_point, add_stick_pos):
         points_around_arc.append((x_around_arc, y_around_arc, z_around_arc))
     rope2_points = np.array(points_around_arc)
 
-    # # rope3
-    # rest_rope_length = rope_length - rope1_length - arc_length
-    # if rest_rope_length > 0:
-    #     width = [rest_rope_length, y_range[1] - y_range[0], z_range[1] - z_range[0]]
-    #     init_pos = [rope2_pos[0]-rest_rope_length/2, rope2_pos[1], (z_range[0]+z_range[1])/2]
-    #     rope3_num_points = int(NUM_POINTS/rest_rope_length*rope1_length)
-    #     rope3_state = (np.random.random((rope3_num_points, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
-    #     return np.concatenate([rotated_rope1, rope2_points, rope3_state])
+    # rope3
+    rest_rope_length = rope_length - rope1_length - arc_length
+    if rest_rope_length > 0:
+        print('over')
+        width = [rest_rope_length, y_range[1] - y_range[0], z_range[1] - z_range[0]]
+        init_pos = [rope2_pos[0]-rest_rope_length/2, rope2_pos[1], (z_range[0]+z_range[1])/2]
+        rope3_num_points = int(NUM_POINTS/rope_length*rest_rope_length)
+        rope3_state = (np.random.random((rope3_num_points, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
+        return np.concatenate([rotated_rope1, rope2_points, rope3_state])
     return np.concatenate([rotated_rope1, rope2_points])
 
 
@@ -199,7 +200,7 @@ def main():
     for _ in range(steps):
         index_list.append(index)
 
-        angle_ranges = [(40, 60)]
+        angle_ranges = [(35, 45)]
         selected_range = random.choice(angle_ranges)
         stick_angle = random.uniform(selected_range[0], selected_range[1])
         tangent_point, add_stick_pos = closest_tangent_point(stick_angle)

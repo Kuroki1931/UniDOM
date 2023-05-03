@@ -6,6 +6,11 @@ import json
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
+import datetime, os, cv2
+import matplotlib.pyplot as plt
+from PIL import Image
+from PIL import ImageDraw
+
 from .optim import Optimizer, Adam, Momentum
 from ..engine.taichi_env import TaichiEnv
 from ..config.utils import make_cls_config
@@ -87,11 +92,72 @@ class Solver:
         return cfg
 
 
+def tell_rope_break(image):
+    # Convert image to HSV color space
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Define pink color range in HSV
+    lower_pink = np.array([140, 50, 50])
+    upper_pink = np.array([170, 255, 255])
+
+    # Create a mask for pink color
+    mask = cv2.inRange(hsv, lower_pink, upper_pink)
+
+    # Find contours in the masked image
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Count the number of contours
+    num_pink_objects = len(contours)
+    return num_pink_objects > 1
+
+
+def rope_action(env, output_path, T=12, step_num=100):
+    # first step: 10 time step same action (0, 1]
+    for action_value in np.linspace(0.1, 1, 10):
+        env.reset()
+        first_action = np.array([[action_value, 0, 0]]*T)
+        # frames = []
+        for idx, act in enumerate(first_action):
+            env.step(act)
+            if idx+1 == T:
+                img = env.render(mode='rgb_array')
+            # pimg = Image.fromarray(img)
+            # frames.append(pimg)
+        # frames[0].save(f'{output_path}/first_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        # rope_state = env.taichi_env.simulator.get_x(0)
+        # rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
+        possible = tell_rope_break(img)
+        if possible:
+            action_value -= 0.1
+            break
+
+    # second step: 10 time step action [action_value - 0.1, action_value + 0.1]
+    actions_list = np.random.normal(action_value, 0.05, (step_num, T, 3))
+
+    best_rope_length = 0
+    best_action = None
+
+    for step, second_action in enumerate(actions_list):
+        print(step,'/', step_num)
+        env.reset()
+        # frames = []
+        for idx, act in enumerate(second_action):
+            env.step(act)
+            if idx+1 == T:
+                img = env.render(mode='rgb_array')
+            # pimg = Image.fromarray(img)
+            # frames.append(pimg)
+        # frames[0].save(f'{output_path}/second_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        rope_state = env.taichi_env.simulator.get_x(0)
+        rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
+        possible = tell_rope_break(img)
+        if rope_length > best_rope_length and not possible:
+            best_rope_length = rope_length
+            best_action = second_action
+    return best_action
+
+
 def solve_action(env, path, logger, args):
-    import datetime, os, cv2
-    import matplotlib.pyplot as plt
-    from PIL import Image
-    from PIL import ImageDraw
     for _ in range(50):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
@@ -106,33 +172,34 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
-        mu = np.random.uniform(500, 4000)
-        lam = np.random.uniform(500, 4000)
-        yield_stress = np.random.uniform(200, 1200)
-        mu = 500
-        lam = 500
-        yield_stress = 500
+        mu = np.random.uniform(10, 500)
+        lam = np.random.uniform(10, 500)
+        yield_stress = np.random.uniform(10, 500)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-        # init_actions
-        if args.task_name in ['Move']:
-            with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
-                stick_pos = json.load(f)
-            stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
-            pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
-            initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
-            init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
-            init_actions = np.diff(init_actions, n=1, axis=0)
-            init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-            init_actions /= np.linalg.norm(init_actions[0])
-        else:
-            init_actions = None
+        if args.task_name not in ['Rope']:
+            # init_actions
+            if args.task_name in ['Move']:
+                with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
+                    stick_pos = json.load(f)
+                stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
+                pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
+                initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
+                init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
+                init_actions = np.diff(init_actions, n=1, axis=0)
+                init_actions = np.vstack([init_actions, init_actions[0][None, :]])
+                init_actions /= np.linalg.norm(init_actions[0])
+            else:
+                init_actions = None
 
-        solver = Solver(taichi_env, logger, None,
-                        n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
-                        **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-        action = solver.solve(init_actions)
+            solver = Solver(taichi_env, logger, None,
+                            n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
+                            **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
+            action = solver.solve(init_actions)
+        else:
+            action = rope_action(env, output_path)
+
         np.save(f"{output_path}/action.npy", action)
         print(action)
         
@@ -183,7 +250,6 @@ def solve_action(env, path, logger, args):
                 'env_name': args.env_name,
                 'plasticine_pc': np.array(plasticine_pc_list),
                 'primitive_pc': np.array(primitive_pc_list),
-                'loss_info_list': loss_info_list
             }
 
             now = datetime.datetime.now()
