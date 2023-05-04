@@ -174,7 +174,7 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
-        np.random.seed(int(args.task_version)+i)
+        np.random.seed(int(args.task_version[1:])+i)
         mu = np.random.uniform(10, 500)
         lam = np.random.uniform(10, 500)
         yield_stress = np.random.uniform(10, 500)
