@@ -160,7 +160,7 @@ def rope_action(env, output_path, T=12, step_num=100):
 
 
 def solve_action(env, path, logger, args):
-    for _ in range(5):
+    for i in range(5):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
@@ -174,6 +174,7 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
+        np.random.seed(int(args.task_version)+i)
         mu = np.random.uniform(10, 500)
         lam = np.random.uniform(10, 500)
         yield_stress = np.random.uniform(10, 500)

@@ -35,19 +35,24 @@ class ReplayBuffer(object):
         return len(self.memory)
 
 
-def sample_pc(plasticine_pc, primitive_pc, num_plasticine_point, num_primitive_point):
-    plasticine_pcd = o3d.geometry.PointCloud()
-    plasticine_pcd.points = o3d.utility.Vector3dVector(plasticine_pc)
-    plasticine_pcd = plasticine_pcd.voxel_down_sample(voxel_size=0.005)
-    sample_plasticine_pc = np.asarray(plasticine_pcd.points)
-    sample_plasticine_pc = sample_plasticine_pc[np.random.choice(sample_plasticine_pc.shape[0], num_plasticine_point), :]
+def sample_pc(plasticine_pc=None, num_plasticine_point=None, primitive_pc=None, num_primitive_point=None):
+    if num_plasticine_point:
+        plasticine_pcd = o3d.geometry.PointCloud()
+        plasticine_pcd.points = o3d.utility.Vector3dVector(plasticine_pc)
+        plasticine_pcd = plasticine_pcd.voxel_down_sample(voxel_size=0.005)
+        sample_plasticine_pc = np.asarray(plasticine_pcd.points)
+        sample_plasticine_pc = sample_plasticine_pc[np.random.choice(sample_plasticine_pc.shape[0], num_plasticine_point), :]
     
-    primitive_pcd = o3d.geometry.PointCloud()
-    primitive_pcd.points = o3d.utility.Vector3dVector(primitive_pc)
-    primitive_pcd = primitive_pcd.voxel_down_sample(voxel_size=0.005)
-    sample_primitive_pc = np.asarray(primitive_pcd.points)
-    sample_primitive_pc = sample_primitive_pc[np.random.choice(sample_primitive_pc.shape[0], num_primitive_point), :]
-    
-    sample_pc = np.concatenate([sample_plasticine_pc, sample_primitive_pc])
-    
-    return sample_pc
+    if num_primitive_point:
+        primitive_pcd = o3d.geometry.PointCloud()
+        primitive_pcd.points = o3d.utility.Vector3dVector(primitive_pc)
+        primitive_pcd = primitive_pcd.voxel_down_sample(voxel_size=0.005)
+        sample_primitive_pc = np.asarray(primitive_pcd.points)
+        sample_primitive_pc = sample_primitive_pc[np.random.choice(sample_primitive_pc.shape[0], num_primitive_point), :]
+
+    if num_plasticine_point and num_primitive_point:
+        return np.concatenate([sample_plasticine_pc, sample_primitive_pc])
+    elif num_plasticine_point:
+        return sample_plasticine_pc
+    else:
+        return sample_primitive_pc
