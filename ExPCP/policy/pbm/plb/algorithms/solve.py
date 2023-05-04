@@ -62,11 +62,7 @@ def main():
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-<<<<<<< HEAD
-            args.num_steps = step * 20
-=======
             args.num_steps = step * 100
->>>>>>> 5cb5b0ce70a59f4f88fe6d516ef2c0f694ae4d2a
         else:
             args.num_steps = 500000
 
