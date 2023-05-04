@@ -240,7 +240,7 @@ def solve_action(env, path, logger, args):
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
 
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}/{env.spec.id}'
             if not os.path.exists(experts_output_dir):
                 os.makedirs(experts_output_dir, exist_ok=True)
 
