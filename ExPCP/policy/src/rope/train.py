@@ -47,7 +47,7 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
-    parser.add_argument('--epoch', default=50, type=int, help='number of epoch in training')
+    parser.add_argument('--epoch', default=200, type=int, help='number of epoch in training')
     parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
@@ -182,15 +182,16 @@ def train(args):
 		)
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
-        if (epoch+1) % args.save_epoch == 0:
+        if (epoch+1) % args.save_epoch == 0 or epoch == 0:
             for i in tqdm(range(10)):
                 test_env = args.env_name.split('-')[0]
                 env.reset()
 
                 # set randam parameter: mu, lam, yield_stress
-                mu = np.random.uniform(500, 4000)
-                lam = np.random.uniform(500, 4000)
-                yield_stress = np.random.uniform(200, 1000)
+                np.random.seed(epoch+i)
+                mu = np.random.uniform(10, 500)
+                lam = np.random.uniform(10, 500)
+                yield_stress = np.random.uniform(10, 500)
                 print('parameter', mu, lam, yield_stress)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 
@@ -225,14 +226,14 @@ def train(args):
 
                 possible = tell_rope_break(img)
                 if possible:
-                    imgs[0].save(f"{output_dir}/{epoch}_break_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+                    imgs[0].save(f"{output_dir}/{epoch}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
+                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
                         f.write(f'break,{mu},{lam},{yield_stress}')
                 else:
                     rope_state = env.taichi_env.simulator.get_x(0)
                     rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
-                    imgs[0].save(f"{output_dir}/{epoch}_{rope_length:.4f}_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+                    imgs[0].save(f"{output_dir}/{epoch}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
+                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
                         f.write(f'{rope_length},{mu},{lam},{yield_stress}')
 
 

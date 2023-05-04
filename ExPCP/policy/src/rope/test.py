@@ -105,9 +105,9 @@ def test(args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(version)
-        mu = np.random.uniform(500, 4000)
-        lam = np.random.uniform(500, 4000)
-        yield_stress = np.random.uniform(200, 1000)
+        mu = np.random.uniform(10, 500)
+        lam = np.random.uniform(10, 500)
+        yield_stress = np.random.uniform(10, 500)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
