@@ -69,7 +69,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/para/2023-05-01_13-45/model/weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/para/2023-05-02_07-42/model/0039_weights.ckpt'
 
 
 def test(args):
@@ -121,8 +121,8 @@ def test(args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(version)
-        mu = np.random.uniform(500, 4000)
-        lam = np.random.uniform(500, 4000)
+        mu = np.random.uniform(500, 1500)
+        lam = np.random.uniform(500, 1500)
         yield_stress = np.random.uniform(200, 1000)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)

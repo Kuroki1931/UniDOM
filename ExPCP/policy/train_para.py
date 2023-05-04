@@ -186,7 +186,7 @@ def train(args):
         
         if (epoch+1) % args.save_epoch == 0:
             for i in tqdm(range(500, 505)):
-                version = 500 + i
+                version = i + 1
                 test_env = args.env_name.split('-')[0]
                 goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
                 env.reset()
@@ -240,7 +240,10 @@ def train(args):
 			        ], False, 1)
                     act = act.numpy()[0]
                     print(act)
-                    _, _, _, loss_info = env.step(act)
+                    try:
+                        _, _, _, loss_info = env.step(act)
+                    except:
+                        continue
                     last_iou = loss_info['incremental_iou']
                     
                     if t % 5 == 0:

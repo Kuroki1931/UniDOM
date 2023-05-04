@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
     parser.add_argument('--epoch', default=50, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=1, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
     parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
@@ -236,7 +236,10 @@ def train(args):
 			        ], False, 1)
                     act = act.numpy()[0]
                     print(act)
-                    _, _, _, loss_info = env.step(act)
+                    try:
+                        _, _, _, loss_info = env.step(act)
+                    except:
+                        continue
                     last_iou = loss_info['incremental_iou']
                     
                     if t % 5 == 0:
