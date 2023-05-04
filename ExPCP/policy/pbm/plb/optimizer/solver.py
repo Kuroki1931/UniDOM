@@ -121,8 +121,9 @@ def rope_action(env, output_path, T=12, step_num=100):
             env.step(act)
             if idx+1 == T:
                 img = env.render(mode='rgb_array')
-            # pimg = Image.fromarray(img)
-            # frames.append(pimg)
+        #     img = env.render(mode='rgb_array')
+        #     pimg = Image.fromarray(img)
+        #     frames.append(pimg)
         # frames[0].save(f'{output_path}/first_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         # rope_state = env.taichi_env.simulator.get_x(0)
         # rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
@@ -145,8 +146,9 @@ def rope_action(env, output_path, T=12, step_num=100):
             env.step(act)
             if idx+1 == T:
                 img = env.render(mode='rgb_array')
-            # pimg = Image.fromarray(img)
-            # frames.append(pimg)
+        #     img = env.render(mode='rgb_array')
+        #     pimg = Image.fromarray(img)
+        #     frames.append(pimg)
         # frames[0].save(f'{output_path}/second_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         rope_state = env.taichi_env.simulator.get_x(0)
         rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
@@ -158,7 +160,7 @@ def rope_action(env, output_path, T=12, step_num=100):
 
 
 def solve_action(env, path, logger, args):
-    for _ in range(50):
+    for _ in range(5):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
@@ -202,12 +204,13 @@ def solve_action(env, path, logger, args):
 
         np.save(f"{output_path}/action.npy", action)
         print(action)
-        
+
+        env.reset()
         try:
             frames = []
             for idx, act in enumerate(action):
                 env.step(act)
-                if idx % 10 == 0:
+                if idx % 1 == 0:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
