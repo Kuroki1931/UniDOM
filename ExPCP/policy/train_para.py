@@ -206,9 +206,9 @@ def train(args):
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(version)
-                mu = np.random.uniform(500, 4000)
-                lam = np.random.uniform(500, 4000)
-                yield_stress = np.random.uniform(200, 1000)
+                mu = np.random.uniform(500, 14000)
+                lam = np.random.uniform(500, 14000)
+                yield_stress = np.random.uniform(200, 2000)
                 print('parameter', mu, lam, yield_stress)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 

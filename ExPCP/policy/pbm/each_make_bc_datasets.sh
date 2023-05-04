@@ -8,7 +8,7 @@ elif [ $(( ${1} % 3)) -eq 2 ]; then
     export CUDA_VISIBLE_DEVICES=2
 fi
 
-VERSION=$(( ${1}+${4}+269 ))
+VERSION=$(( ${1}+${4}+1 ))
 NAME="${3}${VERSION}"
 echo $NAME
 

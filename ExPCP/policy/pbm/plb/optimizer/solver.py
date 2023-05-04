@@ -106,12 +106,9 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
-        mu = np.random.uniform(500, 4000)
-        lam = np.random.uniform(500, 4000)
-        yield_stress = np.random.uniform(200, 1200)
-        mu = 500
-        lam = 500
-        yield_stress = 500
+        mu = np.random.uniform(500, 14000)
+        lam = np.random.uniform(500, 14000)
+        yield_stress = np.random.uniform(200, 2000)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
@@ -122,10 +119,12 @@ def solve_action(env, path, logger, args):
             stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
             pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
             initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
-            init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
-            init_actions = np.diff(init_actions, n=1, axis=0)
-            init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-            init_actions /= np.linalg.norm(init_actions[0])
+            # init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
+            # init_actions = np.diff(init_actions, n=1, axis=0)
+            # init_actions = np.vstack([init_actions, init_actions[0][None, :]])
+            # init_actions /= np.linalg.norm(init_actions[0])
+            # init_actions /= 10
+            init_actions = np.linspace(np.array([0, 0, 0]), np.array([0, 0, 1]), T)
         else:
             init_actions = None
 

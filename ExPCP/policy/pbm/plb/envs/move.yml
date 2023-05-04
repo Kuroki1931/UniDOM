@@ -18,7 +18,7 @@ PRIMITIVES:
     friction: 0.9
     action:
       dim: 3
-      scale: (0.0015, 0.00001, 0.0015)
+      scale: (0.01, 0.00001, 0.01)
   - shape: Sphere
     radius: 0.02
     init_pos: (0.35, 0.0065, 0.5)
