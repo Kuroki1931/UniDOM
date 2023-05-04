@@ -85,7 +85,7 @@ def main(args):
                 plasticine_pc_i = plasticine_pc[i]
                 primitive_center_i = primitive_pc[i]
                 
-                points = sample_pc(plasticine_pc_i, goal_state, args.num_plasticine_point, args.num_goal_point)
+                points = sample_pc(plasticine_pc_i, args.num_plasticine_point, goal_state, args.num_goal_point)
                 vector = points - primitive_center_i
                 vector_encode = np.hstack([vector, pc_encode])
                 act = action[i]

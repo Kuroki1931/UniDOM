@@ -23,8 +23,7 @@ from PIL import ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
-sys.path.append(os.path.join(ROOT_DIR, 'pbm'))
-sys.path.append('/root/fairseq/examples/MMPT')
+sys.path.append(os.path.join(ROOT_DIR, '../../pbm'))
 
 from plb.envs import make
 from plb.algorithms.logger import Logger
