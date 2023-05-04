@@ -177,7 +177,7 @@ def solve_action(env, path, logger, args):
         np.random.seed(int(args.task_version[1:])+i)
         mu = np.random.uniform(10, 500)
         lam = np.random.uniform(10, 500)
-        yield_stress = np.random.uniform(10, 500)
+        yield_stress = np.random.uniform(10, 300)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
@@ -240,7 +240,7 @@ def solve_action(env, path, logger, args):
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
 
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.env_name}'
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}/{env.spec.id}'
             if not os.path.exists(experts_output_dir):
                 os.makedirs(experts_output_dir, exist_ok=True)
 

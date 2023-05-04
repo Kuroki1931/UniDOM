@@ -3,8 +3,13 @@
 ALGO='action'
 ENV_NAME='Rope-v'
 
+<<<<<<< HEAD
 POSE_NUM=600
 EACH_POSE_NUM=40
+=======
+POSE_NUM=200
+EACH_POSE_NUM=10
+>>>>>>> 2ce5a2702b3d80a5df45827d71c8f6510b37d48f
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm

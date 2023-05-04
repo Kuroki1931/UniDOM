@@ -62,10 +62,11 @@ class CLS_SSG_Model_PARA(Model):
 		self.batchnorm1 = BatchNormalization()
 		self.dropout1 = Dropout(self.keep_prob)
 
-		self.parameters_process1 = Dense(128, activation=self.activation)
+		self.parameters_process1 = Dense(256, activation=self.activation)
 		self.parameters_process1 = BatchNormalization()
 
-		self.last_dense1 = Dense(self.action_size, activation=self.activation)
+		self.last_dense1 = Dense(128, activation=self.activation)
+		self.last_dense2 = Dense(self.action_size, activation=self.activation)
 
 
 	def forward_pass(self, inputs, training, batch_size=None):
@@ -88,7 +89,8 @@ class CLS_SSG_Model_PARA(Model):
 
 		net = tf.concat([net, l], axis=1)
 
-		pred = self.last_dense1(net)
+		net = self.last_dense1(net)
+		pred = self.last_dense2(net)
 
 		return pred
 
@@ -175,7 +177,8 @@ class CLS_SSG_Model(Model):
 		self.batchnorm1 = BatchNormalization()
 		self.dropout1 = Dropout(self.keep_prob)
 
-		self.last_dense1 = Dense(self.action_size, activation=self.activation)
+		self.last_dense1 = Dense(128, activation=self.activation)
+		self.last_dense2 = Dense(self.action_size, activation=self.activation)
 
 
 	def forward_pass(self, inputs, training, batch_size=None):
@@ -193,7 +196,8 @@ class CLS_SSG_Model(Model):
 		net = self.batchnorm1(net)
 		net = self.dropout1(net)
 
-		pred = self.last_dense1(net)
+		net = self.last_dense1(net)
+		pred = self.last_dense2(net)
 
 		return pred
 
