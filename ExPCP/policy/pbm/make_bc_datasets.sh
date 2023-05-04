@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Rope-v'
+ENV_NAME='Move-v'
 
 POSE_NUM=500
 EACH_POSE_NUM=10

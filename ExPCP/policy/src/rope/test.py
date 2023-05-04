@@ -18,21 +18,20 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import CLS_SSG_Model_PARA
+from models.cls_ssg_model import CLS_SSG_Model
 from PIL import Image
 from PIL import ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
-sys.path.append(os.path.join(ROOT_DIR, 'pbm'))
-sys.path.append('/root/fairseq/examples/MMPT')
+sys.path.append(os.path.join(ROOT_DIR, '../../pbm'))
 
 from plb.envs import make
 from plb.algorithms.logger import Logger
 from plb.algorithms.discor.run_sac import train as train_sac
 from plb.algorithms.ppo.run_ppo import train_ppo
 from plb.algorithms.TD3.run_td3 import train_td3
-from plb.optimizer.solver import solve_action
+from plb.optimizer.solver import solve_action, tell_rope_break
 from plb.optimizer.solver_nn import solve_nn
 from util.preprocess import sample_pc
 # from videoclip import pooled_text
@@ -50,8 +49,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=256, help='batch size in training')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=2000, help='Point Number of Plasticine')
-    parser.add_argument('--num_goal_point', type=int, default=2000, help='Point Number of Primitive')
+    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
@@ -69,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/para/2023-05-01_13-45/model/weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/2023-05-01_09-36/no_para/2023-05-01_13-45/model/weights.ckpt'
 
 
 def test(args):
@@ -79,11 +77,11 @@ def test(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
     action_size = 3
-    num_point = args.num_plasticine_point + args.num_goal_point
+    num_point = args.num_plasticine_point
 
-    model = CLS_SSG_Model_PARA(args.batch_size, action_size)
+    model = CLS_SSG_Model(args.batch_size, action_size)
    
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 5), (args.batch_size, 3)])
+    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -102,37 +100,19 @@ def test(args):
 
     for i in range(500, 550):
         version = i + 1
-        goal_state = np.load(f"/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/goal_state.npy")
         test_env = args.env_name.split('-')[0]
         env.reset()
 
-        # set goal state
-        env.taichi_env.initialize()
-        env.taichi_env.initialize_update_target(f'envs/assets/{test_env}3D-v{version}.npy')
-        env.taichi_env.loss.reset()
-
-        # set stick pos
-        state = env.taichi_env.get_state()
-        with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{version}/randam_value.txt', mode="r") as f:
-            stick_pos = json.load(f)
-        state['state'][-1][0] = stick_pos['add_stick_x']
-        state['state'][-1][2] = stick_pos['add_stick_y']
-        env.taichi_env.set_state(**state)
-
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(version)
-        mu = np.random.uniform(500, 4000)
-        lam = np.random.uniform(500, 4000)
-        yield_stress = np.random.uniform(200, 1000)
+        mu = np.random.uniform(10, 500)
+        lam = np.random.uniform(10, 500)
+        yield_stress = np.random.uniform(10, 500)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
         output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-1])}/evaluation/{timestr}/{test_env}/{version}"
         os.makedirs(output_dir, exist_ok=True)
-
-        pc_encode = np.zeros((args.num_plasticine_point + args.num_goal_point, 2))
-        pc_encode[:args.num_plasticine_point, 0] = 1
-        pc_encode[args.num_plasticine_point:, 1] = 1
 
         imgs = []
         for t in range(args.num_steps):
@@ -141,15 +121,12 @@ def test(args):
             test_plasticine_pc = env.taichi_env.simulator.get_x(0)
             test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
 
-            test_points = sample_pc(test_plasticine_pc, goal_state, args.num_plasticine_point, args.num_goal_point)
+            test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
             vector = test_points - test_primtiive_pc
-            vector_encode = np.hstack([vector, pc_encode])
-            parameters = np.array([mu, lam, yield_stress])
 
             act = model.forward_pass([
                 tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
-                tf.cast(tf.convert_to_tensor(vector_encode[None]), tf.float32),
-                tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
+                tf.cast(tf.convert_to_tensor(vector[None]), tf.float32)
             ], False, 1)
             act = act.numpy()[0]
             print(act)
@@ -157,19 +134,26 @@ def test(args):
                 _, _, _, loss_info = env.step(act)
             except:
                 continue
-            last_iou = loss_info['incremental_iou']
             
-            if t % 100 == 0:
+            if t % 1 == 0:
                 print(f"Saving gif at {t} steps")
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 I1 = ImageDraw.Draw(pimg)
                 I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                 imgs.append(pimg)
-        
-        imgs[0].save(f"{output_dir}/{last_iou:.4f}_{t}.gif", save_all=True, append_images=imgs[1:], loop=0)
-        with open(f'{output_dir}/last_iou_{t}.txt', 'w') as f:
-            f.write(str(last_iou))
+
+        possible = tell_rope_break(img)
+        if possible:
+            imgs[0].save(f"{output_dir}/break_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
+            with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+                f.write(f'break,{mu},{lam},{yield_stress}')
+        else:
+            rope_state = env.taichi_env.simulator.get_x(0)
+            rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
+            imgs[0].save(f"{output_dir}/{rope_length:.4f}_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
+            with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+                f.write(f'{rope_length},{mu},{lam},{yield_stress}')
     
 
 if __name__ == '__main__':
