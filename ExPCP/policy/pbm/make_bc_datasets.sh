@@ -3,7 +3,7 @@
 ALGO='action'
 ENV_NAME='Rope-v'
 
-POSE_NUM=100
+POSE_NUM=500
 EACH_POSE_NUM=10
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
