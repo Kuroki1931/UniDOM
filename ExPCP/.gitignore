@@ -37,6 +37,7 @@ rl2seq
 output/
 goal_state/
 data/
+assets/
 *.pickle
 *.gif
 

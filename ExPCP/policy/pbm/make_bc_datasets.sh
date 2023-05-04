@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Move-v'
+ENV_NAME='Rope-v'
 
-POSE_NUM=78
-EACH_POSE_NUM=6
+POSE_NUM=100
+EACH_POSE_NUM=10
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm
