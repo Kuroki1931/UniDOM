@@ -146,7 +146,7 @@ def test(args):
             except:
                 continue
             
-            if t % 11 == 0:
+            if t+1 == args.num_steps:
                 print(f"Saving gif at {t} steps")
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
