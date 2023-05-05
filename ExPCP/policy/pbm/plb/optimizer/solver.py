@@ -111,7 +111,7 @@ def tell_rope_break(image):
     return num_pink_objects > 1
 
 
-def rope_action(env, output_path, T=12, step_num=100):
+def rope_action(env, output_path, T=12, step_num=50):
     # first step: 10 time step same action (0, 1]
     for action_value in np.linspace(0.1, 1, 10):
         env.reset()
@@ -165,9 +165,9 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 10, 100
-        lam_bottom, lam_upper = 10, 100
-        yield_stress_bottom, yield_stress_upper = 10, 100
+        mu_bottom, mu_upper = 10, 1000
+        lam_bottom, lam_upper = 10, 1000
+        yield_stress_bottom, yield_stress_upper = 10, 1000
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
