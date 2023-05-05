@@ -47,12 +47,11 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
-    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=1000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=50, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--experts_dir', type=str, default='2023-05-04_17-54', help='experiment root')
     parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
@@ -76,6 +75,9 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
+BASE_DIR = '/root/ExPCP/policy/data/Rope_400_500_400_500_400_500/2023-05-05_10-36'
+BASE_TASK = BASE_DIR.split('/')[-2]
+BASE_DATE = BASE_DIR.split('/')[-1]
 
 
 def load_dataset(in_file, batch_size, num_point):
@@ -117,9 +119,9 @@ def train(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./Rope/')
+    exp_dir = exp_dir.joinpath(f'./{BASE_TASK}/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./{args.experts_dir}/')
+    exp_dir = exp_dir.joinpath(f'./{BASE_DATE}/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./no_para/')
     exp_dir.mkdir(exist_ok=True)
@@ -150,8 +152,8 @@ def train(args):
     num_point = args.num_plasticine_point
 
     model = CLS_SSG_Model(args.batch_size, action_size)
-    train_ds = load_dataset(f'data/Rope/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
-    validation_ds = load_dataset(f'data/Rope/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
+    train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size, num_point)
+    validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/validation_experts.tfrecord', args.batch_size, num_point)
 
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3)])
     print(model.summary())
@@ -162,6 +164,13 @@ def train(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
+    
+    parameter_list = BASE_TASK.split('_')[1:]
+    parameter_list = [int(parameter) for parameter in parameter_list]
+    mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
+    lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
+    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
+        
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
@@ -183,15 +192,15 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(10)):
+            for i in tqdm(range(500)):
                 test_env = args.env_name.split('-')[0]
                 env.reset()
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(epoch+i)
-                mu = np.random.uniform(10, 500)
-                lam = np.random.uniform(10, 500)
-                yield_stress = np.random.uniform(10, 500)
+                mu = np.random.uniform(mu_bottom, mu_upper)
+                lam = np.random.uniform(lam_bottom, lam_upper)
+                yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
                 print('parameter', mu, lam, yield_stress)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 
@@ -215,7 +224,8 @@ def train(args):
                     print(act)
                     _, _, _, loss_info = env.step(act)
                     
-                    if t % 1 == 0:
+                    # if t % 1 == 0:
+                    if t+1 == args.num_steps:
                         log_string(f'action {t}: {str(act)}')
                         print(f"Saving gif at {t} steps")
                         img = env.render(mode='rgb_array')
@@ -228,7 +238,7 @@ def train(args):
                 if possible:
                     imgs[0].save(f"{output_dir}/{epoch}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
                     with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'break,{mu},{lam},{yield_stress}')
+                        f.write(f'0,{mu},{lam},{yield_stress}')
                 else:
                     rope_state = env.taichi_env.simulator.get_x(0)
                     rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]

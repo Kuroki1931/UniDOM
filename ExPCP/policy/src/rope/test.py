@@ -67,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/no_para/2023-05-04_18-24/model/1319_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/no_para/2023-05-04_18-24/model/0499_weights.ckpt'
 
 
 def test(args):
@@ -135,7 +135,7 @@ def test(args):
             except:
                 continue
             
-            if t % 11 == 0:
+            if t+1 == args.num_steps:
                 print(f"Saving gif at {t} steps")
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
