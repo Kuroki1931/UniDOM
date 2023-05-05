@@ -165,7 +165,10 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        output_path = f'{path}/{args.task_name}/{env.spec.id}/{now}'
+        mu_bottom, mu_upper = 10, 100
+        lam_bottom, lam_upper = 10, 100
+        yield_stress_bottom, yield_stress_upper = 10, 100
+        output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
         img = env.render(mode='rgb_array')
@@ -175,9 +178,9 @@ def solve_action(env, path, logger, args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(int(args.task_version[1:])+i)
-        mu = np.random.uniform(10, 100)
-        lam = np.random.uniform(10, 100)
-        yield_stress = np.random.uniform(10, 200)
+        mu = np.random.uniform(mu_bottom, mu_upper)
+        lam = np.random.uniform(lam_bottom, lam_upper)
+        yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
@@ -240,7 +243,7 @@ def solve_action(env, path, logger, args):
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
 
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}/{env.spec.id}'
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
             if not os.path.exists(experts_output_dir):
                 os.makedirs(experts_output_dir, exist_ok=True)
 

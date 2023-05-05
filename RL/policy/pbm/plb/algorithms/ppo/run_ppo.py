@@ -6,6 +6,7 @@ from collections import deque
 
 import cv2
 import gym
+from gym.spaces import Box
 import numpy as np
 import torch
 import torch.nn as nn
@@ -22,6 +23,7 @@ from plb.algorithms.ppo.ppo.storage import RolloutStorage
 from plb.algorithms.ppo.evaluation import evaluate
 
 PARAMETER_SIXE = 3
+ACTION_SPACE = 1
 
 
 def tell_rope_break(image):
@@ -66,17 +68,16 @@ def train_ppo(env, path, logger, old_args):
     from plb import envs
     envs = make_vec_envs(env, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
-
     if not old_args.para:
         obs_size = envs.observation_space.shape[0] - PARAMETER_SIXE
         actor_critic = Policy(
             (obs_size,),
-            envs.action_space,
+            Box(-np.inf, np.inf, (ACTION_SPACE,)),
             base_kwargs={'recurrent': args.recurrent_policy})
     else:
         actor_critic = Policy(
             envs.observation_space.shape,
-            envs.action_space,
+            Box(-np.inf, np.inf, (ACTION_SPACE,)),
             base_kwargs={'recurrent': args.recurrent_policy})
     actor_critic.to(device)
 
@@ -153,11 +154,11 @@ def train_ppo(env, path, logger, old_args):
             obs = obs[:, :-PARAMETER_SIXE]
             obs_size = envs.observation_space.shape[0] - PARAMETER_SIXE
             rollouts = RolloutStorage(args.num_steps, args.num_processes,
-                            (obs_size,), envs.action_space,
+                            (obs_size,), Box(-np.inf, np.inf, (ACTION_SPACE,)),
                             actor_critic.recurrent_hidden_state_size)
         else:
             rollouts = RolloutStorage(args.num_steps, args.num_processes,
-                            envs.observation_space.shape, envs.action_space,
+                            envs.observation_space.shape, Box(-np.inf, np.inf, (ACTION_SPACE,)),
                             actor_critic.recurrent_hidden_state_size)
         rollouts.obs[0].copy_(obs)
         rollouts.to(device)
@@ -176,7 +177,10 @@ def train_ppo(env, path, logger, old_args):
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
             # Obser reward and next obs
-            obs, reward, done, infos = envs.step(action)
+
+            act = action.detach().clone()
+            act = torch.concat([act, torch.zeros((1, 2)).to(device)], axis=1)
+            obs, reward, done, infos = envs.step(act)
             if not old_args.para:
                 obs = obs[:, :-PARAMETER_SIXE]
             total_steps += 1
@@ -199,13 +203,13 @@ def train_ppo(env, path, logger, old_args):
                 #logger.write(output+'\n')
                 #logger.flush()
                 ep_reward = 0
-                if episodes % 200 == 0:
-                    # if episodes >= (test_times + 1) * 200:
-                    ob_rms = utils.get_vec_normalize(envs).ob_rms
-                    total_reward, total_iou, total_last_iou = evaluate(actor_critic, ob_rms, envs, args.seed,
-                             args.num_processes, eval_log_dir, device)
-                    output = f"Test Episode: {episodes}, step: {step} reward: {total_reward},  iou: {total_iou},  last_iou: {total_last_iou}"
-                    print(output)
+                # if episodes % 200 == 0:
+                #     # if episodes >= (test_times + 1) * 200:
+                #     ob_rms = utils.get_vec_normalize(envs).ob_rms
+                #     total_reward, total_iou, total_last_iou = evaluate(actor_critic, ob_rms, envs, args.seed,
+                #              args.num_processes, eval_log_dir, device)
+                #     output = f"Test Episode: {episodes}, step: {step} reward: {total_reward},  iou: {total_iou},  last_iou: {total_last_iou}"
+                #     print(output)
                 episodes_step = 0
             else:
                 episodes_step += 1

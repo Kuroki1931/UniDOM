@@ -67,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_07-10/para/2023-05-04_09-57/model/0169_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/para/2023-05-04_18-25/model/1319_weights.ckpt'
 
 
 def test(args):
@@ -97,8 +97,13 @@ def test(args):
 								density_loss=args.density_loss, contact_loss=args.contact_loss,
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
+    
+    date = CHECK_POINT_PATH.split('/')[-5]
+    mu_list = np.load(f'data/Rope/{date}/mu.npy').tolist()
+    lam_list = np.load(f'data/Rope/{date}/lam.npy').tolist()
+    yield_stress_list = np.load(f'data/Rope/{date}/yield_stress.npy').tolist()
 
-    for i in range(500, 1500):
+    for i in range(500, 1000):
         version = i + 1
         test_env = args.env_name.split('-')[0]
         env.reset()
@@ -124,6 +129,9 @@ def test(args):
             test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
             vector = test_points - test_primtiive_pc
 
+            mu = (mu - np.mean(mu_list)) / np.std(mu_list)
+            lam = (lam - np.mean(lam_list)) / np.std(lam_list)
+            yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
             parameters = np.array([mu, lam, yield_stress])
 
             act = model.forward_pass([

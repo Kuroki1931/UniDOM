@@ -50,6 +50,24 @@ def main(args):
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(timestr)
     exp_dir.mkdir(exist_ok=True)
+    
+    mu_list = []
+    lam_list = []
+    yield_stress_list = []
+    files = glob.glob('/root/ExPCP/policy/pbm/experts/Rope/*/expert*.pickle')
+    with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
+        for path in files:
+            with open(path, 'rb') as f: 
+                data = pickle.load(f)           
+            mu_list.append(data['mu'])
+            lam_list.append(data['lam'])
+            yield_stress_list.append(data['yield_stress'])
+    mu_array = np.array(mu_list)
+    lam_array = np.array(lam_list)
+    yield_stress_array = np.array(yield_stress_list)
+    np.save(f'{exp_dir}/mu.npy', mu_array)
+    np.save(f'{exp_dir}/lam.npy', lam_array)
+    np.save(f'{exp_dir}/yield_stress.npy', yield_stress_array)
 
     '''DATA LOADING'''
     file_list = []
@@ -75,6 +93,9 @@ def main(args):
             mu = data['mu']
             lam = data['lam']
             yield_stress = data['yield_stress']
+            mu = (mu - np.mean(mu_list)) / np.std(mu_list)
+            lam = (lam - np.mean(lam_list)) / np.std(lam_list)
+            yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
 
             for i in range(action.shape[0]):
                 plasticine_pc_i = plasticine_pc[i]
@@ -83,7 +104,8 @@ def main(args):
                 points = sample_pc(plasticine_pc_i, args.num_plasticine_point)
                 vector = points - primitive_center_i
                 act = action[i]
-                act[1] = 0 # because 2D
+                act[1] = 0 # because 1D
+                act[2] = 0 # because 1D
 
                 parameters = np.array([mu, lam, yield_stress])
 
