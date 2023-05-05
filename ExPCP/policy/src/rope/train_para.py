@@ -76,6 +76,9 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
+BASE_DIR = '/root/ExPCP/policy/data/Rope_400_500_400_500_400_500/2023-05-05_10-36'
+BASE_TASK = BASE_DIR.split('/')[-2]
+BASE_DATE = BASE_DIR.split('/')[-1]
 
 
 def load_dataset(in_file, batch_size, num_point):
@@ -119,9 +122,9 @@ def train(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./Rope/')
+    exp_dir = exp_dir.joinpath(f'./{BASE_TASK}/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./{args.experts_dir}/')
+    exp_dir = exp_dir.joinpath(f'./{BASE_DATE}/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./para/')
     exp_dir.mkdir(exist_ok=True)
@@ -152,15 +155,15 @@ def train(args):
     num_point = args.num_plasticine_point
 
     model = CLS_SSG_Model_PARA(args.batch_size, action_size)
-    train_ds = load_dataset(f'data/Rope/{args.experts_dir}/train_experts.tfrecord', args.batch_size, num_point)
-    validation_ds = load_dataset(f'data/Rope/{args.experts_dir}/validation_experts.tfrecord', args.batch_size, num_point)
+    train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}//train_experts.tfrecord', args.batch_size, num_point)
+    validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}//validation_experts.tfrecord', args.batch_size, num_point)
 
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3), (args.batch_size, 3)])
     print(model.summary())
     
-    mu_list = np.load(f'data/Rope/{args.experts_dir}/mu.npy').tolist()
-    lam_list = np.load(f'data/Rope/{args.experts_dir}/lam.npy').tolist()
-    yield_stress_list = np.load(f'data/Rope/{args.experts_dir}/yield_stress.npy').tolist()
+    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//mu.npy').tolist()
+    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//lam.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//yield_stress.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -168,6 +171,12 @@ def train(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
+    
+    parameter_list = BASE_TASK.split('_')[1:]
+    mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
+    lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
+    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
+
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
@@ -195,9 +204,9 @@ def train(args):
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(epoch+i)
-                mu = np.random.uniform(10, 500)
-                lam = np.random.uniform(10, 500)
-                yield_stress = np.random.uniform(10, 500)
+                mu = np.random.uniform(mu_bottom, mu_upper)
+                lam = np.random.uniform(lam_bottom, lam_upper)
+                yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
                 print('parameter', mu, lam, yield_stress)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 
