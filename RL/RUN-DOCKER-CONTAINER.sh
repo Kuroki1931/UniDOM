@@ -1,7 +1,7 @@
 #!/bin/bash
 
-IMAGE_NAME=dmlc
-CONTAINER_NAME="dmlc"
+IMAGE_NAME=roomba_hack
+CONTAINER_NAME="roomba_hack"
 echo "$0: IMAGE=${IMAGE_NAME}"
 echo "$0: CONTAINER=${CONTAINER_NAME}"
 
@@ -15,25 +15,35 @@ EXISTING_CONTAINER_ID=`docker ps -aq -f name=${CONTAINER_NAME}`
 if [ ! -z "${EXISTING_CONTAINER_ID}" ]; then
     docker exec -it ${CONTAINER_NAME} bash
 else
-    xhost +
-    docker run -it --rm \
-        --privileged \
-        --gpus all \
-        --env DISPLAY=${DISPLAY} \
-        --net host \
-        --volume ${PWD}/catkin_ws/:/root/dmlc/catkin_ws/ \
-        --volume /dev/:/dev/ \
-        --volume /tmp/.X11-unix:/tmp/.X11-unix \
-        --volume ${PWD}/policy/:/root/dmlc/policy/ \
-        --name ${CONTAINER_NAME} \
-        ${IMAGE_NAME} \
-        bash -c "sed -i 's/TMP_IP/${ROOMBA_IP}/' ~/scripts/initialize-bash-shell.sh;
-                    bash"
+    if [ "$(uname -m)" == "aarch64" ]; then
+        docker run -it --rm \
+            --privileged \
+            --runtime nvidia \
+            --net host \
+            --volume ${PWD}/catkin_ws/:/root/roomba_hack/catkin_ws/ \
+            --volume /dev/:/dev/ \
+            --volume /tmp/argus_socket:/tmp/argus_socket \
+            --name ${CONTAINER_NAME} \
+            ${IMAGE_NAME}:jetson \
+            bash -c "sed -i 's/TMP_IP/localhost/' ~/scripts/initialize-bash-shell.sh;
+                     sed -i 's/noetic/melodic/' ~/.bashrc;
+                     sed -i 's/noetic/melodic/' ~/scripts/initialize-bash-shell.sh;
+                     source /root/.bashrc;
+                     bash"
+    else
+        xhost +
+        docker run -it --rm \
+            --privileged \
+            --gpus all \
+            --env DISPLAY=${DISPLAY} \
+            --net host \
+            --volume ${PWD}/catkin_ws/:/root/roomba_hack/catkin_ws/ \
+            --volume /dev/:/dev/ \
+            --volume /tmp/.X11-unix:/tmp/.X11-unix \
+            --volume ${PWD}/policy/:/root/roomba_hack/policy/ \
+            --name ${CONTAINER_NAME} \
+            ${IMAGE_NAME} \
+            bash -c "sed -i 's/TMP_IP/${ROOMBA_IP}/' ~/scripts/initialize-bash-shell.sh;
+                     bash"
+    fi
 fi
-
-# /home/robot_dev/kuroki/DMLC/catkin_ws/src/roomba_control/scripts
-# source /opt/ros/noetic/setup.bash 
-
-# docker exec -it okubo_pull_request_xarm-dual_1 bash    
-# roscore
-

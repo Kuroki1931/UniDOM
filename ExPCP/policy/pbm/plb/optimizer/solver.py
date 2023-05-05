@@ -175,9 +175,9 @@ def solve_action(env, path, logger, args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(int(args.task_version[1:])+i)
-        mu = np.random.uniform(10, 500)
-        lam = np.random.uniform(10, 500)
-        yield_stress = np.random.uniform(10, 300)
+        mu = np.random.uniform(10, 100)
+        lam = np.random.uniform(10, 100)
+        yield_stress = np.random.uniform(10, 200)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
