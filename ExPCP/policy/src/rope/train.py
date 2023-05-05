@@ -166,6 +166,7 @@ def train(args):
 	)
     
     parameter_list = BASE_TASK.split('_')[1:]
+    parameter_list = [int(parameter) for parameter in parameter_list]
     mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
     lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
     yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
