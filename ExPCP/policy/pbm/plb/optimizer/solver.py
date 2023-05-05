@@ -160,14 +160,15 @@ def rope_action(env, output_path, T=12, step_num=100):
 
 
 def solve_action(env, path, logger, args):
-    for i in range(5):
+    repeat_time = 5
+    for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 10, 100
-        lam_bottom, lam_upper = 10, 100
-        yield_stress_bottom, yield_stress_upper = 10, 100
+        mu_bottom, mu_upper = 400, 500
+        lam_bottom, lam_upper = 400, 500
+        yield_stress_bottom, yield_stress_upper = 400, 500
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
@@ -177,7 +178,7 @@ def solve_action(env, path, logger, args):
         T = env._max_episode_steps
 
         # set randam parameter: mu, lam, yield_stress
-        np.random.seed(int(args.task_version[1:])+i)
+        np.random.seed(int(args.task_version[1:])*repeat_time+i)
         mu = np.random.uniform(mu_bottom, mu_upper)
         lam = np.random.uniform(lam_bottom, lam_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
