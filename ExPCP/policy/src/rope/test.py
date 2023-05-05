@@ -67,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_07-10/no_para/2023-05-04_09-57/model/0169_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/no_para/2023-05-04_18-24/model/1319_weights.ckpt'
 
 
 def test(args):
@@ -98,7 +98,7 @@ def test(args):
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
 
-    for i in range(500, 1500):
+    for i in range(500, 1000):
         version = i + 1
         test_env = args.env_name.split('-')[0]
         env.reset()

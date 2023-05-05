@@ -47,12 +47,12 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
-    parser.add_argument('--epoch', default=200, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--experts_dir', type=str, default='2023-05-04_07-10', help='experiment root')
+    parser.add_argument('--experts_dir', type=str, default='2023-05-04_17-54', help='experiment root')
     parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
@@ -157,6 +157,10 @@ def train(args):
 
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3), (args.batch_size, 3)])
     print(model.summary())
+    
+    mu_list = np.load(f'data/Rope/{args.experts_dir}/mu.npy').tolist()
+    lam_list = np.load(f'data/Rope/{args.experts_dir}/lam.npy').tolist()
+    yield_stress_list = np.load(f'data/Rope/{args.experts_dir}/yield_stress.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -209,7 +213,10 @@ def train(args):
                     test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
                     vector = test_points - test_primtiive_pc
 
-                    parameters = np.array([mu, lam, yield_stress])
+                    mu_value = (mu - np.mean(mu_list)) / np.std(mu_list)
+                    lam_value = (lam - np.mean(lam_list)) / np.std(lam_list)
+                    yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+                    parameters = np.array([mu_value, lam_value, yield_stress_value])
 
                     act = model.forward_pass([
 			            tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
