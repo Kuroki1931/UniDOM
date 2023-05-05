@@ -160,15 +160,15 @@ def rope_action(env, output_path, T=12, step_num=50):
 
 
 def solve_action(env, path, logger, args):
-    repeat_time = 5
+    repeat_time = 200
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 10, 1000
-        lam_bottom, lam_upper = 10, 1000
-        yield_stress_bottom, yield_stress_upper = 10, 1000
+        mu_bottom, mu_upper = 10, 500
+        lam_bottom, lam_upper = 10, 500
+        yield_stress_bottom, yield_stress_upper = 10, 500
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
