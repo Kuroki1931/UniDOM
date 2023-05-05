@@ -111,7 +111,7 @@ def tell_rope_break(image):
     return num_pink_objects > 1
 
 
-def rope_action(env, output_path, T=12, step_num=100):
+def rope_action(env, output_path, T=12, step_num=50):
     # first step: 10 time step same action (0, 1]
     for action_value in np.linspace(0.1, 1, 10):
         env.reset()

@@ -40,13 +40,15 @@ def create_example(points, vector, parameters, action):
 
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
+BASE_NAME = 'Rope_400_500_400_500_400_500'
+
 
 def main(args):
     '''CREATE DIR'''
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./data/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath('./Rope/')
+    exp_dir = exp_dir.joinpath(f'./{BASE_NAME}/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(timestr)
     exp_dir.mkdir(exist_ok=True)
@@ -54,7 +56,7 @@ def main(args):
     mu_list = []
     lam_list = []
     yield_stress_list = []
-    files = glob.glob('/root/ExPCP/policy/pbm/experts/Rope/*/expert*.pickle')
+    files = glob.glob(f'/root/ExPCP/policy/pbm/experts/{BASE_NAME}/*/expert*.pickle')
     with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
         for path in files:
             with open(path, 'rb') as f: 

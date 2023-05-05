@@ -37,6 +37,8 @@ rl2seq
 output/
 goal_state/
 data/
+make_bc_datasets.sh
+each_make_bc_datasets.sh
 *.pickle
 *.gif
 
