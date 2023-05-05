@@ -67,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/para/2023-05-04_18-25/model/1319_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/para/2023-05-04_18-25/model/0499_weights.ckpt'
 
 
 def test(args):
@@ -129,10 +129,10 @@ def test(args):
             test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
             vector = test_points - test_primtiive_pc
 
-            mu = (mu - np.mean(mu_list)) / np.std(mu_list)
-            lam = (lam - np.mean(lam_list)) / np.std(lam_list)
-            yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
-            parameters = np.array([mu, lam, yield_stress])
+            mu_value = (mu - np.mean(mu_list)) / np.std(mu_list)
+            lam_value = (lam - np.mean(lam_list)) / np.std(lam_list)
+            yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+            parameters = np.array([mu_value, lam_value, yield_stress_value])
 
             act = model.forward_pass([
                 tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
