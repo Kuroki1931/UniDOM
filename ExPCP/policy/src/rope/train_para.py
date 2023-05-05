@@ -47,8 +47,8 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
-    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=1000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=50, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
@@ -199,7 +199,7 @@ def train(args):
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
         
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(10)):
+            for i in tqdm(range(500)):
                 test_env = args.env_name.split('-')[0]
                 env.reset()
 
@@ -237,7 +237,8 @@ def train(args):
                     print(act)
                     _, _, _, loss_info = env.step(act)
                     
-                    if t % 1 == 0:
+                    # if t % 1 == 0:
+                    if t+1 == args.num_steps:
                         log_string(f'action {t}: {str(act)}')
                         print(f"Saving gif at {t} steps")
                         img = env.render(mode='rgb_array')
@@ -250,7 +251,7 @@ def train(args):
                 if possible:
                     imgs[0].save(f"{output_dir}/{epoch}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
                     with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'break,{mu},{lam},{yield_stress}')
+                        f.write(f'0,{mu},{lam},{yield_stress}')
                 else:
                     rope_state = env.taichi_env.simulator.get_x(0)
                     rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
