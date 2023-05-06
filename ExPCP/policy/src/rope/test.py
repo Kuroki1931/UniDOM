@@ -132,7 +132,6 @@ def test(args):
                 tf.cast(tf.convert_to_tensor(vector[None]), tf.float32)
             ], False, 1)
             act = act.numpy()[0]
-            print(act)
             try:
                 _, _, _, loss_info = env.step(act)
             except:

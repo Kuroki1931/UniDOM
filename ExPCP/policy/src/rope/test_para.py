@@ -107,6 +107,7 @@ def test(args):
 
     success_count = 0
     for i in range(500, 1000):
+        print(i)
         version = i + 1
         test_env = args.env_name.split('-')[0]
         env.reset()
@@ -124,8 +125,6 @@ def test(args):
 
         imgs = []
         for t in range(args.num_steps):
-            print(t, '/', args.num_steps)
-
             test_plasticine_pc = env.taichi_env.simulator.get_x(0)
             test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
 
@@ -143,7 +142,6 @@ def test(args):
                 tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
             ], False, 1)
             act = act.numpy()[0]
-            print(act)
             try:
                 _, _, _, loss_info = env.step(act)
             except:
