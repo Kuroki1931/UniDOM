@@ -75,7 +75,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_03-11'
+BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_12-58'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
