@@ -67,7 +67,10 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope/2023-05-04_17-54/no_para/2023-05-04_18-24/model/0499_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope_10_500_10_500_10_500/2023-05-05_15-51/no_para/2023-05-05_16-36/model/0005_weights.ckpt'
+BASE_TASK = CHECK_POINT_PATH.split('/')[-6]
+BASE_DATE = CHECK_POINT_PATH.split('/')[-5]
+EPOCH =int(CHECK_POINT_PATH.split('/')[-1].split('_')[0])
 
 
 def test(args):
@@ -111,7 +114,7 @@ def test(args):
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-1])}/evaluation/{timestr}/{test_env}/{version}"
+        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/Rope"
         os.makedirs(output_dir, exist_ok=True)
 
         imgs = []
@@ -145,14 +148,14 @@ def test(args):
 
         possible = tell_rope_break(img)
         if possible:
-            imgs[0].save(f"{output_dir}/break_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
-            with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+            imgs[0].save(f"{output_dir}/{EPOCH}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
+            with open(f'{output_dir}/last_iou_{EPOCH}_{i}.txt', 'w') as f:
                 f.write(f'0,{mu},{lam},{yield_stress}')
         else:
             rope_state = env.taichi_env.simulator.get_x(0)
             rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
-            imgs[0].save(f"{output_dir}/{rope_length:.4f}_{i}.gif", save_all=True, append_images=imgs[1:], loop=0)
-            with open(f'{output_dir}/last_iou_{i}.txt', 'w') as f:
+            imgs[0].save(f"{output_dir}/{EPOCH}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
+            with open(f'{output_dir}/last_iou_{EPOCH}_{i}.txt', 'w') as f:
                 f.write(f'{rope_length},{mu},{lam},{yield_stress}')
     
 

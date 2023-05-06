@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -76,7 +76,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-05_15-51'
+BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_03-11'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -177,7 +177,7 @@ def train(args):
     mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
     lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
     yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
-
+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
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
