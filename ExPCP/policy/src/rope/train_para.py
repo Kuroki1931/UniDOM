@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -47,8 +47,8 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
-    parser.add_argument('--epoch', default=1000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=50, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
@@ -76,7 +76,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Rope_400_500_400_500_400_500/2023-05-05_10-36'
+BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_03-11'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
