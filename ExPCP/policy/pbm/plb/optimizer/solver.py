@@ -215,7 +215,8 @@ def solve_action(env, path, logger, args):
             frames = []
             for idx, act in enumerate(action):
                 env.step(act)
-                if idx % 1 == 0:
+                # if idx % 1 == 0:
+                if idx + 1 == 12:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)

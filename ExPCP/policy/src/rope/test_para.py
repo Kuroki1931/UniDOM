@@ -67,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope_10_500_10_500_10_500/2023-05-05_15-51/para/2023-05-05_16-36/model/0005_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope_10_500_10_500_10_500/2023-05-06_03-11/para/2023-05-06_11-46/model/0029_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-6]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-5]
 EPOCH =int(CHECK_POINT_PATH.split('/')[-1].split('_')[0])
@@ -105,7 +105,9 @@ def test(args):
     lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/lam.npy').tolist()
     yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
 
+    success_count = 0
     for i in range(500, 1000):
+        print(i)
         version = i + 1
         test_env = args.env_name.split('-')[0]
         env.reset()
@@ -118,13 +120,11 @@ def test(args):
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/Rope"
+        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
         os.makedirs(output_dir, exist_ok=True)
 
         imgs = []
         for t in range(args.num_steps):
-            print(t, '/', args.num_steps)
-
             test_plasticine_pc = env.taichi_env.simulator.get_x(0)
             test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
 
@@ -142,7 +142,6 @@ def test(args):
                 tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
             ], False, 1)
             act = act.numpy()[0]
-            print(act)
             try:
                 _, _, _, loss_info = env.step(act)
             except:
@@ -167,6 +166,8 @@ def test(args):
             imgs[0].save(f"{output_dir}/{EPOCH}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
             with open(f'{output_dir}/last_iou_{EPOCH}_{i}.txt', 'w') as f:
                 f.write(f'{rope_length},{mu},{lam},{yield_stress}')
+            success_count += 1
+    print('success_count', success_count)
     
 
 if __name__ == '__main__':
