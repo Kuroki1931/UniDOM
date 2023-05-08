@@ -111,15 +111,17 @@ def tell_rope_break(image):
     return num_pink_objects > 1
 
 
-def rope_action(env, output_path, T=12, step_num=50):
+def rope_action(env, output_path, T=12, wait_step=3, step_num=50):
     # first step: 10 time step same action (0, 1]
+    wait_action = np.array([[0, 0, 0]]*wait_step)
     for action_value in np.linspace(0.1, 1, 10):
         env.reset()
         first_action = np.array([[action_value, 0, 0]]*T)
+        first_action = np.concatenate([first_action, wait_action])
         # frames = []
         for idx, act in enumerate(first_action):
             env.step(act)
-            if idx+1 == T:
+            if idx+1 == T+wait_step:
                 img = env.render(mode='rgb_array')
         #     img = env.render(mode='rgb_array')
         #     pimg = Image.fromarray(img)
@@ -140,11 +142,12 @@ def rope_action(env, output_path, T=12, step_num=50):
 
     for step, second_action in enumerate(actions_list):
         print(step,'/', step_num)
+        second_action = np.concatenate([second_action, wait_action])
         env.reset()
         # frames = []
         for idx, act in enumerate(second_action):
             env.step(act)
-            if idx+1 == T:
+            if idx+1 == T+wait_step:
                 img = env.render(mode='rgb_array')
         #     img = env.render(mode='rgb_array')
         #     pimg = Image.fromarray(img)
@@ -160,15 +163,15 @@ def rope_action(env, output_path, T=12, step_num=50):
 
 
 def solve_action(env, path, logger, args):
-    repeat_time = 100
+    repeat_time = 150
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 10, 1000
-        lam_bottom, lam_upper = 10, 1000
-        yield_stress_bottom, yield_stress_upper = 10, 1000
+        mu_bottom, mu_upper = 10, 500
+        lam_bottom, lam_upper = 10, 500
+        yield_stress_bottom, yield_stress_upper = 10, 500
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
@@ -215,8 +218,8 @@ def solve_action(env, path, logger, args):
             frames = []
             for idx, act in enumerate(action):
                 env.step(act)
-                # if idx % 1 == 0:
-                if idx + 1 == 12:
+                if idx % 1 == 0:
+                # if idx + 1 == 15:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
