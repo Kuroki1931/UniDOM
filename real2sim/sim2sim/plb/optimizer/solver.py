@@ -17,6 +17,7 @@ OPTIMS = {
     'Momentum': Momentum
 }
 
+YIELD_STRESS = 50
 
 class Solver:
     def __init__(self, env: TaichiEnv, logger=None, cfg=None, **kwargs):
@@ -37,7 +38,7 @@ class Solver:
                 self.logger.reset()
 
             # set parameter
-            env.set_parameter(parameter[0], parameter[1], parameter[2])
+            env.set_parameter(parameter[0], parameter[1], YIELD_STRESS)
             env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
@@ -63,6 +64,7 @@ class Solver:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
+            parameters[2] = YIELD_STRESS
             parameters_list.append(parameters.tolist())
             reward_list.append(reward)
             print('loss', loss, 'reward', reward, parameters, grad)
@@ -114,9 +116,24 @@ def solve_action(env, path, logger, args):
     target_grids = np.load(f'{base_path}/target_densities.npy') 
     target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
     T = actions.shape[0]
-    args.num_steps = T * 100
+    args.num_steps = T * 300
     taichi_env.loss.update_target_density(target_grids)
-    init_parameters = np.array([150, 300, 350])
+    mu = 400
+    lam = 400
+    yield_stress = YIELD_STRESS
+    init_parameters = np.array([mu, lam, yield_stress])
+
+    frames = []
+    for idx, act in enumerate(actions):
+        if idx % 1 == 0:
+            img = env.render(mode='rgb_array')
+            pimg = Image.fromarray(img)
+            I1 = ImageDraw.Draw(pimg)
+            I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+            frames.append(pimg)
+        env.step(act)
+    frames[0].save(f'{output_path}/pre_optimize_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+    env.reset()
 
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,

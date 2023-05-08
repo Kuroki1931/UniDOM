@@ -45,7 +45,7 @@ def get_args():
     parser.add_argument("--num_steps", type=int, default=None)
 
     # differentiable physics parameters
-    parser.add_argument("--lr", type=float, default=10.)
+    parser.add_argument("--lr", type=float, default=1.)
     parser.add_argument("--softness", type=float, default=6666.)
     parser.add_argument("--optim", type=str, default='Adam', choices=['Adam', 'Momentum'])
     parser.add_argument("--create_grid_mass", action='store_true')
