@@ -25,7 +25,7 @@ from util.preprocess import sample_pc
 def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=200, help='Point Number of Plasticine')
     return parser.parse_args()
 
 
