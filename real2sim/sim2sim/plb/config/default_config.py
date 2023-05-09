@@ -20,6 +20,8 @@ _C.SIMULATOR.E = 5e3
 _C.SIMULATOR.nu = 0.2  # Young's modulus and Poisson's ratio
 _C.SIMULATOR.ground_friction = 1.5
 _C.SIMULATOR.gravity = (0, -1, 0)
+_C.SIMULATOR.mu = 354.0
+_C.SIMULATOR.lam = 2220.4
 
 
 # ---------------------------------------------------------------------------- #
@@ -38,14 +40,13 @@ _C.SHAPES = list()
 # ---------------------------------------------------------------------------- #
 _C.RENDERER = RENDERER = CN()
 RENDERER.spp = 50
-RENDERER.max_ray_depth = 2
-RENDERER.image_res = (256, 256)
+RENDERER.image_res = (512, 512)
 RENDERER.voxel_res = (168, 168, 168)
 RENDERER.target_res = (64, 64, 64)
 
 RENDERER.dx = 1. / 150
-RENDERER.sdf_threshold=0.37 * 0.56
-RENDERER.max_ray_depth=2
+RENDERER.sdf_threshold=0.47 * 0.56
+RENDERER.max_ray_depth= 2
 RENDERER.bake_size=6
 RENDERER.use_roulette=False
 

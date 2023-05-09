@@ -40,7 +40,7 @@ def create_example(points, vector, parameters, action):
 
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
-BASE_NAME = 'Rope_10_500_10_500_10_500'
+BASE_NAME = 'Pinch_100_2000_100_2000_100_2000'
 
 
 def main(args):
@@ -56,7 +56,7 @@ def main(args):
     mu_list = []
     lam_list = []
     yield_stress_list = []
-    files = glob.glob(f'/root/ExPCP/policy/pbm/experts/{BASE_NAME}/*/expert*.pickle')
+    files = glob.glob(f'/root/ExPCP/policy/pbm/experts/{BASE_NAME}/*/expert*.pickle')[:1000]
 
     with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
         for path in files:

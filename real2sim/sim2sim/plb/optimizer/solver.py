@@ -5,6 +5,9 @@ import pickle
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
+from PIL import Image
+from PIL import ImageDraw
+
 from .optim import Optimizer, Adam, Momentum
 from ..engine.taichi_env import TaichiEnv
 from ..config.utils import make_cls_config
@@ -14,6 +17,7 @@ OPTIMS = {
     'Momentum': Momentum
 }
 
+YIELD_STRESS = 50
 
 class Solver:
     def __init__(self, env: TaichiEnv, logger=None, cfg=None, **kwargs):
@@ -34,7 +38,7 @@ class Solver:
                 self.logger.reset()
 
             # set parameter
-            env.set_parameter(parameter[0])
+            env.set_parameter(parameter[0], parameter[1], YIELD_STRESS)
             env.set_state(sim_state, self.cfg.softness, False)
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
@@ -60,9 +64,10 @@ class Solver:
                 best_loss = loss
                 best_parameters = parameters
             parameters = optim.step(grad)
+            parameters[2] = YIELD_STRESS
             parameters_list.append(parameters.tolist())
             reward_list.append(reward)
-            print('loss', loss, 'reward', reward, parameters)
+            print('loss', loss, 'reward', reward, parameters, grad)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
@@ -97,7 +102,9 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    output_path = f'{path}/{env.spec.id}/{now}'
+
+    base_path = '/root/real2sim/sim2sim/test/2023-05-05'
+    output_path = f'{base_path}/{now}'
     os.makedirs(output_path, exist_ok=True)
 
     env.reset()
@@ -105,13 +112,28 @@ def solve_action(env, path, logger, args):
     cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
     taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-    actions = np.load('/root/real2sim/sim2sim/test/12:11:54.npy')[:, :3]
-    target_grids = np.load('/root/real2sim/sim2sim/test/fric_1.5/expert_0.0383_12:11:54_grid_mass.npy') 
+    actions = np.load(f'{base_path}/action.npy')
+    target_grids = np.load(f'{base_path}/target_densities.npy') 
     target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
     T = actions.shape[0]
-    args.num_steps = T * 30
+    args.num_steps = T * 300
     taichi_env.loss.update_target_density(target_grids)
-    init_parameters = np.array([0.1])
+    mu = 400
+    lam = 400
+    yield_stress = YIELD_STRESS
+    init_parameters = np.array([mu, lam, yield_stress])
+
+    frames = []
+    for idx, act in enumerate(actions):
+        if idx % 1 == 0:
+            img = env.render(mode='rgb_array')
+            pimg = Image.fromarray(img)
+            I1 = ImageDraw.Draw(pimg)
+            I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+            frames.append(pimg)
+        env.step(act)
+    frames[0].save(f'{output_path}/pre_optimize_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+    env.reset()
 
     solver = Solver(taichi_env, logger, None,
                     n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
@@ -119,22 +141,23 @@ def solve_action(env, path, logger, args):
     best_parameters, parameters_list, reward_list = solver.solve(init_parameters, actions)
     np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
     np.save(f"{output_path}/rewards.npy", np.array(reward_list))
-    print(parameters_list[-1][0])
-    env.taichi_env.set_parameter(parameters_list[-1][0])
+
+    optimized_mu = parameters_list[-1][0]
+    optimized_lam = parameters_list[-1][1]
+    optimized_yield_stress = parameters_list[-1][2]
+    print(optimized_mu, optimized_lam, optimized_yield_stress)
+    env.taichi_env.set_parameter(optimized_mu, optimized_lam, optimized_yield_stress)
     
     frames = []
     for idx, act in enumerate(actions):
-        start_time = datetime.datetime.now()
-        env.step(act)
-        if idx % 5 == 0:
+        if idx % 1 == 0:
             img = env.render(mode='rgb_array')
             pimg = Image.fromarray(img)
+            I1 = ImageDraw.Draw(pimg)
+            I1.text((5, 5), f'mu{optimized_mu:.2f},lam{optimized_lam:.2f},yield_stress{optimized_yield_stress:.2f}', fill=(255, 0, 0))
             frames.append(pimg)
-        end_time = datetime.datetime.now()
-        take_time = end_time - start_time
-        take_time = take_time.total_seconds()
-        print('take time', take_time)
+        env.step(act)
     print(output_path)
-    frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
+    frames[0].save(f'{output_path}/optimize_demo.gif', save_all=True, append_images=frames[1:], loop=0)
     
     return

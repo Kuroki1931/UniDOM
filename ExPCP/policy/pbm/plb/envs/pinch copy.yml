@@ -4,24 +4,32 @@ SIMULATOR:
   mu: 354.0
   lam: 2220.4
 SHAPES:
+  # - shape: box
+  #   width: (0.2, 0.5, 0.5)
+  #   init_pos: (0.5, 0.025, 0.5)
+  #   color: ((0<<8)+ (150<<16) +150)
+  #   n_particles: 3000
   - shape: box
     width: (0.1, 0.05, 0.05)
     init_pos: (0.5, 0.025, 0.5)
     color: ((0<<8)+ (150<<16) +150)
     n_particles: 3000
 PRIMITIVES:
-  - shape: Sphere
-    radius: 0.02
-    init_pos: (0.545, 0.025, 0.5)
-    # init_pos: (0.65, 0.04, 0.5)
-    color: (0.7, 0.7, 0.7)
-    friction: 0.9
+  - shape: Chopsticks
+    h: 0.8
+    r: 0.02
+    init_pos: (0.56, 0.1, 0.5)
+    init_rot: (0.707, 0., 0.707, 0.)
+    init_gap: 0.05
+    minimal_gap: 0.03
+    color: (0.8, 0.8, 0.8)
+    friction: 100.
     action:
-      dim: 3
-      scale: (0.02, 0.00001, 0.00001)
+      dim: 7
+      scale: (0.02, 0.0000004, 0.0000004, 0.0000004, 0.0000004, 0.0000004, 0.0000004)
   - shape: Sphere
     radius: 0.02
-    init_pos: (0.455, 0.025, 0.5)
+    init_pos: (0.405, 0.025, 0.5)
     color: (0.7, 0.7, 0.7)
     friction: 0.9
 RENDERER:
@@ -1828,4 +1836,4 @@ VARIANTS:
         target_path: envs/assets/Rope3D-v599.npy
   - ENV:
       loss:
-        target_path: envs/assets/Rope3D-v600.npy
+        target_path: envs/assets/Rope3D-v600.npyS

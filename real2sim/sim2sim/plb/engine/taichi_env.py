@@ -122,7 +122,5 @@ class TaichiEnv:
             self.loss.reset()
             self.loss.clear()
 
-    def set_parameter(self, ground_friction):
-        self.simulator.set_parameter_kernel(ground_friction)
-        # self.simulator.set_parameter(ground_friction)
-        # self.simulator.ground_friction = ground_friction
+    def set_parameter(self, mu, lam, yield_stress):
+        self.simulator.set_parameter_kernel(mu, lam, yield_stress)

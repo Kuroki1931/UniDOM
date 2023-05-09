@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Rope-v'
+ENV_NAME='Pinch-v'
 
 POSE_NUM=30
 EACH_POSE_NUM=30

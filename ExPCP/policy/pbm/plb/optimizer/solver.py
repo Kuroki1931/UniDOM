@@ -111,43 +111,47 @@ def tell_rope_break(image):
     return num_pink_objects > 1
 
 
-def rope_action(env, output_path, T=12, wait_step=3, step_num=50):
+def rope_action(env, output_path, flag=None, T=12, step_num=50):
     # first step: 10 time step same action (0, 1]
-    wait_action = np.array([[0, 0, 0]]*wait_step)
     for action_value in np.linspace(0.1, 1, 10):
         env.reset()
         first_action = np.array([[action_value, 0, 0]]*T)
-        first_action = np.concatenate([first_action, wait_action])
+        if flag:
+            dummy_action = np.zeros((T, 4))
+            first_action = np.concatenate([first_action, dummy_action], axis=1)
         # frames = []
         for idx, act in enumerate(first_action):
             env.step(act)
-            if idx+1 == T+wait_step:
+            if idx+1 == T:
                 img = env.render(mode='rgb_array')
         #     img = env.render(mode='rgb_array')
         #     pimg = Image.fromarray(img)
         #     frames.append(pimg)
         # frames[0].save(f'{output_path}/first_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        # rope_state = env.taichi_env.simulator.get_x(0)
-        # rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
+        rope_state = env.taichi_env.simulator.get_x(0)
+        rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
         possible = tell_rope_break(img)
         if possible:
             action_value -= 0.1
             break
 
     # second step: 10 time step action [action_value - 0.1, action_value + 0.1]
-    actions_list = np.random.normal(action_value, 0.05, (step_num, T, 3))
+    if flag:
+        actions_list = np.random.normal(action_value, 0.05, (step_num, T, 7))
+    else:
+        actions_list = np.random.normal(action_value, 0.05, (step_num, T, 3))
 
     best_rope_length = 0
     best_action = None
 
     for step, second_action in enumerate(actions_list):
         print(step,'/', step_num)
-        second_action = np.concatenate([second_action, wait_action])
+        second_action = np.concatenate([second_action])
         env.reset()
         # frames = []
         for idx, act in enumerate(second_action):
             env.step(act)
-            if idx+1 == T+wait_step:
+            if idx+1 == T:
                 img = env.render(mode='rgb_array')
         #     img = env.render(mode='rgb_array')
         #     pimg = Image.fromarray(img)
@@ -162,6 +166,35 @@ def rope_action(env, output_path, T=12, wait_step=3, step_num=50):
     return best_action
 
 
+def cloth_action(env, output_path, flag=None, T=5):
+    action_value_list = np.linspace(0.009, 0.0145, 50)
+    for idx, action_value in enumerate(action_value_list):
+        env.reset()
+        actions = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*100)])
+        # frames = []
+        # success = True
+        best_max_x = 0
+        for t, act in enumerate(actions):
+            env.step(act)
+            rope_state = env.taichi_env.simulator.get_x(0)
+            max_x = rope_state.max(axis=0)[0]
+            if max_x > best_max_x:
+                best_max_x = max_x
+        #     if t%1 == 0:
+        #         img = env.render(mode='rgb_array')
+        #         pimg = Image.fromarray(img)
+        #         frames.append(pimg)
+        # frames[0].save(f'{output_path}/{idx}_{action_value}_{best_max_x}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        if best_max_x > 0.55:
+            if idx == 0:
+                best_action_value = action_value_list[idx]
+            else:
+                best_action_value = action_value_list[idx-1]
+            actions = np.array([[best_action_value, 0, 0]]*T)
+            return actions
+    return actions
+
+
 def solve_action(env, path, logger, args):
     repeat_time = 150
     for i in range(repeat_time):
@@ -169,9 +202,9 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 10, 500
-        lam_bottom, lam_upper = 10, 500
-        yield_stress_bottom, yield_stress_upper = 10, 500
+        mu_bottom, mu_upper = 100, 2000
+        lam_bottom, lam_upper = 100, 2000
+        yield_stress_bottom, yield_stress_upper = 100, 2000
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
@@ -188,7 +221,13 @@ def solve_action(env, path, logger, args):
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-        if args.task_name not in ['Rope']:
+        if args.task_name in ['Rope']:
+            action = rope_action(env, output_path)
+        if args.task_name in ['Pinch']:
+            action = cloth_action(env, output_path)
+        # if args.task_name in ['Pinch']:
+        #     action = cloth_action()
+        else:
             # init_actions
             if args.task_name in ['Move']:
                 with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
@@ -207,8 +246,6 @@ def solve_action(env, path, logger, args):
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                             **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
             action = solver.solve(init_actions)
-        else:
-            action = rope_action(env, output_path)
 
         np.save(f"{output_path}/action.npy", action)
         print(action)
@@ -219,7 +256,7 @@ def solve_action(env, path, logger, args):
             for idx, act in enumerate(action):
                 env.step(act)
                 if idx % 1 == 0:
-                # if idx + 1 == 15:
+                # if idx + 1 == 5:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
@@ -271,4 +308,5 @@ def solve_action(env, path, logger, args):
             with open(f'{output_path}/iou_{last_iou}.txt', 'w') as f:
                 f.write(str(last_iou))
         except:
+            print('Nan error')
             pass
