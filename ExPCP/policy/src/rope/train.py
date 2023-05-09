@@ -170,7 +170,8 @@ def train(args):
     mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
     lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
     yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
-        
+
+    best_success_count = 0
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
@@ -190,7 +191,8 @@ def train(args):
 			verbose = 1
 		)
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
-        
+
+        success_count = 0 
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
             for i in tqdm(range(500)):
                 test_env = args.env_name.split('-')[0]
@@ -201,7 +203,6 @@ def train(args):
                 mu = np.random.uniform(mu_bottom, mu_upper)
                 lam = np.random.uniform(lam_bottom, lam_upper)
                 yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-                print('parameter', mu, lam, yield_stress)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 
                 output_dir = exp_dir.joinpath(f'{test_env}/')
@@ -209,7 +210,6 @@ def train(args):
 
                 imgs = []
                 for t in range(args.num_steps):
-                    print(t, '/', args.num_steps)
                     test_plasticine_pc = env.taichi_env.simulator.get_x(0)
                     test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
 
@@ -221,13 +221,10 @@ def train(args):
 			            tf.cast(tf.convert_to_tensor(vector[None]), tf.float32),
 			        ], False, 1)
                     act = act.numpy()[0]
-                    print(act)
                     _, _, _, loss_info = env.step(act)
                     
                     # if t % 1 == 0:
                     if t+1 == args.num_steps:
-                        log_string(f'action {t}: {str(act)}')
-                        print(f"Saving gif at {t} steps")
                         img = env.render(mode='rgb_array')
                         pimg = Image.fromarray(img)
                         I1 = ImageDraw.Draw(pimg)
@@ -245,6 +242,10 @@ def train(args):
                     imgs[0].save(f"{output_dir}/{epoch}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
                     with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
                         f.write(f'{rope_length},{mu},{lam},{yield_stress}')
+                    success_count += 1
+        if success_count > best_success_count:
+            model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
+        log_string('success_count: %4f' % success_count)
 
 
 if __name__ == '__main__':
