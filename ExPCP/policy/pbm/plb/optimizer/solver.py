@@ -170,9 +170,8 @@ def cloth_action(env, output_path, flag=None, T=5):
     action_value_list = np.linspace(0.009, 0.0145, 50)
     for idx, action_value in enumerate(action_value_list):
         env.reset()
-        actions = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*100)])
-        # frames = []
-        # success = True
+        actions = np.concatenate([np.array([[0.05, 0, 0]]*T), np.array([[0, 0, 0]]*100)])
+        frames = []
         best_max_x = 0
         for t, act in enumerate(actions):
             env.step(act)
@@ -180,11 +179,11 @@ def cloth_action(env, output_path, flag=None, T=5):
             max_x = rope_state.max(axis=0)[0]
             if max_x > best_max_x:
                 best_max_x = max_x
-        #     if t%1 == 0:
-        #         img = env.render(mode='rgb_array')
-        #         pimg = Image.fromarray(img)
-        #         frames.append(pimg)
-        # frames[0].save(f'{output_path}/{idx}_{action_value}_{best_max_x}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+            if t%1 == 0:
+                img = env.render(mode='rgb_array')
+                pimg = Image.fromarray(img)
+                frames.append(pimg)
+        frames[0].save(f'{output_path}/{idx}_{action_value}_{best_max_x}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         if best_max_x > 0.55:
             if idx == 0:
                 best_action_value = action_value_list[idx]
@@ -202,9 +201,9 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 100, 2000
-        lam_bottom, lam_upper = 100, 2000
-        yield_stress_bottom, yield_stress_upper = 100, 2000
+        mu_bottom, mu_upper = 200, 5000
+        lam_bottom, lam_upper = 200, 5000
+        yield_stress_bottom, yield_stress_upper = 800, 800
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()

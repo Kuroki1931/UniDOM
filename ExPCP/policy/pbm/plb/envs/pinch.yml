@@ -5,14 +5,14 @@ SIMULATOR:
   lam: 2220.4
 SHAPES:
   - shape: box
-    width: (0.002, 0.2, 0.002)
-    init_pos: (0.45, 0.15, 0.5)
+    width: (0.002, 0.3, 0.002)
+    init_pos: (0.5, 0.25, 0.5)
     color: 100
-    n_particles: 200
+    n_particles: 400
 PRIMITIVES:
   - shape: Sphere
     radius: 0.01
-    init_pos: (0.45, 0.25, 0.5)
+    init_pos: (0.5, 0.4, 0.5)
     color: (0.7, 0.7, 0.7)
     friction: 0.9
     action:
