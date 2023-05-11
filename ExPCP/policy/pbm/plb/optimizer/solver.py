@@ -165,37 +165,8 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
             best_action = second_action
     return best_action
 
-
-def cloth_action(env, output_path, flag=None, T=5):
-    action_value_list = np.linspace(0.009, 0.0145, 50)
-    for idx, action_value in enumerate(action_value_list):
-        env.reset()
-        actions = np.concatenate([np.array([[0.05, 0, 0]]*T), np.array([[0, 0, 0]]*100)])
-        frames = []
-        best_max_x = 0
-        for t, act in enumerate(actions):
-            env.step(act)
-            rope_state = env.taichi_env.simulator.get_x(0)
-            max_x = rope_state.max(axis=0)[0]
-            if max_x > best_max_x:
-                best_max_x = max_x
-            if t%1 == 0:
-                img = env.render(mode='rgb_array')
-                pimg = Image.fromarray(img)
-                frames.append(pimg)
-        frames[0].save(f'{output_path}/{idx}_{action_value}_{best_max_x}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        if best_max_x > 0.55:
-            if idx == 0:
-                best_action_value = action_value_list[idx]
-            else:
-                best_action_value = action_value_list[idx-1]
-            actions = np.array([[best_action_value, 0, 0]]*T)
-            return actions
-    return actions
-
-
 def solve_action(env, path, logger, args):
-    repeat_time = 150
+    repeat_time = 100
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
@@ -223,9 +194,9 @@ def solve_action(env, path, logger, args):
         if args.task_name in ['Rope']:
             action = rope_action(env, output_path)
         if args.task_name in ['Pinch']:
-            action = cloth_action(env, output_path)
-        # if args.task_name in ['Pinch']:
-        #     action = cloth_action()
+            T = 5
+            action_value = np.random.uniform(0.01, 0.015)
+            action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         else:
             # init_actions
             if args.task_name in ['Move']:
