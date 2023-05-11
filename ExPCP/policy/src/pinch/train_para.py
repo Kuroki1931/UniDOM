@@ -50,25 +50,17 @@ def parse_args():
     parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
     parser.add_argument('--save_epoch', default=5, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=200, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--experts_dir', type=str, default='2023-05-04_17-54', help='experiment root')
-    parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
-    parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
-    parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
-    parser.add_argument('--use_uniform_sample', action='store_true', default=False, help='use uniform sampiling')
-    parser.add_argument('--clip_type', type=int, default=1, help='0 -> video clip, 1 -> clip')
-    parser.add_argument('--command_type', type=int, default=0, help='0 ->whole, 1 -> separate')
-    parser.add_argument('--command_num', type=int, default=4, help='command num')
     
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Rope-v1")
+    parser.add_argument("--env_name", type=str, default="Pinch-v1")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
     parser.add_argument("--density_loss", type=float, default=500)
     parser.add_argument("--contact_loss", type=float, default=1)
     parser.add_argument("--soft_contact_loss", action='store_true')
-    parser.add_argument("--num_steps", type=int, default=12)
+    parser.add_argument("--num_steps", type=int, default=5)
     # differentiable physics parameters
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--softness", type=float, default=6666.)
@@ -76,7 +68,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_12-58'
+BASE_DIR = '/root/ExPCP/policy/data/Pinch_100_2000_100_2000_100_2000/2023-05-09_01-02'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -216,6 +208,7 @@ def train(args):
                 output_dir.mkdir(exist_ok=True)
 
                 imgs = []
+                best_max_x = 0
                 for t in range(args.num_steps):
                     test_plasticine_pc = env.taichi_env.simulator.get_x(0)
                     test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
@@ -234,28 +227,40 @@ def train(args):
                         tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
 			        ], False, 1)
                     act = act.numpy()[0]
-                    _, _, _, loss_info = env.step(act)
                     
-                    # if t % 1 == 0:
-                    if t+1 == args.num_steps:
+                    max_x = env.taichi_env.simulator.get_x(0).max(axis=0)[0]
+                    if max_x > best_max_x:
+                        best_max_x = max_x
+
+                    _, _, _, loss_info = env.step(act)
+
+                    if t % 2 == 0:
+                    # if t+1 == args.num_steps:
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        imgs.append(pimg)
+                        
+                # white space time
+                white_time = 100
+                for t in range(white_time):
+                    max_x = env.taichi_env.simulator.get_x(0).max(axis=0)[0]
+                    if max_x > best_max_x:
+                        best_max_x = max_x
+                    env.step(np.array([0, 0, 0]))
+                    if t % 2 == 0:
                         img = env.render(mode='rgb_array')
                         pimg = Image.fromarray(img)
                         I1 = ImageDraw.Draw(pimg)
                         I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                         imgs.append(pimg)
 
-                possible = tell_rope_break(img)
-                if possible:
-                    imgs[0].save(f"{output_dir}/{epoch}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'0,{mu},{lam},{yield_stress}')
-                else:
-                    rope_state = env.taichi_env.simulator.get_x(0)
-                    rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
-                    imgs[0].save(f"{output_dir}/{epoch}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'{rope_length},{mu},{lam},{yield_stress}')
-                    success_count += 1
+                success = best_max_x > 0.55
+                imgs[0].save(f"{output_dir}/{epoch}_{i}_{best_max_x:.4f}_{success}.gif", save_all=True, append_images=imgs[1:], loop=0)
+                with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
+                    f.write(f'{best_max_x},{mu},{lam},{yield_stress}')
+                success_count += int(success)
         if success_count > best_success_count:
             model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
         log_string('success_count: %4f' % success_count)

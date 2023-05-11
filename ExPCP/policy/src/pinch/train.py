@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import CLS_SSG_Model_PARA
+from models.cls_ssg_model import CLS_SSG_Model
 from PIL import Image
 from PIL import ImageDraw
 
@@ -50,19 +50,11 @@ def parse_args():
     parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
     parser.add_argument('--save_epoch', default=5, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=200, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--experts_dir', type=str, default='2023-05-04_17-54', help='experiment root')
-    parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
-    parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
-    parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
-    parser.add_argument('--use_uniform_sample', action='store_true', default=False, help='use uniform sampiling')
-    parser.add_argument('--clip_type', type=int, default=1, help='0 -> video clip, 1 -> clip')
-    parser.add_argument('--command_type', type=int, default=0, help='0 ->whole, 1 -> separate')
-    parser.add_argument('--command_num', type=int, default=4, help='command num')
     
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Rope-v1")
+    parser.add_argument("--env_name", type=str, default="Pinch-v1")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
     parser.add_argument("--density_loss", type=float, default=500)
@@ -76,7 +68,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Rope_10_500_10_500_10_500/2023-05-06_12-58'
+BASE_DIR = '/root/ExPCP/policy/data/Pinch_100_2000_100_2000_100_2000/2023-05-09_01-02'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -91,7 +83,6 @@ def load_dataset(in_file, batch_size, num_point):
         in_features = {
             'points': tf.io.FixedLenFeature([num_point * 3], tf.float32),
             'vector': tf.io.FixedLenFeature([num_point * 3], tf.float32),
-            'parameters': tf.io.FixedLenFeature([3], tf.float32),
             'action': tf.io.FixedLenFeature([3], tf.float32)
         }
 
@@ -100,13 +91,12 @@ def load_dataset(in_file, batch_size, num_point):
     def _preprocess_fn(sample):
         points = sample['points']
         vector = sample['vector']
-        parameters = sample['parameters']
         action = sample['action']
 
         points = tf.reshape(points, (num_point, 3))
         vector = tf.reshape(vector, (num_point, 3))
 
-        return points, vector, parameters, action
+        return points, vector, action
 
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
@@ -126,7 +116,7 @@ def train(args):
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{BASE_DATE}/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./para/')
+    exp_dir = exp_dir.joinpath(f'./no_para/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{timestr}/')
     exp_dir.mkdir(exist_ok=True)
@@ -154,16 +144,12 @@ def train(args):
     action_size = 3
     num_point = args.num_plasticine_point
 
-    model = CLS_SSG_Model_PARA(args.batch_size, action_size)
-    train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}//train_experts.tfrecord', args.batch_size, num_point)
-    validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}//validation_experts.tfrecord', args.batch_size, num_point)
+    model = CLS_SSG_Model(args.batch_size, action_size)
+    train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size, num_point)
+    validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/validation_experts.tfrecord', args.batch_size, num_point)
 
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3), (args.batch_size, 3)])
+    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3)])
     print(model.summary())
-    
-    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//mu.npy').tolist()
-    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//lam.npy').tolist()
-    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//yield_stress.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -198,8 +184,8 @@ def train(args):
 			verbose = 1
 		)
         log_string('mean_squared_error: %4f' % history.history['loss'][0])
-        
-        success_count = 0
+
+        success_count = 0 
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
             for i in tqdm(range(500)):
                 test_env = args.env_name.split('-')[0]
@@ -216,6 +202,7 @@ def train(args):
                 output_dir.mkdir(exist_ok=True)
 
                 imgs = []
+                best_max_x = 0
                 for t in range(args.num_steps):
                     test_plasticine_pc = env.taichi_env.simulator.get_x(0)
                     test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
@@ -223,39 +210,45 @@ def train(args):
                     test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
                     vector = test_points - test_primtiive_pc
 
-                    mu_value = (mu - np.mean(mu_list)) / np.std(mu_list)
-                    lam_value = (lam - np.mean(lam_list)) / np.std(lam_list)
-                    yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
-                    parameters = np.array([mu_value, lam_value, yield_stress_value])
-
                     act = model.forward_pass([
 			            tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
 			            tf.cast(tf.convert_to_tensor(vector[None]), tf.float32),
-                        tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
 			        ], False, 1)
                     act = act.numpy()[0]
-                    _, _, _, loss_info = env.step(act)
                     
-                    # if t % 1 == 0:
-                    if t+1 == args.num_steps:
+                    max_x = env.taichi_env.simulator.get_x(0).max(axis=0)[0]
+                    if max_x > best_max_x:
+                        best_max_x = max_x
+
+                    _, _, _, loss_info = env.step(act)
+
+                    if t % 1 == 0:
+                    # if t+1 == args.num_steps:
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        imgs.append(pimg)
+                
+                # white space time
+                white_time = 100
+                for t in range(white_time):
+                    max_x = env.taichi_env.simulator.get_x(0).max(axis=0)[0]
+                    if max_x > best_max_x:
+                        best_max_x = max_x
+                    env.step(np.array([0, 0, 0]))
+                    if t % 2 == 0:
                         img = env.render(mode='rgb_array')
                         pimg = Image.fromarray(img)
                         I1 = ImageDraw.Draw(pimg)
                         I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                         imgs.append(pimg)
 
-                possible = tell_rope_break(img)
-                if possible:
-                    imgs[0].save(f"{output_dir}/{epoch}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'0,{mu},{lam},{yield_stress}')
-                else:
-                    rope_state = env.taichi_env.simulator.get_x(0)
-                    rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
-                    imgs[0].save(f"{output_dir}/{epoch}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
-                    with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
-                        f.write(f'{rope_length},{mu},{lam},{yield_stress}')
-                    success_count += 1
+                success = best_max_x > 0.55
+                imgs[0].save(f"{output_dir}/{epoch}_{i}_{best_max_x:.4f}_{success}.gif", save_all=True, append_images=imgs[1:], loop=0)
+                with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
+                    f.write(f'{best_max_x},{mu},{lam},{yield_stress}')
+                success_count += int(success)
         if success_count > best_success_count:
             model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
         log_string('success_count: %4f' % success_count)
