@@ -3,8 +3,8 @@
 ALGO='action'
 ENV_NAME='Table-v'
 
-POSE_NUM=9
-EACH_POSE_NUM=90
+POSE_NUM=90
+EACH_POSE_NUM=18
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm
