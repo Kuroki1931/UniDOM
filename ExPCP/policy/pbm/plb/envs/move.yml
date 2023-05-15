@@ -1,39 +1,25 @@
 SIMULATOR:
   yield_stress: 1762.2
-  gravity: (0, -3, 0)
+  gravity: (0, -0.6, 0)
   mu: 354.0
   lam: 2220.4
+  ground_friction: 0.5
 SHAPES:
   - shape: box
     width: (0.5, 0.025, 0.025)
-    init_pos: (0.5, 0.0065, 0.5)
-    color: 100
+    init_pos: (0.5, 0.0125, 0.5)
     n_particles: 3000
+    color: 100
 PRIMITIVES:
   - shape: Sphere
-    radius: 0.02
-    init_pos: (0.64, 0.0065, 0.52)
-    # init_pos: (0.65, 0.04, 0.5)
+    radius: 0.025
+    init_pos: (0.745, 0.02, 0.5)
     color: (0.7, 0.7, 0.7)
-    friction: 0.9
     action:
       dim: 3
-      scale: (0.01, 0.00001, 0.01)
-  - shape: Sphere
-    radius: 0.02
-    init_pos: (0.35, 0.0065, 0.5)
-    color: (0.7, 0.7, 0.7)
-    friction: 0.9
-  - shape: Cylinder
-    h: 0.06
-    r: 0.06
-    init_pos: (0.36, 0.00, 0.5)
-    color: (0.8, 0.8, 0.8)
-    friction: 0.1
+      scale: (0.005, 0.005, 0.005)
 RENDERER:
-  camera_pos: (0.5, 2.0, 0.5)
-  camera_rot: (1.57, 0.)
-  use_directional_light: True
+  use_directional_light: False
 VARIANTS:
   - ENV:
       loss:

@@ -29,18 +29,16 @@ def parse_args():
     return parser.parse_args()
 
 
-def create_example(points, vector, parameters, action):
+def create_example(points, parameters):
 
     feature = {
 		'points' : tf_utils.float_list_feature(points.reshape(-1, 1)),
-        'vector': tf_utils.float_list_feature(vector.reshape(-1, 1)),
 		'parameters' : tf_utils.float_list_feature(parameters.reshape(-1, 1)),
-		'action' : tf_utils.float_list_feature(action.reshape(-1, 1))
 	}
 
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
-BASE_NAME = 'Pinch_100_2000_100_2000_100_2000'
+BASE_NAME = 'Move_1000_8000_1000_8000_500_2000'
 
 
 def main(args):
@@ -87,35 +85,19 @@ def main(args):
             print(path)
             env_count[env_name] += 1
             # target
-            action = data['action']
             # points
-            plasticine_pc = data['plasticine_pc']
-    
-            primitive_pc = data['primitive_pc']
+            plasticine_pc = data['plasticine_pc'][-1]
             mu = data['mu']
             lam = data['lam']
-            yield_stress = data['yield_stress']
-            mu = (mu - np.mean(mu_list)) / np.std(mu_list)
-            lam = (lam - np.mean(lam_list)) / np.std(lam_list)
-            yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+            # yield_stress = data['yield_stress']
 
-            for i in range(action.shape[0]):
-                plasticine_pc_i = plasticine_pc[i]
-                primitive_center_i = primitive_pc[i]
-                
-                points = sample_pc(plasticine_pc_i, args.num_plasticine_point)
-                vector = points - primitive_center_i
-                act = action[i]
-                act[1] = 0 # because 1D
-                act[2] = 0 # because 1D
+            parameters = np.array([mu, lam])
 
-                parameters = np.array([mu, lam, yield_stress])
-
-                tf_example = create_example(points, vector, parameters, act)
-                if random.randint(1, 10) == 1:
-                    validation_writer.write(tf_example.SerializeToString())
-                else:
-                    train_writer.write(tf_example.SerializeToString())    
+            tf_example = create_example(plasticine_pc, parameters)
+            if random.randint(1, 10) == 1:
+                validation_writer.write(tf_example.SerializeToString())
+            else:
+                train_writer.write(tf_example.SerializeToString())    
     with open(f'{exp_dir}/file.txt', 'w') as fp:
         for item in file_list:
             # write each item on a new line
