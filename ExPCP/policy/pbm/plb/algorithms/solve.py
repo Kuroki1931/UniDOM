@@ -62,9 +62,9 @@ def main():
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-            args.num_steps = step * 100
+            args.num_steps = step * 10
         else:
-            args.num_steps = 500000
+            args.num_steps = 5000000
 
     logger = Logger(args.path)
     set_random_seed(args.seed)

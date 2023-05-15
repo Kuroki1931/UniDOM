@@ -40,11 +40,11 @@ class PlasticineEnv(gym.Env):
             outs.append(i.get_state(t))
         primitive_pos = np.concatenate(outs)[:3]
         step_size = len(x) // self._n_observed_particles
-        mu = self.taichi_env.simulator.mu_value
-        lam = self.taichi_env.simulator.lam_value
-        yield_stress = self.taichi_env.simulator.yield_stress_value
-        parameters = np.array([mu, lam, yield_stress])
-        return np.concatenate([x[::step_size].reshape(-1), primitive_pos, parameters])
+        # mu = self.taichi_env.simulator.mu_value
+        # lam = self.taichi_env.simulator.lam_value
+        # yield_stress = self.taichi_env.simulator.yield_stress_value
+        # parameters = np.array([mu, lam, yield_stress])
+        return np.concatenate([x[::step_size].reshape(-1), primitive_pos])
     
     def get_obs(self, t=0, time=0):
         plasticine_pc = self.taichi_env.simulator.get_x(t)
@@ -63,12 +63,7 @@ class PlasticineEnv(gym.Env):
 
         self._recorded_actions.append(action)
         obs = self._get_obs()
-
-        x = self.taichi_env.simulator.get_x(0)
-        r = x.max(axis=0)[0] - x.min(axis=0)[0]
-
-        loss_info['reward'] = r
-
+        r = loss_info['reward']
         if np.isnan(obs).any() or np.isnan(r):
             if np.isnan(r):
                 print('nan in r')

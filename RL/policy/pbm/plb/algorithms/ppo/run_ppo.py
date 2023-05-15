@@ -23,7 +23,7 @@ from plb.algorithms.ppo.ppo.storage import RolloutStorage
 from plb.algorithms.ppo.evaluation import evaluate
 
 PARAMETER_SIXE = 3
-ACTION_SPACE = 1
+ACTION_SPACE = 3
 
 
 def tell_rope_break(image):
@@ -47,7 +47,6 @@ def tell_rope_break(image):
 def train_ppo(env, path, logger, old_args):
     num_steps = old_args.num_steps
     args = get_args()
-    args.num_steps = env._max_episode_steps
     args.num_env_steps = num_steps
 
     log_dir = args.log_dir = path
@@ -68,8 +67,8 @@ def train_ppo(env, path, logger, old_args):
     from plb import envs
     envs = make_vec_envs(env, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
-    if not old_args.para:
-        obs_size = envs.observation_space.shape[0] - PARAMETER_SIXE
+    if old_args.para:
+        obs_size = envs.observation_space.shape[0] + PARAMETER_SIXE
         actor_critic = Policy(
             (obs_size,),
             Box(-np.inf, np.inf, (ACTION_SPACE,)),
@@ -140,19 +139,26 @@ def train_ppo(env, path, logger, old_args):
     for j in range(num_updates):
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(int(j))
-        mu = np.random.uniform(10, 500)
-        lam = np.random.uniform(10, 500)
-        yield_stress = np.random.uniform(10, 500)
-        parameters = torch.tensor([mu, lam, yield_stress])[None, :]
+        mu_bottom, mu_upper = 200, 2000
+        lam_bottom, lam_upper = 200, 2000
+        yield_stress_bottom, yield_stress_upper = 50, 300
+        mu = np.random.uniform(mu_bottom, mu_upper)
+        lam = np.random.uniform(lam_bottom, lam_upper)
+        yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
+        mu_normalization = (mu - mu_bottom) / (mu_upper - mu_bottom)
+        lam_normalization = (lam - lam_bottom) / (lam_upper - lam_bottom)
+        yield_stress_normalization = (yield_stress - yield_stress_bottom) / (yield_stress_upper - yield_stress_bottom)
+        parameters = torch.tensor([mu_normalization, lam_normalization, yield_stress_normalization])[None, :].to(device)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
+        
         envs = make_vec_envs(env, args.seed, args.num_processes,
                         args.gamma, args.log_dir, device, False)
 
         obs = envs.reset()
-        if not old_args.para:
-            obs = obs[:, :-PARAMETER_SIXE]
-            obs_size = envs.observation_space.shape[0] - PARAMETER_SIXE
+        if old_args.para:
+            obs = torch.concat([obs, parameters], axis=1)
+            obs_size = envs.observation_space.shape[0] + PARAMETER_SIXE
             rollouts = RolloutStorage(args.num_steps, args.num_processes,
                             (obs_size,), Box(-np.inf, np.inf, (ACTION_SPACE,)),
                             actor_critic.recurrent_hidden_state_size)
@@ -169,51 +175,42 @@ def train_ppo(env, path, logger, old_args):
                 agent.optimizer, j, num_updates,
                 agent.optimizer.lr if args.algo == "acktr" else args.lr)
 
-        bf_length = 0.2
         for step in range(args.num_steps):
             # Sample actions
             with torch.no_grad():
                 value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
-            # Obser reward and next obs
 
-            act = action.detach().clone()
-            act = torch.concat([act, torch.zeros((1, 2)).to(device)], axis=1)
-            obs, reward, done, infos = envs.step(act)
-            if not old_args.para:
-                obs = obs[:, :-PARAMETER_SIXE]
+            # Obser reward and next obs
+            obs, reward, done, infos = envs.step(action)
+            if old_args.para:
+                obs = torch.concat([obs, parameters], axis=1)
+            logger.step(None, None, infos[0]['reward'], None, done[0], infos[0])
             total_steps += 1
-            diff_length = infos[0]['reward'] - bf_length
-            bf_length = infos[0]['reward']
-            ep_reward += diff_length
+            ep_reward += infos[0]['reward']
 
             if done[0]:
-                img = envs.render(mode='rgb_array')
-                if tell_rope_break(img):
-                     ep_reward -= 1
                 episodes += 1
                 episode_rewards.append(ep_reward)
-                logger.reset()
-                logger.step(None, None, ep_reward, None, done[0], infos[0])
-                logger.reset()
-                reward = torch.tensor([[ep_reward]])
                 #output = f"Episode: {episodes}, step: {step} reward: {ep_reward},  iou: {ep_iou},  last_iou: {ep_last_iou}"
                 #print(output)
                 #logger.write(output+'\n')
                 #logger.flush()
+                logger.reset()
                 ep_reward = 0
-                # if episodes % 200 == 0:
-                #     # if episodes >= (test_times + 1) * 200:
-                #     ob_rms = utils.get_vec_normalize(envs).ob_rms
-                #     total_reward, total_iou, total_last_iou = evaluate(actor_critic, ob_rms, envs, args.seed,
-                #              args.num_processes, eval_log_dir, device)
-                #     output = f"Test Episode: {episodes}, step: {step} reward: {total_reward},  iou: {total_iou},  last_iou: {total_last_iou}"
-                #     print(output)
+                ep_iou = 0
+                ep_last_iou = 0
+                if episodes % 200 == 0:
+                    # if episodes >= (test_times + 1) * 200:
+                    ob_rms = utils.get_vec_normalize(envs).ob_rms
+                    total_reward, total_iou, total_last_iou = evaluate(actor_critic, ob_rms, envs, args.seed,
+                             args.num_processes, eval_log_dir, device)
+                    output = f"Test Episode: {episodes}, step: {step} reward: {total_reward},  iou: {total_iou},  last_iou: {total_last_iou}"
+                    print(output)
                 episodes_step = 0
             else:
                 episodes_step += 1
-                logger.step(None, None, ep_reward, None, done[0], infos[0])
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(

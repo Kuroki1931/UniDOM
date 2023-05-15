@@ -8,6 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from plb.envs import make
 from plb.algorithms.logger import Logger
+import datetime
 
 from plb.algorithms.discor.run_sac import train as train_sac
 from plb.algorithms.ppo.run_ppo import train_ppo
@@ -59,7 +60,10 @@ def main():
     args = get_args()
 
     # step = LANG_GOAL[args.env_name]['num_steps']
-    step = 16
+    step = 70
+
+    now = datetime.datetime.now()
+    args.path = f'{args.path}/{args.env_name}/{args.algo}/{args.para}/{now}'
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
