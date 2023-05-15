@@ -8,7 +8,6 @@ import math
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import json
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from plb.envs import make
 from plb.algorithms.logger import Logger
@@ -57,12 +56,12 @@ def get_args():
 
 # Define the range of the initial state of the rope
 x_range = [0.25, 0.75]
-y_range = [0.475, 0.525]
-z_range = [0, 0.05]
+y_range = [0.4875, 0.5125]
+z_range = [0, 0.025]
 stick_radius = 0.07
 
 # Calculate the initial state points of the rope
-NUM_POINTS = 5000
+NUM_POINTS = 3000
 width = [x_range[1] - x_range[0], y_range[1] - y_range[0], z_range[1] - z_range[0]]
 init_pos = [(x_range[0]+x_range[1])/2, (y_range[0]+y_range[1])/2, (z_range[0]+z_range[1])/2]
 rope_initial_state = (np.random.random((NUM_POINTS, 3)) * 2 - 1) * (0.5 * np.array(width)) + np.array(init_pos)
@@ -73,7 +72,7 @@ def closest_tangent_point(angle):
     angle_radians = math.radians(angle)
     center = [x_range[0], (y_range[0] + y_range[1]) / 2]
     radius = 0.6 * rope_length
-    r = math.sqrt(random.uniform((radius**2)/8, radius**2))  # Use the square root to maintain uniform distribution
+    r = math.sqrt(random.uniform((radius**2)/6, radius**2))  # Use the square root to maintain uniform distribution
     X = center[0] + r * math.cos(angle_radians)
     Y = center[1] + r * math.sin(angle_radians)
     stick_pos = np.array([X, Y, 0])
@@ -181,7 +180,7 @@ def main():
                             soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
     env.reset()
-    steps = 600
+    steps = 200
 
     base_path = '/root/ExPCP/policy/pbm/goal_state'
     os.makedirs(base_path, exist_ok=True)
@@ -200,18 +199,18 @@ def main():
     for _ in range(steps):
         index_list.append(index)
 
-        angle_ranges = [(35, 45)]
+        angle_ranges = [(35, 38)]
         selected_range = random.choice(angle_ranges)
         stick_angle = random.uniform(selected_range[0], selected_range[1])
         tangent_point, add_stick_pos = closest_tangent_point(stick_angle)
         goal_state = goal_state_pattern1(tangent_point, add_stick_pos)
         goal_state = goal_state[:, [0, 2, 1]]
-
         env.taichi_env.initialize()
         env.taichi_env.simulator.reset(goal_state)
         state = env.taichi_env.get_state()
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
+        print(grid_mass.sum())
         np.save(f'/root/ExPCP/policy/pbm/plb/envs/assets/Move3D-v{index}', grid_mass)
 
         os.makedirs(f'{base_path}/goal_state1/{index}', exist_ok=True)

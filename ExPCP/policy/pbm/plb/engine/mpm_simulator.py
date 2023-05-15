@@ -21,7 +21,7 @@ class MPMSimulator:
 
         self.dx, self.inv_dx = 1 / n_grid, float(n_grid)
         self.dt = 0.5e-4 / quality
-        self.p_vol, self.p_rho = (self.dx * 0.5) ** 2, 3 # TODO default 1
+        self.p_vol, self.p_rho = (self.dx * 0.5) ** 2, 1
         self.p_mass = self.p_vol * self.p_rho
 
         # material
@@ -379,29 +379,6 @@ class MPMSimulator:
                         pos = pos*0.5 + primitive_pos - 0.25
                         x_list.append(pos.tolist())
         return np.array(x_list)
-    
-    # @ti.kernel
-    # def get_grid_mass_kernel(self, f: ti.i32, x: ti.ext_arr(), y: ti.ext_arr(), z: ti.ext_arr(), m: ti.ext_arr()):
-    #     for p in range(0, self.n_particles):
-    #         base = (self.x[f, p] * self.inv_dx - 0.5).cast(int)
-    #         fx = self.x[f, p] * self.inv_dx - base.cast(self.dtype)
-    #         w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
-    #         for offset in ti.static(ti.grouped(self.stencil_range())):
-    #             weight = ti.cast(1.0, self.dtype)
-    #             for d in ti.static(range(self.dim)):
-    #                 weight *= w[offset[d]][d]
-    #             x[p] = (base + offset)[0]
-    #             y[p] = (base + offset)[1]
-    #             z[p] = (base + offset)[2]
-    #             m[p] = weight * self.p_mass
-
-    # def get_grid_mass(self, f):
-    #     x = np.zeros((self.n_particles), dtype=np.float64)
-    #     y = np.zeros((self.n_particles), dtype=np.float64)
-    #     z = np.zeros((self.n_particles), dtype=np.float64)
-    #     m = np.zeros((self.n_particles), dtype=np.float64)
-    #     self.get_grid_mass_kernel(f, x, y, z, m)
-    #     return x, y, z, m
 
     @ti.kernel
     def get_grid_mass_kernel(self, f: ti.i32, x: ti.ext_arr()):

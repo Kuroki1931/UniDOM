@@ -189,7 +189,6 @@ class Cylinder(Primitive):
         cfg.r = 0.1
         return cfg
 
-
 class Torus(Primitive):
     def __init__(self, **kwargs):
         super(Torus, self).__init__(**kwargs)
