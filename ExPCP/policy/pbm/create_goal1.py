@@ -72,7 +72,7 @@ def closest_tangent_point(angle):
     angle_radians = math.radians(angle)
     center = [x_range[0], (y_range[0] + y_range[1]) / 2]
     radius = 0.6 * rope_length
-    r = math.sqrt(random.uniform((radius**2)/8, radius**2))  # Use the square root to maintain uniform distribution
+    r = math.sqrt(random.uniform((radius**2)/6, radius**2))  # Use the square root to maintain uniform distribution
     X = center[0] + r * math.cos(angle_radians)
     Y = center[1] + r * math.sin(angle_radians)
     stick_pos = np.array([X, Y, 0])
@@ -199,7 +199,7 @@ def main():
     for _ in range(steps):
         index_list.append(index)
 
-        angle_ranges = [(35, 45)]
+        angle_ranges = [(35, 38)]
         selected_range = random.choice(angle_ranges)
         stick_angle = random.uniform(selected_range[0], selected_range[1])
         tangent_point, add_stick_pos = closest_tangent_point(stick_angle)

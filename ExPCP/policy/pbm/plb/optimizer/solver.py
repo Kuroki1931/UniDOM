@@ -174,7 +174,7 @@ def solve_action(env, path, logger, args):
         now = datetime.datetime.now()
         mu_bottom, mu_upper = 200, 2000
         lam_bottom, lam_upper = 200, 2000
-        yield_stress_bottom, yield_stress_upper = 50, 500
+        yield_stress_bottom, yield_stress_upper = 200, 300
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
