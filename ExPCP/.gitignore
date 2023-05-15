@@ -37,6 +37,7 @@ rl2seq
 output/
 goal_state/
 data/
+assets/
 make_bc_datasets.sh
 each_make_bc_datasets.sh
 *.pickle

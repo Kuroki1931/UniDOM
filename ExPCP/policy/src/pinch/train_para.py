@@ -234,13 +234,13 @@ def train(args):
 
                     _, _, _, loss_info = env.step(act)
 
-                    # if t % 2 == 0:
-                    # # if t+1 == args.num_steps:
-                    #     img = env.render(mode='rgb_array')
-                    #     pimg = Image.fromarray(img)
-                    #     I1 = ImageDraw.Draw(pimg)
-                    #     I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                    #     imgs.append(pimg)
+                    if t % 2 == 0:
+                    # if t+1 == args.num_steps:
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        imgs.append(pimg)
                         
                 # white space time
                 white_time = 100
@@ -249,14 +249,15 @@ def train(args):
                     if max_x > best_max_x:
                         best_max_x = max_x
                     env.step(np.array([0, 0, 0]))
-                #     if t % 2 == 0:
-                #         img = env.render(mode='rgb_array')
-                #         pimg = Image.fromarray(img)
-                #         I1 = ImageDraw.Draw(pimg)
-                #         I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                #         imgs.append(pimg)
-                # imgs[0].save(f"{output_dir}/{epoch}_{i}_{best_max_x:.4f}_{success}.gif", save_all=True, append_images=imgs[1:], loop=0)
-                success = best_max_x < 0.55
+                    if t % 2 == 0:
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        imgs.append(pimg)
+
+                success = best_max_x > 0.55
+                imgs[0].save(f"{output_dir}/{epoch}_{i}_{best_max_x:.4f}_{success}.gif", save_all=True, append_images=imgs[1:], loop=0)
                 with open(f'{output_dir}/last_iou_{epoch}_{i}.txt', 'w') as f:
                     f.write(f'{best_max_x},{mu},{lam},{yield_stress}')
                 success_count += int(success)

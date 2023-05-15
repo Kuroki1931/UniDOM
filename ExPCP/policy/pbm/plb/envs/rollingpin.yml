@@ -1,0 +1,92 @@
+SIMULATOR:
+  E: 5000.
+  n_particles: 10000
+  yield_stress: 50.
+  ground_friction: 1.5
+SHAPES:
+  # start setting
+  - shape: box
+    width: (0.3, 0.1, 0.1)
+    init_pos: (0.5, 0.05, 0.5)
+    color: 100
+  
+  # # goal-v1: all crush
+  # - shape: box
+  #   width: (0.38, 0.02, 0.15)
+  #   init_pos: (0.5, 0.05, 0.5)
+  #   color: 100
+
+  # # goal-v2: left crush
+  # - shape: box
+  #   width: (0.15, 0.1, 0.1)
+  #   init_pos: (0.575, 0.05, 0.5)
+  #   color: 100
+  # - shape: box
+  #   width: (0.19, 0.02, 0.15)
+  #   init_pos: (0.405, 0.05, 0.5)
+  #   color: 100
+  
+  # # goal-v3: left crush
+  # - shape: box
+  #   width: (0.15, 0.1, 0.1)
+  #   init_pos: (0.425, 0.05, 0.5)
+  #   color: 100
+  # - shape: box
+  #   width: (0.19, 0.02, 0.15)
+  #   init_pos: (0.595, 0.05, 0.5)
+  #   color: 100
+
+  # # goal-v4: center crush
+  # - shape: box
+  #   width: (0.1, 0.1, 0.1)
+  #   init_pos: (0.4, 0.05, 0.5)
+  #   color: 100
+  # - shape: box
+  #   width: (0.095, 0.02, 0.15)
+  #   init_pos: (0.5, 0.05, 0.5)
+  #   color: 100
+  # - shape: box
+  #   width: (0.1, 0.1, 0.11)
+  #   init_pos: (0.6, 0.05, 0.5)
+  #   color: 100
+
+  # # goal-v5: all crush a little
+  # - shape: box
+  #   width: (0.35, 0.06, 0.13)
+  #   init_pos: (0.5, 0.05, 0.5)
+  #   color: 100
+PRIMITIVES:
+  - shape: RollingPin
+    h: 0.2
+    r: 0.03
+    init_pos: (0.5, 0.123, 0.5)
+    init_rot: (0.707, 0.707, 0., 0.)
+    color: (0.8, 0.8, 0.8)
+    friction: 0.9
+    action:
+      dim: 3
+      scale: (0.666666666666, 0.00000001, 0.001)
+ENV:
+  loss:
+    target_path: envs/assets/Rollingpin3D-v1.npy
+RENDERER:
+  camera_pos: (0.5, 2.5, 2.)
+  camera_rot: (1.0, 0.)
+  use_directional_light: True
+  light_direction: (0., 1., 0.)
+VARIANTS:
+  - ENV:
+      loss:
+        target_path: envs/assets/Rollingpin3D-v1.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Rollingpin3D-v2.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Rollingpin3D-v3.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Rollingpin3D-v4.npy
+  - ENV:
+      loss:
+        target_path: envs/assets/Rollingpin3D-v5.npy
