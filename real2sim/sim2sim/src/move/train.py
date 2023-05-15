@@ -15,6 +15,7 @@ import logging
 import tensorflow as tf
 from tensorflow import keras
 from pathlib import Path
+from scipy.spatial.distance import cdist
 
 from tqdm import tqdm
 from models.cls_ssg_model import CLS_SSG_Model
@@ -26,8 +27,7 @@ ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, '../../pbm'))
 
 from plb.envs import make
-from util.preprocess import sample_pc
-# from videoclip import pooled_text
+
 
 def set_random_seed(seed):
     random.seed(seed)
@@ -42,17 +42,10 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=16, help='batch size in training')
     parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=100, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
-    parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
-    parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
-    parser.add_argument('--use_uniform_sample', action='store_true', default=False, help='use uniform sampiling')
-    parser.add_argument('--clip_type', type=int, default=1, help='0 -> video clip, 1 -> clip')
-    parser.add_argument('--command_type', type=int, default=0, help='0 ->whole, 1 -> separate')
-    parser.add_argument('--command_num', type=int, default=4, help='command num')
     
     parser.add_argument("--algo", type=str, default='action')
     parser.add_argument("--env_name", type=str, default="Move-v1")
@@ -69,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/real2sim/sim2sim/data/Move_1000_8000_1000_8000_500_2000/2023-05-15_13-55'
+BASE_DIR = '/root/real2sim/sim2sim/data/Move_1000_8000_1000_8000_500_2000/2023-05-15_16-21'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -142,6 +135,9 @@ def train(args):
     model = CLS_SSG_Model(args.batch_size, parameters_size)
     train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size, num_point)
     validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/validation_experts.tfrecord', args.batch_size, num_point)
+    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/mu.npy').tolist()
+    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/lam.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
 
     model.build((args.batch_size, num_point, 3))
     print(model.summary())
@@ -212,8 +208,9 @@ def train(args):
                 pred_parameters = pred_parameters.numpy()
 
                 env.reset()
-                pred_mu = pred_parameters[0][0]
-                pred_lam = pred_parameters[0][1]
+                pred_mu = pred_parameters[0][0] * np.std(mu_list) + np.mean(mu_list)
+                pred_lam = pred_parameters[0][1] * np.std(lam_list) + np.mean(lam_list)
+
                 env.taichi_env.set_parameter(pred_mu, pred_lam, yield_stress)
 
                 frames = []
@@ -228,13 +225,26 @@ def train(args):
                 frames[0].save(f'{output_dir}/{epoch}_{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
                 pred_last_state = env.taichi_env.simulator.get_x(0)
 
-                with open(f'{output_dir}/{epoch}_{i}.txt', 'w') as f:
-                    f.write(f'{mu}, {lam}, {yield_stress}, {pred_mu},{pred_lam},{yield_stress}')
-                
-        # if success_count > best_success_count:
-        #     model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
-        # log_string('success_count: %4f' % success_count)
+                def chamfer_distance(A, B):
+                    # compute distance matrix between A and B
+                    dist_matrix = cdist(A, B)
+                    # for each point in A, compute minimum distance to any point in B
+                    dist_A = np.min(dist_matrix, axis=1)
+                    # for each point in B, compute minimum distance to any point in A
+                    dist_B = np.min(dist_matrix, axis=0)
+                    # compute Chamfer distance
+                    chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
+                    return chamfer_dist
+                chamfer_dist = chamfer_distance(last_state, pred_last_state)
+                cd_loss += chamfer_dist
 
+                with open(f'{output_dir}/{epoch}_{i}.txt', 'w') as f:
+                    f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {pred_mu},{pred_lam},{yield_stress}')
+
+        if cd_loss > best_cd_loss:
+            best_cd_loss = cd_loss
+            model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
+        log_string('chamfer_distance: %4f' % cd_loss)
 
 if __name__ == '__main__':
 	args = parse_args()

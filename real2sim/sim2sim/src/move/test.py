@@ -21,20 +21,14 @@ from tqdm import tqdm
 from models.cls_ssg_model import CLS_SSG_Model
 from PIL import Image
 from PIL import ImageDraw
+from scipy.spatial.distance import cdist
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, '../../pbm'))
 
 from plb.envs import make
-from plb.algorithms.logger import Logger
-from plb.algorithms.discor.run_sac import train as train_sac
-from plb.algorithms.ppo.run_ppo import train_ppo
-from plb.algorithms.TD3.run_td3 import train_td3
-from plb.optimizer.solver import solve_action, tell_rope_break
-from plb.optimizer.solver_nn import solve_nn
-from util.preprocess import sample_pc
-# from videoclip import pooled_text
+
 
 def set_random_seed(seed):
     random.seed(seed)
@@ -53,7 +47,7 @@ def parse_args():
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Rope-v1")
+    parser.add_argument("--env_name", type=str, default="Move-v1")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
     parser.add_argument("--density_loss", type=float, default=500)
@@ -67,24 +61,30 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/Rope_10_500_10_500_10_500/2023-05-06_03-11/no_para/2023-05-06_11-46/model/0029_weights.ckpt'
-BASE_TASK = CHECK_POINT_PATH.split('/')[-6]
-BASE_DATE = CHECK_POINT_PATH.split('/')[-5]
-EPOCH =int(CHECK_POINT_PATH.split('/')[-1].split('_')[0])
+CHECK_POINT_PATH = '/root/real2sim/sim2sim/log/Move_1000_8000_1000_8000_500_2000/2023-05-15_16-21/2023-05-15_16-31/model/best_weights.ckpt'
+BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
+BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
 
 def test(args):
     '''LOG'''
     args = parse_args()
-    
-    timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
-    action_size = 3
+    parameter_list = BASE_TASK.split('_')[1:]
+    parameter_list = [int(parameter) for parameter in parameter_list]
+    mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
+    lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
+    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
+    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/mu.npy').tolist()
+    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/lam.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
+
+    parameters_size = 2
     num_point = args.num_plasticine_point
 
-    model = CLS_SSG_Model(args.batch_size, action_size)
+    model = CLS_SSG_Model(args.batch_size, parameters_size)
    
-    model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3)])
+    model.build((args.batch_size, num_point, 3))
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -101,64 +101,71 @@ def test(args):
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
 
-    success_count = 0
-    for i in range(1000, 1500):
-        print(i)
-        version = i + 1
-        test_env = args.env_name.split('-')[0]
+    output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+    os.makedirs(output_dir, exist_ok=True)
+
+    cd_loss = 0
+    for i in range(10005, 10010):
         env.reset()
 
         # set randam parameter: mu, lam, yield_stress
-        np.random.seed(version)
-        mu = np.random.uniform(10, 500)
-        lam = np.random.uniform(10, 500)
-        yield_stress = np.random.uniform(10, 500)
+        np.random.seed(i)
+        mu = np.random.uniform(mu_bottom, mu_upper)
+        lam = np.random.uniform(lam_bottom, lam_upper)
+        yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
         print('parameter', mu, lam, yield_stress)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
-        os.makedirs(output_dir, exist_ok=True)
-
-        imgs = []
-        for t in range(args.num_steps):
-            test_plasticine_pc = env.taichi_env.simulator.get_x(0)
-            test_primtiive_pc = env.taichi_env.primitives[0].get_state(0)[:3]
-
-            test_points = sample_pc(test_plasticine_pc, args.num_plasticine_point)
-            vector = test_points - test_primtiive_pc
-
-            act = model.forward_pass([
-                tf.cast(tf.convert_to_tensor(test_points[None]), tf.float32),
-                tf.cast(tf.convert_to_tensor(vector[None]), tf.float32)
-            ], False, 1)
-            act = act.numpy()[0]
-            try:
-                _, _, _, loss_info = env.step(act)
-            except:
-                continue
-            
-            if t+1 == args.num_steps:
-                print(f"Saving gif at {t} steps")
+        action = np.array([[0, 0.6, 0]]*180)
+        frames = []
+        for idx, act in enumerate(action):
+            env.step(act)
+            if idx % 5 == 0:
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 I1 = ImageDraw.Draw(pimg)
                 I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                imgs.append(pimg)
+                frames.append(pimg)
+        frames[0].save(f'{output_dir}/{i}_ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        last_state = env.taichi_env.simulator.get_x(0)
 
-        possible = tell_rope_break(img)
-        if possible:
-            imgs[0].save(f"{output_dir}/{EPOCH}_{i}_break.gif", save_all=True, append_images=imgs[1:], loop=0)
-            with open(f'{output_dir}/last_iou_{EPOCH}_{i}.txt', 'w') as f:
-                f.write(f'0,{mu},{lam},{yield_stress}')
-        else:
-            rope_state = env.taichi_env.simulator.get_x(0)
-            rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0]
-            imgs[0].save(f"{output_dir}/{EPOCH}_{i}_{rope_length:.4f}.gif", save_all=True, append_images=imgs[1:], loop=0)
-            with open(f'{output_dir}/last_iou_{EPOCH}_{i}.txt', 'w') as f:
-                f.write(f'{rope_length},{mu},{lam},{yield_stress}')
-            success_count += 1
-    print('success_count', success_count)
-    
+        pred_parameters = model.forward_pass(tf.cast(tf.convert_to_tensor(last_state[None]), tf.float32), False, 1)
+        pred_parameters = pred_parameters.numpy()
+
+        env.reset()
+        pred_mu = pred_parameters[0][0] * np.std(mu_list) + np.mean(mu_list)
+        pred_lam = pred_parameters[0][1] * np.std(lam_list) + np.mean(lam_list)
+
+        env.taichi_env.set_parameter(pred_mu, pred_lam, yield_stress)
+
+        frames = []
+        for idx, act in enumerate(action):
+            env.step(act)
+            if idx % 5 == 0:
+                img = env.render(mode='rgb_array')
+                pimg = Image.fromarray(img)
+                I1 = ImageDraw.Draw(pimg)
+                I1.text((5, 5), f'mu{pred_mu:.2f},lam{pred_lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                frames.append(pimg)
+        frames[0].save(f'{output_dir}/{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        pred_last_state = env.taichi_env.simulator.get_x(0)
+
+        def chamfer_distance(A, B):
+            # compute distance matrix between A and B
+            dist_matrix = cdist(A, B)
+            # for each point in A, compute minimum distance to any point in B
+            dist_A = np.min(dist_matrix, axis=1)
+            # for each point in B, compute minimum distance to any point in A
+            dist_B = np.min(dist_matrix, axis=0)
+            # compute Chamfer distance
+            chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
+            return chamfer_dist
+        chamfer_dist = chamfer_distance(last_state, pred_last_state)
+        cd_loss += chamfer_dist
+
+        with open(f'{output_dir}/{i}.txt', 'w') as f:
+            f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {pred_mu},{pred_lam},{yield_stress}')
+
 
 if __name__ == '__main__':
 	args = parse_args()

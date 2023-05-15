@@ -90,8 +90,10 @@ def main(args):
             mu = data['mu']
             lam = data['lam']
             # yield_stress = data['yield_stress']
+            mu_value = (mu - np.mean(mu_list)) / np.std(mu_list)
+            lam_value = (lam - np.mean(lam_list)) / np.std(lam_list)
 
-            parameters = np.array([mu, lam])
+            parameters = np.array([mu_value, lam_value])
 
             tf_example = create_example(plasticine_pc, parameters)
             if random.randint(1, 10) == 1:
