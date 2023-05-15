@@ -166,15 +166,15 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 5
+    repeat_time = 500
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 200, 2000
-        lam_bottom, lam_upper = 200, 2000
-        yield_stress_bottom, yield_stress_upper = 200, 300
+        mu_bottom, mu_upper = 1000, 8000
+        lam_bottom, lam_upper = 1000, 8000
+        yield_stress_bottom, yield_stress_upper = 1000, 1000
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
@@ -193,29 +193,17 @@ def solve_action(env, path, logger, args):
 
         if args.task_name in ['Rope']:
             action = rope_action(env, output_path)
-        if args.task_name in ['Pinch']:
+        elif args.task_name in ['Pinch']:
             T = 5
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
+        elif args.task_name in ['Move']:
+            action = np.array([[0, 0.6, 0]]*180)
         else:
-            # init_actions
-            if args.task_name in ['Move']:
-                with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
-                    stick_pos = json.load(f)
-                stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
-                pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
-                initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
-                init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
-                init_actions = np.diff(init_actions, n=1, axis=0)
-                init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-                init_actions /= np.linalg.norm(init_actions[0])
-            else:
-                init_actions = None
-
             solver = Solver(taichi_env, logger, None,
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                             **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-            action = solver.solve(init_actions)
+            action = solver.solve()
 
         np.save(f"{output_path}/action.npy", action)
         print(action)
