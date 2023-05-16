@@ -258,6 +258,7 @@ def solve_action(env, path, logger, args):
                 'env_name': args.env_name,
                 'plasticine_pc': np.array(plasticine_pc_list),
                 'primitive_pc': np.array(primitive_pc_list),
+                'last_iou': last_iou
             }
 
             now = datetime.datetime.now()

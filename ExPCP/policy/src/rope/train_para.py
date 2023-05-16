@@ -161,9 +161,9 @@ def train(args):
     model.build([(args.batch_size, num_point, 3), (args.batch_size, num_point, 3), (args.batch_size, 3)])
     print(model.summary())
     
-    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//mu.npy').tolist()
-    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//lam.npy').tolist()
-    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}//yield_stress.npy').tolist()
+    mu_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/mu.npy').tolist()
+    lam_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/lam.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
