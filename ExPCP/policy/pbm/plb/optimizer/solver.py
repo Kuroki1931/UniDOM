@@ -199,7 +199,7 @@ def solve_action(env, path, logger, args):
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         elif args.task_name in ['Move']:
-            action = np.array([[0, 0.6, 0]]*180)
+            action = np.array([[0, 0.6, 0]]*150)
         else:
             solver = Solver(taichi_env, logger, None,
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
