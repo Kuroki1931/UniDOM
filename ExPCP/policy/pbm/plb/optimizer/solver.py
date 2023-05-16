@@ -174,7 +174,7 @@ def solve_action(env, path, logger, args):
         now = datetime.datetime.now()
         mu_bottom, mu_upper = 1000, 8000
         lam_bottom, lam_upper = 1000, 8000
-        yield_stress_bottom, yield_stress_upper = 1000, 1000
+        yield_stress_bottom, yield_stress_upper = 500, 500
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
@@ -198,7 +198,7 @@ def solve_action(env, path, logger, args):
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         elif args.task_name in ['Move']:
-            action = np.array([[0, 0.6, 0]]*180)
+            action = np.array([[0, 0.6, 0]]*150)
         else:
             solver = Solver(taichi_env, logger, None,
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,

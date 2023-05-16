@@ -191,7 +191,7 @@ def train(args):
                 yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
                 env.taichi_env.set_parameter(mu, lam, yield_stress)
 
-                action = np.array([[0, 0.6, 0]]*180)
+                action = np.array([[0, 0.6, 0]]*150)
                 frames = []
                 for idx, act in enumerate(action):
                     env.step(act)
