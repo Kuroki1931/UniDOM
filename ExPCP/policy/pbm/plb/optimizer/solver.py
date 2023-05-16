@@ -67,7 +67,8 @@ class Solver:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_action
+        return actions
+        # return best_action
 
 
     @staticmethod
@@ -166,7 +167,7 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 500
+    repeat_time = 5
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
@@ -174,7 +175,7 @@ def solve_action(env, path, logger, args):
         now = datetime.datetime.now()
         mu_bottom, mu_upper = 1000, 8000
         lam_bottom, lam_upper = 1000, 8000
-        yield_stress_bottom, yield_stress_upper = 1000, 1000
+        yield_stress_bottom, yield_stress_upper = 500, 500
         output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
