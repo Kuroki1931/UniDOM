@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import cv2
 import numpy as np
 import rospy
@@ -58,7 +59,9 @@ class Robot():
         tf_buffer = tf2_ros.Buffer()
         tf_listener = tf2_ros.TransformListener(tf_buffer)
         initial_arm_position = move_group.get_current_pose(end_effector_link).pose.position
+        initial_orientation = move_group.get_current_pose(end_effector_link).pose.orientation
         print('initial_arm_position', initial_arm_position)
+        import pdb; pdb.set_trace()
 
         steps = 0
         z_axis = 0
@@ -73,8 +76,8 @@ class Robot():
             target_pose = move_group.get_current_pose(end_effector_link)
             target_pose.pose.position.x = initial_arm_position.x
             target_pose.pose.position.y = initial_arm_position.y
-            target_pose.pose.position.z = z_axis
-            target_pose.pose.orientation = Quaternion(x=-1.0, y=0.0, z=0.0, w=0.0) #gripperは下向きで固定
+            target_pose.pose.position.z = z_axis - 0.14
+            target_pose.pose.orientation = initial_orientation
    
             pose_goal = copy.deepcopy(target_pose)
             plan, _fraction = move_group.compute_cartesian_path([pose_goal.pose], 0.01, 0)
@@ -107,6 +110,20 @@ class Robot():
 if __name__ == '__main__':
     rospy.init_node('special_node', log_level=rospy.DEBUG)
     robot = Robot()
+    fill_pcds_list = []
+    bf_pcd = None
+    for pcd in robot.real_pcds_list:
+        if pcd.shape[0] < 1000:
+            fill_pcds_list.append(pcd)
+        else:
+            if bf_pcd is not None:
+                fill_pcds_list.append(bf_pcd)
+        bf_pcd = pcd
 
+    pcds_array = np.array(fill_pcds_list)
+    rope_type = 'red'
+    output_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
+    os.makedirs(output_path, exist_ok=True)
+    np.save(f'{output_path}/real_pcds.npy', pcds_array)
     while not rospy.is_shutdown():
         rospy.sleep(1)
