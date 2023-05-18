@@ -121,7 +121,7 @@ if __name__ == '__main__':
         bf_pcd = pcd
 
     pcds_array = np.array(fill_pcds_list)
-    rope_type = 'red'
+    rope_type = 'yellow'
     output_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
     os.makedirs(output_path, exist_ok=True)
     np.save(f'{output_path}/real_pcds.npy', pcds_array)

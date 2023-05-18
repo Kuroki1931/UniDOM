@@ -35,6 +35,7 @@ rl2seq
 *HW1*
 
 output/
+real_points/
 *.pickle
 *.gif
 

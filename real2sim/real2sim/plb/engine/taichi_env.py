@@ -28,21 +28,19 @@ class TaichiEnv:
         self.args.task_name = self.args.env_name[:idx]
         self.args.task_version = self.args.env_name[(idx+1):]
         sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
-        if self.args.task_name in ['Move', 'Table']:
-            from object.cloth import Cloth
-            self.real2sim = Cloth()
 
-        obj_particle = self.real2sim.get_obj_particle()
-        hand_position = self.real2sim.get_hand_position()
-        surface_index = self.real2sim.get_surface_index()
         self.cfg = cfg.ENV
-        self.primitives = Primitives(cfg.PRIMITIVES, hand_position)
-        self.shapes = Shapes(cfg.SHAPES, obj_particle)
-        # self.shapes = Shapes(cfg.SHAPES)
+        self.primitives = Primitives(cfg.PRIMITIVES)
+        self.shapes = Shapes(cfg.SHAPES)
         self.init_particles, self.particle_colors = self.shapes.get()
 
         cfg.SIMULATOR.defrost()
         self.n_particles = cfg.SIMULATOR.n_particles = len(self.init_particles)
+
+        if self.args.task_name in ['Move', 'Table']:
+            from object.cloth import Cloth
+            self.real2sim = Cloth(self.init_particles)
+        surface_index = self.real2sim.get_surface_index()
 
         self.simulator = MPMSimulator(cfg.SIMULATOR, self.primitives, surface_index)
         self.renderer = Renderer(cfg.RENDERER, self.primitives)
