@@ -126,7 +126,7 @@ def solve_action(env, path, logger, args):
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
         env.reset()
-
+        import pdb; pdb.set_trace()
         frames = []
         target_grids = []
         for idx, act in enumerate(action):
@@ -140,6 +140,7 @@ def solve_action(env, path, logger, args):
                 frames.append(pimg)
         frames[0].save(f'{output_path}/ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         last_state = env.taichi_env.simulator.get_x(0)
+        import pdb; pdb.set_trace()
 
         target_grids = np.repeat(np.array(target_grids), env.taichi_env.simulator.substeps, axis=0)
         T = action.shape[0]

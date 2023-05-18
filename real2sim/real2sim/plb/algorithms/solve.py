@@ -34,7 +34,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Table-v1")
+    parser.add_argument("--env_name", type=str, default="Move-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=10)
@@ -42,9 +42,7 @@ def get_args():
     parser.add_argument("--contact_loss", type=float, default=1)
     parser.add_argument("--soft_contact_loss", action='store_true')
     parser.add_argument("--num_steps", type=int, default=None)
-    parser.add_argument("--mu", type=float, default=1000.)
-    parser.add_argument("--lam", type=float, default=2000.)
-    parser.add_argument("--yield_stress", type=float, default=1000.)
+    parser.add_argument("--rope_type", type=str, default="red")
 
     # differentiable physics parameters
     parser.add_argument("--lr", type=float, default=50.)
