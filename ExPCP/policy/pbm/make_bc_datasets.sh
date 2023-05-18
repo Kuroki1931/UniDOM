@@ -3,7 +3,7 @@
 ALGO='action'
 ENV_NAME='Table-v'
 
-POSE_NUM=90
+POSE_NUM=180
 EACH_POSE_NUM=9
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 

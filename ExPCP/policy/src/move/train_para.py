@@ -27,14 +27,8 @@ ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, '../../pbm'))
 
 from plb.envs import make
-from plb.algorithms.logger import Logger
-from plb.algorithms.discor.run_sac import train as train_sac
-from plb.algorithms.ppo.run_ppo import train_ppo
-from plb.algorithms.TD3.run_td3 import train_td3
-from plb.optimizer.solver import solve_action
-from plb.optimizer.solver_nn import solve_nn
 from util.preprocess import sample_pc
-# from videoclip import pooled_text
+
 
 def set_random_seed(seed):
     random.seed(seed)
