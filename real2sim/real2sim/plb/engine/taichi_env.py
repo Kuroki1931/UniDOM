@@ -137,5 +137,5 @@ class TaichiEnv:
             self.loss.reset()
             self.loss.clear()
 
-    def set_parameter(self, mu, lam, yield_stress):
-        self.simulator.set_parameter_kernel(mu, lam, yield_stress)
+    def set_parameter(self, E, Poisson, yield_stress):
+        self.simulator.set_parameter_kernel(E, Poisson, yield_stress)

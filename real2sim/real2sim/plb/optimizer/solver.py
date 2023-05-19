@@ -62,11 +62,14 @@ class Solver:
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
+            print('--------')
             parameters = optim.step(grad)
+            print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
+            parameters[1] = np.clip(parameters[1], 0.2, 0.4)
             parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
-            print('loss:', loss, 'mu:', parameters[0], 'lam:', parameters[1], 'yield_stress:', parameters[2])
+            print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
@@ -116,17 +119,17 @@ def solve_action(env, path, logger, args):
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
-        args.num_steps = T * 100
+        args.num_steps = T * 150
         taichi_env.loss.update_target_density(target_grids)
-        mu_bottom, mu_upper = 1000, 2500
-        lam_bottom, lam_upper = 1000, 2500
+        E_bottom, E_upper = 2000, 8000
+        Poisson_bottom, Poisson_upper = 0.2, 0.4
         yield_stress_bottom, yield_stress_upper = 200, 200
 
         np.random.seed(t)
-        mu = np.random.uniform(mu_bottom, mu_upper)
-        lam = np.random.uniform(lam_bottom, lam_upper)
+        E = np.random.uniform(E_bottom, E_upper)
+        Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-        init_parameters = np.array([mu, lam, yield_stress])
+        init_parameters = np.array([E, Poisson, yield_stress])
 
         # save initial gif
         env.taichi_env.set_parameter(init_parameters[0], init_parameters[1], init_parameters[2])
@@ -142,7 +145,7 @@ def solve_action(env, path, logger, args):
             take_time = end_time - start_time
             take_time = take_time.total_seconds()
             print('take time', take_time)
-        frames[0].save(f'{output_path}/initial_mu{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
+        frames[0].save(f'{output_path}/initial_E{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
         last_state = env.taichi_env.simulator.get_x(0)
         env.reset()
@@ -183,7 +186,7 @@ def solve_action(env, path, logger, args):
             return chamfer_dist
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
-        frames[0].save(f'{output_path}/optimized_mu{parameters_list[-1][0]}_lam{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
+        frames[0].save(f'{output_path}/optimized_E{parameters_list[-1][0]}_Poisson{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
             save_all=True, append_images=frames[1:], loop=0)
         with open(f'{output_path}/setting.txt', 'w') as f:
-            f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {parameters_list[-1][0]}, {parameters_list[-1][1]}, {parameters_list[-1][2]}')
+            f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {parameters_list[-1][0]}, {parameters_list[-1][1]}, {parameters_list[-1][2]}')

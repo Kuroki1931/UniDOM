@@ -45,7 +45,7 @@ def get_args():
     parser.add_argument("--rope_type", type=str, default="red")
 
     # differentiable physics parameters
-    parser.add_argument("--lr", type=float, default=50.)
+    parser.add_argument("--lr", type=float, default=100.)
     parser.add_argument("--softness", type=float, default=6666.)
     parser.add_argument("--optim", type=str, default='Adam', choices=['Adam', 'Momentum'])
 
