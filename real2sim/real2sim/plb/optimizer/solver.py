@@ -6,6 +6,7 @@ import shutil
 from yacs.config import CfgNode as CN
 from datetime import datetime
 
+from scipy.spatial.distance import cdist
 from .optim import Optimizer, Adam, Momentum
 from ..engine.taichi_env import TaichiEnv
 from ..config.utils import make_cls_config
@@ -100,7 +101,7 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(5):
+    for t in range(20):
         rope_type = args.rope_type
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
         output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
@@ -117,8 +118,8 @@ def solve_action(env, path, logger, args):
         T = actions.shape[0]
         args.num_steps = T * 100
         taichi_env.loss.update_target_density(target_grids)
-        mu_bottom, mu_upper = 1000, 4000
-        lam_bottom, lam_upper = 1000, 4000
+        mu_bottom, mu_upper = 1000, 2500
+        lam_bottom, lam_upper = 1000, 2500
         yield_stress_bottom, yield_stress_upper = 200, 200
 
         np.random.seed(t)
@@ -141,9 +142,9 @@ def solve_action(env, path, logger, args):
             take_time = end_time - start_time
             take_time = take_time.total_seconds()
             print('take time', take_time)
-        print(output_path)
         frames[0].save(f'{output_path}/initial_mu{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
+        last_state = env.taichi_env.simulator.get_x(0)
         env.reset()
 
         # optimize
@@ -168,8 +169,21 @@ def solve_action(env, path, logger, args):
             take_time = end_time - start_time
             take_time = take_time.total_seconds()
             print('take time', take_time)
-        print(output_path)
+        pred_last_state = env.taichi_env.simulator.get_x(0)
+
+        def chamfer_distance(A, B):
+            # compute distance matrix between A and B
+            dist_matrix = cdist(A, B)
+            # for each point in A, compute minimum distance to any point in B
+            dist_A = np.min(dist_matrix, axis=1)
+            # for each point in B, compute minimum distance to any point in A
+            dist_B = np.min(dist_matrix, axis=0)
+            # compute Chamfer distance
+            chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
+            return chamfer_dist
+        chamfer_dist = chamfer_distance(last_state, pred_last_state)
+
         frames[0].save(f'{output_path}/optimized_mu{parameters_list[-1][0]}_lam{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
-                    save_all=True, append_images=frames[1:], loop=0)
+            save_all=True, append_images=frames[1:], loop=0)
         with open(f'{output_path}/setting.txt', 'w') as f:
-                    f.write(f'{mu}, {lam}, {yield_stress}, {parameters_list[-1][0]},{parameters_list[-1][1]},{parameters_list[-1][2]}')
+            f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {parameters_list[-1][0]}, {parameters_list[-1][1]}, {parameters_list[-1][2]}')
