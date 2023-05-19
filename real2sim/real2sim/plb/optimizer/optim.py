@@ -6,6 +6,7 @@ class Optimizer:
     def __init__(self, parameters: np.ndarray, cfg=None, **kwargs):
         self.cfg = make_cls_config(self, cfg, **kwargs)
         self.lr = self.cfg.lr
+        self.lr2 = self.cfg.lr/10000
         self.bounds = self.cfg.bounds
         self.parameters = parameters
         self.initialize()
@@ -68,7 +69,7 @@ class Adam(Optimizer):
         v_cap = v_t / (1 - (beta_2 ** (self.iter + 1)))  # calculates the bias-corrected estimates
 
         self.iter += 1
-        return self.parameters - (self.lr * m_cap) / (np.sqrt(v_cap) + epsilon)
+        return self.parameters - (np.array([self.lr, self.lr2, self.lr]) * m_cap) / (np.sqrt(v_cap) + epsilon)
 
     @classmethod
     def default_config(cls):

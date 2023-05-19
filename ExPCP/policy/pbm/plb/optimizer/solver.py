@@ -173,10 +173,10 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 200, 5000
-        lam_bottom, lam_upper = 200, 5000
+        E_bottom, E_upper = 500, 10500
+        Poisson_bottom, Poisson_upper = 0.2, 0.4
         yield_stress_bottom, yield_stress_upper = 200, 200
-        output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
+        output_path = f'{path}/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
         img = env.render(mode='rgb_array')
@@ -186,11 +186,11 @@ def solve_action(env, path, logger, args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(int(args.task_version[1:])*repeat_time+i)
-        mu = np.random.uniform(mu_bottom, mu_upper)
-        lam = np.random.uniform(lam_bottom, lam_upper)
+        E = np.random.uniform(E_bottom, E_upper)
+        Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-        print('parameter', mu, lam, yield_stress)
-        env.taichi_env.set_parameter(mu, lam, yield_stress)
+        print('parameter', E, Poisson, yield_stress)
+        env.taichi_env.set_parameter(E, Poisson, yield_stress)
 
         if args.task_name in ['Rope']:
             action = rope_action(env, output_path)
@@ -219,7 +219,7 @@ def solve_action(env, path, logger, args):
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
-                    I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                     frames.append(pimg)
             frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
 
@@ -244,15 +244,15 @@ def solve_action(env, path, logger, args):
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
 
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
             if not os.path.exists(experts_output_dir):
                 os.makedirs(experts_output_dir, exist_ok=True)
 
             print('length', i, 'r', r, 'last_iou', last_iou)
             bc_data = {
                 'action': np.array(action_list),
-                'mu': mu,
-                'lam': lam,
+                'E': E,
+                'Poisson': Poisson,
                 'yield_stress': yield_stress,
                 'rewards': np.array(reward_list),
                 'env_name': args.env_name,
