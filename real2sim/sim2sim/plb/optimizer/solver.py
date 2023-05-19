@@ -19,7 +19,7 @@ OPTIMS = {
     'Momentum': Momentum
 }
 
-YIELD_STRESS = 500
+YIELD_STRESS = 200
 
 class Solver:
     def __init__(self, env: TaichiEnv, logger=None, cfg=None, **kwargs):
@@ -105,28 +105,23 @@ def solve_action(env, path, logger, args):
     from PIL import Image
     now = datetime.datetime.now()
 
-    BASE_TASK = 'Move_1000_8000_1000_8000_500_2000'
-    base_path = f'/root/real2sim/sim2sim/output/{BASE_TASK}'
-    output_path = f'{base_path}/{now}'
-    os.makedirs(output_path, exist_ok=True)
-
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [int(parameter) for parameter in parameter_list]
-    mu_bottom, mu_upper = parameter_list[0], parameter_list[1]
-    lam_bottom, lam_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
-
+    mu_bottom, mu_upper = 1000, 2500
+    lam_bottom, lam_upper = 1000, 2500
+    yield_stress_bottom, yield_stress_upper = 200, 200
     action = np.array([[0, 0.6, 0]]*150)
 
-    for t in tqdm(range(1000, 1005)):
+    for t in tqdm(range(1000, 1010)):
+        output_path = f'/root/real2sim/sim2sim/output/{now}/{t}'
+        os.makedirs(output_path, exist_ok=True)
+
         # collect ground truth
         np.random.seed(t)
-        mu = np.random.uniform(mu_bottom, mu_upper)
-        lam = np.random.uniform(lam_bottom, lam_upper)
-        yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
+        mu = np.random.uniform(200, 5000)
+        lam = np.random.uniform(200, 5000)
+        yield_stress = np.random.uniform(200, 200)
         env.taichi_env.set_parameter(mu, lam, yield_stress)
         env.reset()
-        import pdb; pdb.set_trace()
+
         frames = []
         target_grids = []
         for idx, act in enumerate(action):
@@ -140,13 +135,15 @@ def solve_action(env, path, logger, args):
                 frames.append(pimg)
         frames[0].save(f'{output_path}/ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         last_state = env.taichi_env.simulator.get_x(0)
-        import pdb; pdb.set_trace()
 
         target_grids = np.repeat(np.array(target_grids), env.taichi_env.simulator.substeps, axis=0)
         T = action.shape[0]
-        args.num_steps = T * 30
+        args.num_steps = T * 100
 
-        for i in tqdm(range(5)):
+        for i in tqdm(range(20)):
+            output_path = f'/root/real2sim/sim2sim/output/{now}/{t}/{i}'
+            os.makedirs(output_path, exist_ok=True)
+
             # set test
             env.reset()
             taichi_env: TaichiEnv = env.unwrapped.taichi_env
@@ -163,8 +160,8 @@ def solve_action(env, path, logger, args):
                         n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                         **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
             best_parameters, parameters_list, reward_list = solver.solve(init_parameters, action)
-            np.save(f"{output_path}/{i}_parameters.npy", np.array(parameters_list))
-            np.save(f"{output_path}/{i}_rewards.npy", np.array(reward_list))
+            np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
+            np.save(f"{output_path}/rewards.npy", np.array(reward_list))
 
             optimized_mu = parameters_list[-1][0]
             optimized_lam = parameters_list[-1][1]
@@ -181,7 +178,7 @@ def solve_action(env, path, logger, args):
                     I1 = ImageDraw.Draw(pimg)
                     I1.text((5, 5), f'mu{optimized_mu:.2f},lam{optimized_lam:.2f},yield_stress{optimized_yield_stress:.2f}', fill=(255, 0, 0))
                     frames.append(pimg)
-            frames[0].save(f'{output_path}/{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+            frames[0].save(f'{output_path}/pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
             pred_last_state = env.taichi_env.simulator.get_x(0)
 
             def chamfer_distance(A, B):
@@ -196,5 +193,5 @@ def solve_action(env, path, logger, args):
                 return chamfer_dist
             chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
-            with open(f'{output_path}/{i}.txt', 'w') as f:
+            with open(f'{output_path}/setting.txt', 'w') as f:
                 f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {initial_mu}, {initial_lam}, {initial_yield_stress}, {optimized_mu},{optimized_lam},{optimized_yield_stress}')
