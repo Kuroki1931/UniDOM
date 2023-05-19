@@ -8,9 +8,7 @@ class MPMSimulator:
         assert cfg.dtype == 'float64'
         dtype = self.dtype = ti.f64 if cfg.dtype == 'float64' else ti.f32
         self._yield_stress = cfg.yield_stress
-        self.ground_friction = cfg.ground_friction
         self.default_gravity = cfg.gravity
-        self._mu, self._lam = cfg.mu, cfg.lam
         self.n_primitive = len(primitives)
 
         quality = cfg.quality
@@ -25,14 +23,10 @@ class MPMSimulator:
         self.p_mass = self.p_vol * self.p_rho
 
         # material
-        E, nu = cfg.E, cfg.nu
-        # self._mu, self._lam = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
-        self.mu = ti.field(dtype, shape=(), needs_grad=True)
-        self.lam = ti.field(dtype, shape=(), needs_grad=True)
-        self.yield_stress = ti.field(dtype, shape=(), needs_grad=True)
-        self.mu[None] = cfg.mu
-        self.lam[None] = cfg.lam
-        self.yield_stress[None] = cfg.yield_stress
+        self._E, self._nu = cfg.E, cfg.nu
+        self.E = ti.field(dtype=dtype, shape=(), needs_grad=True)
+        self.nu = ti.field(dtype=dtype, shape=(), needs_grad=True)
+        self.yield_stress = ti.field(dtype=dtype, shape=(), needs_grad=True)
 
         max_steps = self.max_steps = cfg.max_steps
         self.substeps = int(2e-3 // self.dt)
@@ -60,11 +54,16 @@ class MPMSimulator:
         self.grid_primitive_m = ti.field(dtype=dtype, shape=primitive_res, needs_grad=True)  # grid node mass
         self.primitive_dx = 1 / self.primitive_n_grid
 
+        # optimizing parameter
+        # self.ground_friction = cfg.ground_friction
+        self.optimize_ground_friction = ti.field(dtype, shape=(), needs_grad=True)
+        self.optimize_ground_friction[None] = cfg.ground_friction
+
     def initialize(self):
         self.gravity[None] = self.default_gravity
-        self.mu[None] = self._mu
-        self.lam[None] = self._lam
-        self.yield_stress[None] = self._yield_stress
+        self.yield_stress.fill(self._yield_stress)
+        self.E.fill(self._E)
+        self.nu.fill(self._nu)
 
     # --------------------------------- MPM part -----------------------------------
     @ti.kernel
@@ -167,18 +166,20 @@ class MPMSimulator:
     @ti.kernel
     def p2g(self, f: ti.i32):
         for p in range(0, self.n_particles):
+            mu, lam = self.E[None] / (2 * (1 + self.nu[None])), self.E[None] * self.nu[None] / ((1 + self.nu[None]) * (1 - 2 * self.nu[None]))  # Lame parameters
+            
             base = (self.x[f, p] * self.inv_dx - 0.5).cast(int)
             fx = self.x[f, p] * self.inv_dx - base.cast(self.dtype)
             # Quadratic kernels  [http://mpm.graphics   Eqn. 123, with x=fx, fx-1,fx-2]
             w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
-            new_F = self.compute_von_mises(self.F_tmp[p], self.U[p], self.sig[p], self.V[p], self.yield_stress[None], self.mu[None])
+            new_F = self.compute_von_mises(self.F_tmp[p], self.U[p], self.sig[p], self.V[p], self.yield_stress[None], mu)
             self.F[f + 1, p] = new_F
 
             J = (new_F).determinant()
 
             r = self.U[p] @ self.V[p].transpose()
-            stress = 2 * self.mu[None] * (new_F - r) @ new_F.transpose() + \
-                     ti.Matrix.identity(self.dtype, self.dim) * self.lam[None] * J * (J - 1)
+            stress = 2 * mu * (new_F - r) @ new_F.transpose() + \
+                     ti.Matrix.identity(self.dtype, self.dim) * lam * J * (J - 1)
 
             stress = (-self.dt * self.p_vol * 4 * self.inv_dx * self.inv_dx) * stress
             affine = stress + self.p_mass * self.C[f, p]
@@ -211,17 +212,17 @@ class MPMSimulator:
                 v_in2 = v_out
                 for d in ti.static(range(self.dim)):
                     if I[d] < bound and v_out[d] < 0:
-                        if ti.static(d != 1 or self.ground_friction == 0):
+                        if ti.static(d != 1) or self.optimize_ground_friction[None] == 0:
                             v_out[d] = 0  # Boundary conditions
                         else:
-                            if ti.static(self.ground_friction < 10):
+                            if self.optimize_ground_friction[None] < 10:
                                 # TODO: 1e-30 problems ...
                                 normal = ti.Vector.zero(self.dtype, self.dim)
                                 normal[d] = 1.
                                 lin = v_out.dot(normal) + 1e-30
                                 vit = v_out - lin * normal - I * 1e-30
                                 lit = self.norm(vit)
-                                v_out = max(1. + ti.static(self.ground_friction) * lin / lit, 0.) * (vit + I * 1e-30)
+                                v_out = max(1. + self.optimize_ground_friction * lin / lit, 0.) * (vit + I * 1e-30)
                                 v_out[1] = 0
                             else:
                                 v_out = ti.Vector.zero(self.dtype, self.dim)
@@ -474,16 +475,21 @@ class MPMSimulator:
     def clear_and_compute_grid_m_grad(self, f):
         self.compute_grid_m_kernel.grad(f)
     """
-    def set_parameter_kernel(self, mu: ti.f64, lam: ti.f64, yield_stress: ti.f64):
+
+    # ------------------------------------------------------------------
+    # for optimizing parameter
+    # ------------------------------------------------------------------
+    @ti.kernel
+    def set_parameter_kernel(self, E: ti.f64, Poisson: ti.f64, yield_stress: ti.f64):
         # optimizing parameter
-        self.mu[None] = mu
-        self.lam[None] = lam
+        self.E[None] = E
+        self.nu[None] = Poisson
         self.yield_stress[None] = yield_stress
 
     @ti.kernel
     def get_parameter_grad_kernel(self, grad: ti.ext_arr()):
-        grad[0] = self.mu.grad[None]
-        grad[1] = self.lam.grad[None]
+        grad[0] = self.E.grad[None]
+        grad[1] = self.nu.grad[None]
         grad[2] = self.yield_stress.grad[None]
 
     def get_parameter_grad(self):

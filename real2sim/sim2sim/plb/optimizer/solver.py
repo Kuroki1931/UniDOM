@@ -69,7 +69,10 @@ class Solver:
             parameters[2] = YIELD_STRESS
             parameters_list.append(parameters.tolist())
             reward_list.append(reward)
-            print('loss', loss, 'reward', reward, parameters, grad)
+            print('---------------')
+            print('loss', loss, 'reward', reward)
+            print(parameters)
+            print(grad)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
@@ -105,8 +108,8 @@ def solve_action(env, path, logger, args):
     from PIL import Image
     now = datetime.datetime.now()
 
-    mu_bottom, mu_upper = 1000, 2500
-    lam_bottom, lam_upper = 1000, 2500
+    E_bottom, E_upper = 2000, 8000
+    Poisson_bottom, Poisson_upper = 0.2, 0.4
     yield_stress_bottom, yield_stress_upper = 200, 200
     action = np.array([[0, 0.6, 0]]*150)
 
@@ -116,10 +119,10 @@ def solve_action(env, path, logger, args):
 
         # collect ground truth
         np.random.seed(t)
-        mu = np.random.uniform(200, 5000)
-        lam = np.random.uniform(200, 5000)
+        E = np.random.uniform(500, 10500)
+        Poisson = np.random.uniform(0.2, 0.4)
         yield_stress = np.random.uniform(200, 200)
-        env.taichi_env.set_parameter(mu, lam, yield_stress)
+        env.taichi_env.set_parameter(E, Poisson, yield_stress)
         env.reset()
 
         frames = []
@@ -131,7 +134,7 @@ def solve_action(env, path, logger, args):
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 I1 = ImageDraw.Draw(pimg)
-                I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                 frames.append(pimg)
         frames[0].save(f'{output_path}/ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         last_state = env.taichi_env.simulator.get_x(0)
@@ -150,11 +153,11 @@ def solve_action(env, path, logger, args):
             taichi_env.loss.update_target_density(target_grids)
 
             np.random.seed(i)
-            initial_mu = np.random.uniform(mu_bottom, mu_upper)
-            initial_lam = np.random.uniform(lam_bottom, lam_upper)
+            initial_E = np.random.uniform(E_bottom, E_upper)
+            initial_Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
             initial_yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-            init_parameters = np.array([initial_mu, initial_lam, initial_yield_stress])
-            env.taichi_env.set_parameter(initial_mu, initial_lam, initial_yield_stress)
+            init_parameters = np.array([initial_E, initial_Poisson, initial_yield_stress])
+            env.taichi_env.set_parameter(initial_E, initial_Poisson, initial_yield_stress)
 
             solver = Solver(taichi_env, logger, None,
                         n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
@@ -163,11 +166,11 @@ def solve_action(env, path, logger, args):
             np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
             np.save(f"{output_path}/rewards.npy", np.array(reward_list))
 
-            optimized_mu = parameters_list[-1][0]
-            optimized_lam = parameters_list[-1][1]
+            optimized_E = parameters_list[-1][0]
+            optimized_Poisson = parameters_list[-1][1]
             optimized_yield_stress = parameters_list[-1][2]
-            print(optimized_mu, optimized_lam, optimized_yield_stress)
-            env.taichi_env.set_parameter(optimized_mu, optimized_lam, optimized_yield_stress)
+            print(optimized_E, optimized_Poisson, optimized_yield_stress)
+            env.taichi_env.set_parameter(optimized_E, optimized_Poisson, optimized_yield_stress)
 
             frames = []
             for idx, act in enumerate(action):
@@ -176,7 +179,7 @@ def solve_action(env, path, logger, args):
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
-                    I1.text((5, 5), f'mu{optimized_mu:.2f},lam{optimized_lam:.2f},yield_stress{optimized_yield_stress:.2f}', fill=(255, 0, 0))
+                    I1.text((5, 5), f'E{optimized_E:.2f},Poisson{optimized_Poisson:.2f},yield_stress{optimized_yield_stress:.2f}', fill=(255, 0, 0))
                     frames.append(pimg)
             frames[0].save(f'{output_path}/pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
             pred_last_state = env.taichi_env.simulator.get_x(0)
@@ -194,4 +197,4 @@ def solve_action(env, path, logger, args):
             chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
             with open(f'{output_path}/setting.txt', 'w') as f:
-                f.write(f'{chamfer_dist}, {mu}, {lam}, {yield_stress}, {initial_mu}, {initial_lam}, {initial_yield_stress}, {optimized_mu},{optimized_lam},{optimized_yield_stress}')
+                f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {initial_E}, {initial_lam}, {initial_yield_stress}, {optimized_E},{optimized_Poisson},{optimized_yield_stress}')
