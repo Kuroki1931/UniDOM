@@ -479,20 +479,8 @@ class MPMSimulator:
     # ------------------------------------------------------------------
     # for optimizing parameter
     # ------------------------------------------------------------------
-    @ti.kernel
     def set_parameter_kernel(self, E: ti.f64, Poisson: ti.f64, yield_stress: ti.f64):
         # optimizing parameter
         self.yield_stress.fill(yield_stress)
         self.E.fill(E)
-        self.nu.fill(nu)
-
-    @ti.kernel
-    def get_parameter_grad_kernel(self, grad: ti.ext_arr()):
-        grad[0] = self.E.grad[None]
-        grad[1] = self.nu.grad[None]
-        grad[2] = self.yield_stress.grad[None]
-
-    def get_parameter_grad(self):
-        grad = np.zeros((3), dtype=np.float64)
-        self.get_parameter_grad_kernel(grad)
-        return grad
+        self.nu.fill(Poisson)
