@@ -40,13 +40,14 @@ _C.SHAPES = list()
 # ---------------------------------------------------------------------------- #
 _C.RENDERER = RENDERER = CN()
 RENDERER.spp = 50
+RENDERER.max_ray_depth = 2
 RENDERER.image_res = (512, 512)
 RENDERER.voxel_res = (168, 168, 168)
 RENDERER.target_res = (64, 64, 64)
 
 RENDERER.dx = 1. / 150
 RENDERER.sdf_threshold=0.57 * 0.56
-RENDERER.max_ray_depth= 2
+RENDERER.max_ray_depth=2
 RENDERER.bake_size=6
 RENDERER.use_roulette=False
 

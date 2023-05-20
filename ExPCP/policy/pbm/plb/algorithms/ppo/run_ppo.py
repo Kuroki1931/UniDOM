@@ -1,5 +1,6 @@
 import copy
 import glob
+from gym.spaces import Box
 import os
 import time
 from collections import deque
@@ -19,6 +20,8 @@ from plb.algorithms.ppo.ppo.envs import make_vec_envs
 from plb.algorithms.ppo.ppo.model import Policy
 from plb.algorithms.ppo.ppo.storage import RolloutStorage
 from plb.algorithms.ppo.evaluation import evaluate
+
+PARAMETER_SIXE = 3
 
 
 def train_ppo(env, path, logger, old_args):
@@ -45,10 +48,17 @@ def train_ppo(env, path, logger, old_args):
     envs = make_vec_envs(env, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
 
-    actor_critic = Policy(
-        envs.observation_space.shape,
-        envs.action_space,
-        base_kwargs={'recurrent': args.recurrent_policy})
+    if old_args.use_para:
+        obs_size = envs.observation_space.shape[0] + PARAMETER_SIXE
+        actor_critic = Policy(
+            (obs_size,),
+            envs.action_space,
+            base_kwargs={'recurrent': args.recurrent_policy})
+    else:
+        actor_critic = Policy(
+            envs.observation_space.shape,
+            envs.action_space,
+            base_kwargs={'recurrent': args.recurrent_policy})
     actor_critic.to(device)
 
     if args.algo == 'a2c':
@@ -93,14 +103,6 @@ def train_ppo(env, path, logger, old_args):
             shuffle=True,
             drop_last=drop_last)
 
-    rollouts = RolloutStorage(args.num_steps, args.num_processes,
-                              envs.observation_space.shape, envs.action_space,
-                              actor_critic.recurrent_hidden_state_size)
-
-    obs = envs.reset()
-    rollouts.obs[0].copy_(obs)
-    rollouts.to(device)
-
     episode_rewards = deque(maxlen=10)
 
     start = time.time()
@@ -116,6 +118,29 @@ def train_ppo(env, path, logger, old_args):
     total_steps = 0
     logger.reset()
     for j in range(num_updates):
+        np.random.seed(int(j))
+        mu = np.random.uniform(200, 5000)
+        lam = np.random.uniform(200, 5000)
+        yield_stress = np.random.uniform(20, 500)
+        parameters = torch.tensor([mu, lam, yield_stress])[None, :].to(device)
+        print('parameter', mu, lam, yield_stress)
+        env.taichi_env.set_parameter(mu, lam, yield_stress)
+        envs = make_vec_envs(env, args.seed, args.num_processes,
+                        args.gamma, args.log_dir, device, False)
+
+        obs = envs.reset()
+        if old_args.use_para:
+            obs = torch.concat([obs, parameters], axis=1)
+            obs_size = envs.observation_space.shape[0] + PARAMETER_SIXE
+            rollouts = RolloutStorage(args.num_steps, args.num_processes,
+                            (obs_size,), envs.action_space,
+                            actor_critic.recurrent_hidden_state_size)
+        else:
+            rollouts = RolloutStorage(args.num_steps, args.num_processes,
+                            envs.observation_space.shape, envs.action_space,
+                            actor_critic.recurrent_hidden_state_size)
+        rollouts.obs[0].copy_(obs)
+        rollouts.to(device)
 
         if args.use_linear_lr_decay:
             # decrease learning rate linearly
@@ -132,6 +157,8 @@ def train_ppo(env, path, logger, old_args):
 
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
+            if old_args.use_para:
+                obs = torch.concat([obs, parameters], axis=1)
             logger.step(None, None, infos[0]['reward'], None, done[0], infos[0])
             total_steps += 1
             ep_reward += infos[0]['reward']
