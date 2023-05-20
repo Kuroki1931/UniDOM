@@ -32,7 +32,7 @@ class Sphere(Primitive):
         cfg = Primitive.default_config()
         cfg.radius = 1.
         return cfg
-
+    
     @ti.func
     def collider_v(self, f, grid_pos, dt):
         inv_quat = ti.Vector(
@@ -46,12 +46,11 @@ class Sphere(Primitive):
     def collide(self, f, grid_pos, v_out, dt):
         dist = self.sdf(f, grid_pos)
         influence = min(ti.exp(-dist * self.softness[None]), 1)
-        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.01:
+        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.0005:
             D = self.normal(f, grid_pos)
             collider_v_at_grid = self.collider_v(f, grid_pos, dt)
             v_out = collider_v_at_grid  # Set the object's velocity to the sphere's velocity
         return v_out
-
 
 class Capsule(Primitive):
     def __init__(self, **kwargs):
@@ -208,17 +207,6 @@ class Cylinder(Primitive):
         cfg.h = 0.2
         cfg.r = 0.1
         return cfg
-    
-    @ti.func
-    def collide(self, f, grid_pos, v_out, dt):
-        dist = self.sdf(f, grid_pos)
-        influence = min(ti.exp(-dist * self.softness[None]), 1)
-        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.005:
-            D = self.normal(f, grid_pos)
-            collider_v_at_grid = self.collider_v(f, grid_pos, dt)
-            v_out = collider_v_at_grid  # Set the object's velocity to the sphere's velocity
-        return v_out
-
 
 class Torus(Primitive):
     def __init__(self, **kwargs):
@@ -285,6 +273,8 @@ class Box(Primitive):
         cfg = Primitive.default_config()
         cfg.size = (0.1, 0.1, 0.1)
         return cfg
+
+
 
 
 class Primitives:
