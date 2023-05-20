@@ -104,7 +104,7 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(20):
+    for t in range(2000, 2010):
         rope_type = args.rope_type
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
         output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
@@ -147,7 +147,6 @@ def solve_action(env, path, logger, args):
             print('take time', take_time)
         frames[0].save(f'{output_path}/initial_E{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
-        last_state = env.taichi_env.simulator.get_x(0)
         env.reset()
 
         # optimize
@@ -184,6 +183,8 @@ def solve_action(env, path, logger, args):
             # compute Chamfer distance
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
+
+        last_state = np.load(f'{input_path}/real_pcds_modify.npy', allow_pickle=True)[-1]
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
         frames[0].save(f'{output_path}/optimized_E{parameters_list[-1][0]}_Poisson{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',

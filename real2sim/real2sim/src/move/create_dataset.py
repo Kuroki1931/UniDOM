@@ -20,12 +20,31 @@ from pathlib import Path
 
 from util import tf_utils
 from util.preprocess import sample_pc
+from plb.envs import make
 
 
 def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('training')
+    parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
+    parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
+    parser.add_argument('--batch_size', type=int, default=256, help='batch size in training')
+    parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
+    
+    parser.add_argument("--algo", type=str, default='action')
+    parser.add_argument("--env_name", type=str, default="Move-v1")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--sdf_loss", type=float, default=500)
+    parser.add_argument("--density_loss", type=float, default=500)
+    parser.add_argument("--contact_loss", type=float, default=1)
+    parser.add_argument("--soft_contact_loss", action='store_true')
+    parser.add_argument("--num_steps", type=int, default=12)
+    # differentiable physics parameters
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--softness", type=float, default=6666.)
+    parser.add_argument("--optim", type=str, default='Adam', choices=['Adam', 'Momentum'])
     return parser.parse_args()
 
 
@@ -56,6 +75,14 @@ def main(args):
     yield_stress_list = []
     files = glob.glob(f'/root/ExPCP/policy/pbm/experts/{BASE_NAME}/*/expert*.pickle')
 
+    env = make(args.env_name, nn=(args.algo=='nn'), sdf_loss=args.sdf_loss,
+								density_loss=args.density_loss, contact_loss=args.contact_loss,
+								soft_contact_loss=args.soft_contact_loss)
+    env.seed(args.seed)
+    surface_index = env.taichi_env.surface_index.astype(bool)
+
+    np.save(f'{exp_dir}/surface_index.npy', surface_index)
+
     with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
         for path in files:
             with open(path, 'rb') as f: 
@@ -84,9 +111,8 @@ def main(args):
 
             print(path)
             env_count[env_name] += 1
-            # target
             # points
-            plasticine_pc = data['plasticine_pc'][-1]
+            plasticine_pc = data['plasticine_pc'][-1][surface_index, :]
             E = data['E']
             Poisson = data['Poisson']
             # yield_stress = data['yield_stress']

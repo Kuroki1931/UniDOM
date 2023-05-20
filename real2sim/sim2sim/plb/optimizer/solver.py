@@ -145,7 +145,7 @@ def solve_action(env, path, logger, args):
         T = action.shape[0]
         args.num_steps = T * 60
 
-        for i in tqdm(range(2000, 2005)):
+        for i in tqdm(range(2000, 2010)):
             output_path = f'/root/real2sim/sim2sim/output/{now}/{t}/{i}'
             os.makedirs(output_path, exist_ok=True)
 
