@@ -67,6 +67,7 @@ class Solver:
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
             parameters[1] = np.clip(parameters[1], 0.20, 0.4)
+            parameters[0] = np.clip(parameters[0], 500, 10600)
             parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
@@ -119,7 +120,7 @@ def solve_action(env, path, logger, args):
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
-        args.num_steps = T * 150
+        args.num_steps = T * 100
         taichi_env.loss.update_target_density(target_grids)
         E_bottom, E_upper = 2000, 8000
         Poisson_bottom, Poisson_upper = 0.2, 0.4
