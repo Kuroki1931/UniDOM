@@ -62,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/real2sim/sim2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-20_05-31'
+BASE_DIR = '/root/real2sim/real2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -128,9 +128,10 @@ def train(args):
 								density_loss=args.density_loss, contact_loss=args.contact_loss,
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
-   
+
     parameters_size = 2
-    num_point = args.num_plasticine_point
+    surface_index = np.load(f'data/{BASE_TASK}/{BASE_DATE}/surface_index.npy')
+    num_point = surface_index.sum()
 
     model = CLS_SSG_Model(args.batch_size, parameters_size)
     train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size, num_point)

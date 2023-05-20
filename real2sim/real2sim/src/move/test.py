@@ -61,7 +61,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/real2sim/sim2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_05-31/2023-05-20_05-51/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/real2sim/real2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24/2023-05-20_08-55/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -72,15 +72,12 @@ def test(args):
 
     parameter_list = BASE_TASK.split('_')[1:]
     parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
     E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
     Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
-    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
+    surface_index = np.load(f'data/{BASE_TASK}/{BASE_DATE}/surface_index.npy')
 
     parameters_size = 2
-    num_point = args.num_plasticine_point
+    num_point = surface_index.sum()
 
     model = CLS_SSG_Model(args.batch_size, parameters_size)
    
@@ -101,33 +98,27 @@ def test(args):
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
 
-    output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
-    os.makedirs(output_dir, exist_ok=True)
+    now = datetime.datetime.now()
+    yield_stress = 200
+    action = np.array([[0, 0.6, 0]]*150)
 
     cd_loss = 0
-    for i in range(1000, 1010):
+    for rope_type in ['red', 'white', 'yellow']:
         env.reset()
 
-        # set randam parameter: mu, lam, yield_stress
-        np.random.seed(i)
-        E = np.random.uniform(E_bottom, E_upper)
-        Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
-        yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-        print('parameter', E, Poisson, yield_stress)
-        env.taichi_env.set_parameter(E, Poisson, yield_stress)
+        input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
+        output_dir = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/learning'
+        os.makedirs(output_dir, exist_ok=True)
 
-        action = np.array([[0, 0.6, 0]]*150)
-        frames = []
-        for idx, act in enumerate(action):
-            env.step(act)
-            if idx % 5 == 0:
-                img = env.render(mode='rgb_array')
-                pimg = Image.fromarray(img)
-                I1 = ImageDraw.Draw(pimg)
-                I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                frames.append(pimg)
-        frames[0].save(f'{output_dir}/{i}_ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        last_state = env.taichi_env.simulator.get_x(0)
+        last_state = np.load(f'{input_path}/real_pcds_modify.npy', allow_pickle=True)[-1]
+        if last_state.shape[0] > num_point:
+            diff = last_state.shape[0] - num_point
+            random_index = np.random.choice(last_state.shape[0], diff, replace=False)
+            last_state = np.delete(last_state, random_index, axis=0)
+        else:
+            diff = num_point - last_state.shape[0]
+            random_index = np.random.choice(last_state.shape[0], diff, replace=True)
+            last_state = np.concatenate([last_state, last_state[random_index]], axis=0)
 
         pred_parameters = model.forward_pass(tf.cast(tf.convert_to_tensor(last_state[None]), tf.float32), False, 1)
         pred_parameters = pred_parameters.numpy()
@@ -135,7 +126,7 @@ def test(args):
         env.reset()
         pred_E = pred_parameters[0][0] * np.std(E_list) + np.mean(E_list)
         pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
-
+        print('parameter', pred_E, pred_Poisson, yield_stress)
         env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
 
         frames = []
@@ -147,7 +138,7 @@ def test(args):
                 I1 = ImageDraw.Draw(pimg)
                 I1.text((5, 5), f'E{pred_E:.2f},Poisson{pred_Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                 frames.append(pimg)
-        frames[0].save(f'{output_dir}/{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+        frames[0].save(f'{output_dir}/pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
         pred_last_state = env.taichi_env.simulator.get_x(0)
 
         def chamfer_distance(A, B):
@@ -163,8 +154,8 @@ def test(args):
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
         cd_loss += chamfer_dist
 
-        with open(f'{output_dir}/{i}.txt', 'w') as f:
-            f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {pred_E},{pred_Poisson},{yield_stress}')
+        with open(f'{output_dir}/setting.txt', 'w') as f:
+            f.write(f'{chamfer_dist}, {pred_E},{pred_Poisson},{yield_stress}')
 
 
 if __name__ == '__main__':

@@ -40,9 +40,9 @@ class TaichiEnv:
         if self.args.task_name in ['Move', 'Table']:
             from object.cloth import Cloth
             self.real2sim = Cloth(self.init_particles)
-        surface_index = self.real2sim.get_surface_index()
+        self.surface_index = self.real2sim.get_surface_index()
 
-        self.simulator = MPMSimulator(cfg.SIMULATOR, self.primitives, surface_index)
+        self.simulator = MPMSimulator(cfg.SIMULATOR, self.primitives, self.surface_index)
         self.renderer = Renderer(cfg.RENDERER, self.primitives)
 
         if nn:

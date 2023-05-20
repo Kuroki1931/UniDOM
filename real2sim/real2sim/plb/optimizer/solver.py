@@ -67,6 +67,7 @@ class Solver:
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
             parameters[1] = np.clip(parameters[1], 0.20, 0.4)
+            parameters[0] = np.clip(parameters[0], 500, 10600)
             parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
@@ -104,7 +105,7 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(20):
+    for t in range(2000, 2010):
         rope_type = args.rope_type
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
         output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
@@ -119,7 +120,7 @@ def solve_action(env, path, logger, args):
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
-        args.num_steps = T * 150
+        args.num_steps = T * 100
         taichi_env.loss.update_target_density(target_grids)
         E_bottom, E_upper = 2000, 8000
         Poisson_bottom, Poisson_upper = 0.2, 0.4
@@ -147,7 +148,6 @@ def solve_action(env, path, logger, args):
             print('take time', take_time)
         frames[0].save(f'{output_path}/initial_E{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
-        last_state = env.taichi_env.simulator.get_x(0)
         env.reset()
 
         # optimize
@@ -184,6 +184,8 @@ def solve_action(env, path, logger, args):
             # compute Chamfer distance
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
+
+        last_state = np.load(f'{input_path}/real_pcds_modify.npy', allow_pickle=True)[-1]
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
         frames[0].save(f'{output_path}/optimized_E{parameters_list[-1][0]}_Poisson{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
