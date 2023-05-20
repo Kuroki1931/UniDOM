@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Rollingpin-v'
+ENV_NAME='Table-v'
 
-POSE_NUM=18
-EACH_POSE_NUM=18
+POSE_NUM=120
+EACH_POSE_NUM=6
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm

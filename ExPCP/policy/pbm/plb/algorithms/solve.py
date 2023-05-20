@@ -36,7 +36,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Rollingpin-v1")
+    parser.add_argument("--env_name", type=str, default="Pinch-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -58,13 +58,14 @@ def get_args():
 def main():
     args = get_args()
 
-    step = 70
+    # step = LANG_GOAL[args.env_name]['num_steps']
+    step = 200
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-            args.num_steps = step * 150
+            args.num_steps = step * 130
         else:
-            args.num_steps = 500000
+            args.num_steps = 5000000
 
     logger = Logger(args.path)
     set_random_seed(args.seed)

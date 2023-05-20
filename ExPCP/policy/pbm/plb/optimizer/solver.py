@@ -67,7 +67,8 @@ class Solver:
                 callback(self, optim, loss, grad)
 
         env.set_state(**env_state)
-        return best_action
+        return actions
+        # return best_action
 
 
     @staticmethod
@@ -166,16 +167,16 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 30
+    repeat_time = 3
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        mu_bottom, mu_upper = 200, 2000
-        lam_bottom, lam_upper = 200, 2000
-        yield_stress_bottom, yield_stress_upper = 20, 500
-        output_path = f'{path}/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
+        E_bottom, E_upper = 500, 10500
+        Poisson_bottom, Poisson_upper = 0.2, 0.4
+        yield_stress_bottom, yield_stress_upper = 200, 200
+        output_path = f'{path}/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
         env.reset()
         img = env.render(mode='rgb_array')
@@ -185,37 +186,25 @@ def solve_action(env, path, logger, args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(int(args.task_version[1:])*repeat_time+i)
-        mu = np.random.uniform(mu_bottom, mu_upper)
-        lam = np.random.uniform(lam_bottom, lam_upper)
+        E = np.random.uniform(E_bottom, E_upper)
+        Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
-        print('parameter', mu, lam, yield_stress)
-        env.taichi_env.set_parameter(mu, lam, yield_stress)
+        print('parameter', E, Poisson, yield_stress)
+        env.taichi_env.set_parameter(E, Poisson, yield_stress)
 
         if args.task_name in ['Rope']:
             action = rope_action(env, output_path)
-        if args.task_name in ['Pinch']:
+        elif args.task_name in ['Pinch']:
             T = 5
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
+        elif args.task_name in ['Move']:
+            action = np.array([[0, 0.6, 0]]*150)
         else:
-            # init_actions
-            if args.task_name in ['Move']:
-                with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{args.task_version[1:]}/randam_value.txt', mode="r") as f:
-                    stick_pos = json.load(f)
-                stick_pos = np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])
-                pseudo_goal_pos = stick_pos + np.array([0, 0, 0.08])
-                initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
-                init_actions = np.linspace(initial_primitive_pos, pseudo_goal_pos, T)
-                init_actions = np.diff(init_actions, n=1, axis=0)
-                init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-                init_actions /= np.linalg.norm(init_actions[0])
-            else:
-                init_actions = None
-
             solver = Solver(taichi_env, logger, None,
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                             **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-            action = solver.solve(init_actions)
+            action = solver.solve()
 
         np.save(f"{output_path}/action.npy", action)
         print(action)
@@ -225,12 +214,12 @@ def solve_action(env, path, logger, args):
             frames = []
             for idx, act in enumerate(action):
                 env.step(act)
-                if idx % 1 == 0:
+                if idx % 5 == 0:
                 # if idx + 1 == 5:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
-                    I1.text((5, 5), f'mu{mu:.2f},lam{lam:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                     frames.append(pimg)
             frames[0].save(f'{output_path}/demo.gif', save_all=True, append_images=frames[1:], loop=0)
 
@@ -255,20 +244,21 @@ def solve_action(env, path, logger, args):
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
 
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{mu_bottom}_{mu_upper}_{lam_bottom}_{lam_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
+            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
             if not os.path.exists(experts_output_dir):
                 os.makedirs(experts_output_dir, exist_ok=True)
 
             print('length', i, 'r', r, 'last_iou', last_iou)
             bc_data = {
                 'action': np.array(action_list),
-                'mu': mu,
-                'lam': lam,
+                'E': E,
+                'Poisson': Poisson,
                 'yield_stress': yield_stress,
                 'rewards': np.array(reward_list),
                 'env_name': args.env_name,
                 'plasticine_pc': np.array(plasticine_pc_list),
                 'primitive_pc': np.array(primitive_pc_list),
+                'last_iou': last_iou
             }
 
             now = datetime.datetime.now()
