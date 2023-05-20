@@ -210,6 +210,7 @@ def main():
         state = env.taichi_env.get_state()
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
+        grid_mass[:5] = 0
         print(grid_mass.sum())
         np.save(f'/root/ExPCP/policy/pbm/plb/envs/assets/Move3D-v{index}', grid_mass)
 
