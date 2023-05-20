@@ -66,7 +66,7 @@ class Solver:
             parameters = optim.step(grad)
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
-            parameters[1] = np.clip(parameters[1], 0.2, 0.4)
+            parameters[1] = np.clip(parameters[1], 0.20, 0.4)
             parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
