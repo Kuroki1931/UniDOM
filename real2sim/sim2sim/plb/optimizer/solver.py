@@ -65,14 +65,16 @@ class Solver:
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
+            print('--------')
             parameters = optim.step(grad)
+            print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
+            parameters[1] = np.clip(parameters[1], 0.2, 0.4)
+            parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
             reward_list.append(reward)
             print('---------------')
             print('loss', loss, 'reward', reward)
-            print(parameters)
-            print(grad)
             for callback in callbacks:
                 callback(self, optim, loss, grad)
 
@@ -141,9 +143,9 @@ def solve_action(env, path, logger, args):
 
         target_grids = np.repeat(np.array(target_grids), env.taichi_env.simulator.substeps, axis=0)
         T = action.shape[0]
-        args.num_steps = T * 100
+        args.num_steps = T * 60
 
-        for i in tqdm(range(20)):
+        for i in tqdm(range(2000, 2005)):
             output_path = f'/root/real2sim/sim2sim/output/{now}/{t}/{i}'
             os.makedirs(output_path, exist_ok=True)
 
@@ -197,4 +199,4 @@ def solve_action(env, path, logger, args):
             chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
             with open(f'{output_path}/setting.txt', 'w') as f:
-                f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {initial_E}, {initial_lam}, {initial_yield_stress}, {optimized_E},{optimized_Poisson},{optimized_yield_stress}')
+                f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {initial_E}, {initial_Poisson}, {initial_yield_stress}, {optimized_E},{optimized_Poisson},{optimized_yield_stress}')
