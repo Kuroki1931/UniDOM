@@ -6,7 +6,7 @@ class Optimizer:
     def __init__(self, parameters: np.ndarray, cfg=None, **kwargs):
         self.cfg = make_cls_config(self, cfg, **kwargs)
         self.lr = self.cfg.lr
-        self.lr2 = self.cfg.lr/10000
+        self.lr2 = self.cfg.lr/100000
         self.bounds = self.cfg.bounds
         self.parameters = parameters
         self.initialize()
