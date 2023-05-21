@@ -26,22 +26,26 @@ class Solver:
         self.env = env
         self.logger = logger
 
-    def solve(self, init_parameters, actions, callbacks=()):
+    def solve(self, init_parameters, actions, target_grids, callbacks=()):
         env = self.env
         optim = OPTIMS[self.optim_cfg.type](init_parameters, self.optim_cfg)
         # set softness ..
         env_state = env.get_state()
         self.total_steps = 0
 
-        def forward(sim_state, parameter, action):
+        def forward(sim_state, parameter, action, target_grids):
             if self.logger is not None:
                 self.logger.reset()
 
             # set parameter
             env.set_parameter(parameter[0], parameter[1], YIELD_STRESS) # mu, lam, yield_stress
             env.set_state(sim_state, self.cfg.softness, False)
+            env.loss.update_target_density(target_grids)
+            print('------------------------------')
+            loss__ = 0
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
+                    loss__ += i*19
                     loss_info = env.compute_loss()
 
                     env.step(action[i])
@@ -50,6 +54,7 @@ class Solver:
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
+            import pdb;pdb.set_trace()
             return loss, env.simulator.get_parameter_grad()
 
         best_parameters = None
@@ -58,7 +63,7 @@ class Solver:
 
         parameters = init_parameters
         for iter in range(self.cfg.n_iters):
-            loss, grad = forward(env_state['state'], parameters, actions)
+            loss, grad = forward(env_state['state'], parameters, actions, target_grids)
             if loss < best_loss:
                 best_loss = loss
                 best_parameters = parameters
@@ -105,7 +110,7 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(2004, 2010):
+    for t in range(2000, 2010):
         rope_type = args.rope_type
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
         output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
@@ -133,28 +138,27 @@ def solve_action(env, path, logger, args):
         init_parameters = np.array([E, Poisson, yield_stress])
 
         # save initial gif
+        grid_loss_sum = 0
         env.taichi_env.set_parameter(init_parameters[0], init_parameters[1], init_parameters[2])
         frames = []
         for idx, act in enumerate(actions):
-            start_time = datetime.datetime.now()
+            env.taichi_env.compute_loss()
+            grid_loss_sum += np.abs(env.taichi_env.simulator.get_grid_mass(0)).sum()
             env.step(act)
             if idx % 5 == 0:
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 frames.append(pimg)
-            end_time = datetime.datetime.now()
-            take_time = end_time - start_time
-            take_time = take_time.total_seconds()
-            print('take time', take_time)
         frames[0].save(f'{output_path}/initial_E{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
+        print(grid_loss_sum)
         env.reset()
 
         # optimize
         solver = Solver(taichi_env, logger, None,
                         n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
                         **{"optim.lr": args.lr, "optim.type": args.optim, "init_range": 0.0001})
-        best_parameters, parameters_list = solver.solve(init_parameters, actions)
+        best_parameters, parameters_list = solver.solve(init_parameters, actions, target_grids)
         np.save(f"{output_path}/parameters.npy", np.array(parameters_list))
         print(parameters_list[-1])
 
@@ -162,16 +166,11 @@ def solve_action(env, path, logger, args):
         env.taichi_env.set_parameter(parameters_list[-1][0], parameters_list[-1][1], parameters_list[-1][2])
         frames = []
         for idx, act in enumerate(actions):
-            start_time = datetime.datetime.now()
             env.step(act)
             if idx % 5 == 0:
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 frames.append(pimg)
-            end_time = datetime.datetime.now()
-            take_time = end_time - start_time
-            take_time = take_time.total_seconds()
-            print('take time', take_time)
         pred_last_state = env.taichi_env.simulator.get_x(0)
 
         def chamfer_distance(A, B):

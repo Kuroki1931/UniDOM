@@ -41,10 +41,10 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=16, help='batch size in training')
-    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=100, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=1000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=1000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
@@ -62,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/real2sim/real2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24'
+BASE_DIR = '/root/real2sim/real2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-21_07-04'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -156,7 +156,7 @@ def train(args):
     Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
     yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
-    best_cd_loss = 0
+    best_cd_loss = 100000000000000
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
@@ -170,7 +170,7 @@ def train(args):
                 keras.callbacks.TensorBoard(
                     f'{exp_dir}', update_freq=50),
                 keras.callbacks.ModelCheckpoint(
-                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq='epoch')
+                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq=10)
             ],
 			epochs = 1,
 			verbose = 1
@@ -179,7 +179,7 @@ def train(args):
 
         cd_loss = 0
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(10000, 10005)):
+            for i in tqdm(range(10000, 10010)):
                 test_env = args.env_name.split('-')[0]
                 env.reset()
                 output_dir = exp_dir.joinpath(f'{test_env}/')
@@ -213,18 +213,23 @@ def train(args):
                 pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
 
                 env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
+                print('parameter:', pred_E, pred_Poisson, yield_stress)
 
-                frames = []
-                for idx, act in enumerate(action):
-                    env.step(act)
-                    if idx % 5 == 0:
-                        img = env.render(mode='rgb_array')
-                        pimg = Image.fromarray(img)
-                        I1 = ImageDraw.Draw(pimg)
-                        I1.text((5, 5), f'E{pred_E:.2f},Poisson{pred_Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                        frames.append(pimg)
-                frames[0].save(f'{output_dir}/{epoch}_{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-                pred_last_state = env.taichi_env.simulator.get_x(0)
+                try:
+                    frames = []
+                    for idx, act in enumerate(action):
+                        env.step(act)
+                        if idx % 5 == 0:
+                            img = env.render(mode='rgb_array')
+                            pimg = Image.fromarray(img)
+                            I1 = ImageDraw.Draw(pimg)
+                            I1.text((5, 5), f'E{pred_E:.2f},Poisson{pred_Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                            frames.append(pimg)
+                    frames[0].save(f'{output_dir}/{epoch}_{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
+                    pred_last_state = env.taichi_env.simulator.get_x(0)
+                except:
+                    print('error')
+                    break
 
                 def chamfer_distance(A, B):
                     # compute distance matrix between A and B
@@ -242,10 +247,12 @@ def train(args):
                 with open(f'{output_dir}/{epoch}_{i}.txt', 'w') as f:
                     f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {pred_E},{pred_Poisson},{yield_stress}')
 
-        if cd_loss > best_cd_loss:
-            best_cd_loss = cd_loss
-            model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
-        log_string('chamfer_distance: %4f' % cd_loss)
+            if cd_loss < best_cd_loss:
+                best_cd_loss = cd_loss
+                model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
+                log_string('update best chamfer_distance------------------: %4f' % cd_loss)
+            else:
+                log_string('chamfer_distance------------------: %4f' % cd_loss)
 
 if __name__ == '__main__':
 	args = parse_args()
