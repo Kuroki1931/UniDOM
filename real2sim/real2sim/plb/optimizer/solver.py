@@ -67,7 +67,7 @@ class Solver:
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
             parameters[2] = YIELD_STRESS
             parameters[1] = np.clip(parameters[1], 0.20, 0.4)
-            parameters[0] = np.clip(parameters[0], 500, 10600)
+            parameters[0] = np.clip(parameters[0], 500, 10700)
             parameters = np.clip(parameters, 0.01, 9999999999999999)
             parameters_list.append(parameters.tolist())
             print('loss:', loss, 'E:', parameters[0], 'Poisson:', parameters[1], 'yield_stress:', parameters[2])
@@ -105,7 +105,7 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(2000, 2010):
+    for t in range(2004, 2010):
         rope_type = args.rope_type
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
         output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
