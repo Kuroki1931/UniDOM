@@ -6,9 +6,9 @@ SIMULATOR:
   ground_friction: 0.5
 SHAPES:
   - shape: box
-    width: (0.5, 0.025, 0.025)
+    width: (0.5, 0.028, 0.028)
     init_pos: (0.5, 0.0125, 0.5)
-    n_particles: 3000
+    n_particles: 1000
     color: 100
 PRIMITIVES:
   - shape: Sphere

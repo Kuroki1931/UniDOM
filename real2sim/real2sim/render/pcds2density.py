@@ -65,8 +65,8 @@ def main():
     env.seed(args.seed)
     env.reset()
 
-    output_path = '/root/real2sim/real2sim/real_points/yellow'
-    
+    output_path = '/root/real2sim/real2sim/real_points/white'
+
     pcds = np.load(f'{output_path}/real_pcds_modify.npy', allow_pickle=True)
     grid_mass_list = []
     default_grid_mass = env.taichi_env.simulator.get_grid_mass(0)
