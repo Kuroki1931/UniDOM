@@ -21,19 +21,13 @@ else
         --gpus all \
         --env DISPLAY=${DISPLAY} \
         --net host \
-        --volume ${PWD}/catkin_ws/:/root/dmlc/catkin_ws/ \
+        --volume ${PWD}/catkin_ws/:/root/ExPCP/catkin_ws/ \
         --volume /dev/:/dev/ \
         --volume /tmp/.X11-unix:/tmp/.X11-unix \
-        --volume ${PWD}/policy/:/root/dmlc/policy/ \
+        --volume ${PWD}/policy/:/root/ExPCP/policy/ \
         --name ${CONTAINER_NAME} \
         ${IMAGE_NAME} \
         bash -c "sed -i 's/TMP_IP/${ROOMBA_IP}/' ~/scripts/initialize-bash-shell.sh;
                     bash"
 fi
-
-# /home/robot_dev/kuroki/DMLC/catkin_ws/src/roomba_control/scripts
-# source /opt/ros/noetic/setup.bash 
-
-# docker exec -it okubo_pull_request_xarm-dual_1 bash    
-# roscore
 

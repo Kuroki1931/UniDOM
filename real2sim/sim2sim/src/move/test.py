@@ -104,6 +104,10 @@ def test(args):
     output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
     os.makedirs(output_dir, exist_ok=True)
 
+<<<<<<< HEAD
+=======
+    cd_loss = 0
+>>>>>>> 00614fb064aa3eb837d1eaabd7e5aae7118fdbec
     for i in range(2000, 2010):
         env.reset()
 

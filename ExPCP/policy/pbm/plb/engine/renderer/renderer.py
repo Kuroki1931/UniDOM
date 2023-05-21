@@ -484,7 +484,7 @@ class Renderer:
             spp = self.spp
 
         last_t = 0
-        visualize_target = kwargs.get('target', 1)
+        visualize_target = kwargs.get('target', 0)
         self.visualize_shape[None] = kwargs.get('shape', 1)
         self.visualize_primitive[None] = kwargs.get('primitive', 1)
         self.color_buffer.fill(0)

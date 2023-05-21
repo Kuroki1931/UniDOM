@@ -43,6 +43,7 @@ def get_args():
     parser.add_argument("--density_loss", type=float, default=500)
     parser.add_argument("--contact_loss", type=float, default=1)
     parser.add_argument("--soft_contact_loss", action='store_true')
+    parser.add_argument("--use_para", action='store_true')
 
     parser.add_argument("--num_steps", type=int, default=None)
 
@@ -58,11 +59,15 @@ def main():
     args = get_args()
 
     # step = LANG_GOAL[args.env_name]['num_steps']
-    step = 180
+    step = 160
 
     if args.num_steps is None:
         if args.algo in DIFF_ALGOS:
-            args.num_steps = step * 130
+<<<<<<< HEAD
+            args.num_steps = step * 100
+=======
+            args.num_steps = step * 80
+>>>>>>> 0073a048400db4cd20dedf5e71c2b50fa202579a
         else:
             args.num_steps = 5000000
 

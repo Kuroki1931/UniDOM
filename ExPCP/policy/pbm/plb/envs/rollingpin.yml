@@ -1,14 +1,26 @@
 SIMULATOR:
   E: 5000.
+<<<<<<< HEAD
+  yield_stress: 50.
+  ground_friction: 1.5
+SHAPES:
+=======
   n_particles: 10000
   yield_stress: 50.
   ground_friction: 1.5
 SHAPES:
 <<<<<<< HEAD
+>>>>>>> aeba76aa9b3e0cc0e71863c4f5a1f66b754ee311
   - shape: box
     width: (0.3, 0.1, 0.3)
     init_pos: (0.5, 0.05, 0.5)
     color: 100
+<<<<<<< HEAD
+    n_particles: 5000
+PRIMITIVES:
+  - shape: RollingPin
+    h: 0.3
+=======
 PRIMITIVES:
   - shape: RollingPin
     h: 0.3
@@ -68,6 +80,7 @@ PRIMITIVES:
   - shape: RollingPin
     h: 0.2
 >>>>>>> 094b2af18ab91d83f577b31c189379e8ac01fb06
+>>>>>>> aeba76aa9b3e0cc0e71863c4f5a1f66b754ee311
     r: 0.03
     init_pos: (0.5, 0.123, 0.5)
     init_rot: (0.707, 0.707, 0., 0.)
@@ -78,8 +91,12 @@ PRIMITIVES:
 <<<<<<< HEAD
       scale: (0.6666666666666667, 0.06666666666666668, 0.001)
 =======
+<<<<<<< HEAD
+      scale: (0.6666666666666667, 0.06666666666666668, 0.001)
+=======
       scale: (0.666666666666, 0.00000001, 0.001)
 >>>>>>> 094b2af18ab91d83f577b31c189379e8ac01fb06
+>>>>>>> aeba76aa9b3e0cc0e71863c4f5a1f66b754ee311
 ENV:
   loss:
     target_path: envs/assets/Rollingpin3D-v1.npy
@@ -106,5 +123,9 @@ VARIANTS:
 <<<<<<< HEAD
         target_path: envs/assets/Rollingpin3D-v5.npy
 =======
+<<<<<<< HEAD
+        target_path: envs/assets/Rollingpin3D-v5.npy
+=======
         target_path: envs/assets/Rollingpin3D-v5.npy
 >>>>>>> 094b2af18ab91d83f577b31c189379e8ac01fb06
+>>>>>>> aeba76aa9b3e0cc0e71863c4f5a1f66b754ee311

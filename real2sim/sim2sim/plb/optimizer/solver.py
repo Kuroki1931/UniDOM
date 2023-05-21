@@ -115,7 +115,11 @@ def solve_action(env, path, logger, args):
     yield_stress_bottom, yield_stress_upper = 200, 200
     action = np.array([[0, 0.6, 0]]*150)
 
+<<<<<<< HEAD
     for t in tqdm(range(2000, 2010)):
+=======
+    for t in tqdm(range(2003, 2006)):
+>>>>>>> 00614fb064aa3eb837d1eaabd7e5aae7118fdbec
         output_path = f'/root/real2sim/sim2sim/output/{now}/{t}'
         os.makedirs(output_path, exist_ok=True)
 

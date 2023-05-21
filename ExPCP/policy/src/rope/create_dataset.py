@@ -25,7 +25,7 @@ from util.preprocess import sample_pc
 def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=5000, help='Point Number of Plasticine')
     return parser.parse_args()
 
 
@@ -40,7 +40,7 @@ def create_example(points, vector, parameters, action):
 
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
-BASE_NAME = 'Pinch_100_2000_100_2000_100_2000'
+BASE_NAME = 'Rollingpin_200_2000_200_2000_20_500'
 
 
 def main(args):
@@ -101,6 +101,7 @@ def main(args):
 
             for i in range(action.shape[0]):
                 plasticine_pc_i = plasticine_pc[i]
+                assert plasticine_pc_i.shape[0] == args.num_plasticine_point
                 primitive_center_i = primitive_pc[i]
                 
                 points = sample_pc(plasticine_pc_i, args.num_plasticine_point)
