@@ -115,7 +115,7 @@ def solve_action(env, path, logger, args):
     yield_stress_bottom, yield_stress_upper = 200, 200
     action = np.array([[0, 0.6, 0]]*150)
 
-    for t in tqdm(range(1000, 1005)):
+    for t in tqdm(range(2003, 2006)):
         output_path = f'/root/real2sim/sim2sim/output/{now}/{t}'
         os.makedirs(output_path, exist_ok=True)
 
@@ -145,7 +145,7 @@ def solve_action(env, path, logger, args):
         T = action.shape[0]
         args.num_steps = T * 100
 
-        for i in tqdm(range(2000, 2005)):
+        for i in tqdm(range(3000, 3010)):
             output_path = f'/root/real2sim/sim2sim/output/{now}/{t}/{i}'
             os.makedirs(output_path, exist_ok=True)
 

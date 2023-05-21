@@ -105,7 +105,7 @@ def test(args):
     os.makedirs(output_dir, exist_ok=True)
 
     cd_loss = 0
-    for i in range(1000, 1010):
+    for i in range(2000, 2010):
         env.reset()
 
         # set randam parameter: mu, lam, yield_stress
