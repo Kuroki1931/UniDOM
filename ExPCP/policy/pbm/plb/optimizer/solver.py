@@ -10,6 +10,7 @@ import datetime, os, cv2
 import matplotlib.pyplot as plt
 from PIL import Image
 from PIL import ImageDraw
+import random
 
 from .optim import Optimizer, Adam, Momentum
 from ..engine.taichi_env import TaichiEnv
@@ -184,13 +185,17 @@ def solve_action(env, path, logger, args):
         taichi_env: TaichiEnv = env.unwrapped.taichi_env
         T = env._max_episode_steps
 
-        # set randam parameter: mu, lam, yield_stress
+        # set randam parameter
         np.random.seed(int(args.task_version[1:])*repeat_time+i)
         E = np.random.uniform(E_bottom, E_upper)
         Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
         print('parameter', E, Poisson, yield_stress)
         env.taichi_env.set_parameter(E, Poisson, yield_stress)
+        
+        experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
+        if not os.path.exists(experts_output_dir):
+            os.makedirs(experts_output_dir, exist_ok=True)
 
         if args.task_name in ['Rope']:
             action = rope_action(env, output_path)
@@ -200,6 +205,60 @@ def solve_action(env, path, logger, args):
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         elif args.task_name in ['Move']:
             action = np.array([[0, 0.6, 0]]*150)
+        elif args.task_name in ['Torus']:
+            random.seed(int(args.task_version[1:])*repeat_time+i)
+            ranges = [(0.05, 0.3), (0.1, 0.6), (0.5, 0.5)]
+            samples = []
+            for r in ranges:
+                samples.append(random.uniform(*r))
+            start_pos = np.array(samples)
+            initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
+            init_actions = np.linspace(initial_primitive_pos, start_pos, 200)
+            init_actions = np.diff(init_actions, n=1, axis=0)
+            init_actions = np.vstack([init_actions, init_actions[0][None, :]])
+            action = np.concatenate([init_actions, np.array([[0, 0, 0]]*300)])
+            
+            try:
+                best_max_x = 0
+                env.taichi_env.primitives.set_softness()
+                frames = []
+                for idx, act in enumerate(action):
+                    env.step(act)
+                    
+                    if idx == 200:
+                        release_point = env.taichi_env.primitives[0].get_state(0)[:3]
+                        env.taichi_env.primitives.set_softness1(0)
+                    if idx % 5 == 0:
+                        img = env.render(mode='rgb_array')
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        frames.append(pimg)
+
+                    state = env.taichi_env.simulator.get_x(0)
+                    max_x = state.max(axis=0)[0]
+                    if max_x > best_max_x:
+                        best_max_x = max_x
+                frames[0].save(f'{output_path}/best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+
+                bc_data = {
+                    'release_point': release_point,
+                    'max_x': best_max_x,
+                    'action': action,
+                    'E': E,
+                    'Poisson': Poisson,
+                    'yield_stress': yield_stress,
+                    'env_name': args.env_name,
+                }
+
+                now = datetime.datetime.now()
+                current_time = now.strftime("%H:%M:%S")
+                with open(f'{experts_output_dir}/expert_{current_time}.pickle', 'wb') as f:
+                    pickle.dump(bc_data, f)
+            except:
+                print('Nan error')
+                pass
+            continue
         else:
             solver = Solver(taichi_env, logger, None,
                             n_iters=(args.num_steps + T-1)//T, softness=args.softness, horizon=T,
@@ -212,10 +271,12 @@ def solve_action(env, path, logger, args):
         env.reset()
         try:
             frames = []
+            env.taichi_env.primitives.set_softness()
             for idx, act in enumerate(action):
                 env.step(act)
+                if idx == 200:
+                    env.taichi_env.primitives.set_softness1(0)
                 if idx % 5 == 0:
-                # if idx + 1 == 5:
                     img = env.render(mode='rgb_array')
                     pimg = Image.fromarray(img)
                     I1 = ImageDraw.Draw(pimg)
@@ -243,10 +304,6 @@ def solve_action(env, path, logger, args):
                 last_iou = loss_info['incremental_iou']
                 reward_list.append(r)
                 loss_info_list.append(loss_info)
-
-            experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
-            if not os.path.exists(experts_output_dir):
-                os.makedirs(experts_output_dir, exist_ok=True)
 
             print('length', i, 'r', r, 'last_iou', last_iou)
             bc_data = {

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ALGO='action'
-ENV_NAME='Table-v'
+ENV_NAME='Torus-v'
 
-POSE_NUM=180
-EACH_POSE_NUM=9
+POSE_NUM=540
+EACH_POSE_NUM=18
 STEPS=$(( ${POSE_NUM} / ${EACH_POSE_NUM} ))
 
 export PYTHONPATH=../../pbm

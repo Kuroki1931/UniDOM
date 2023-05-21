@@ -46,7 +46,7 @@ class Sphere(Primitive):
     def collide(self, f, grid_pos, v_out, dt):
         dist = self.sdf(f, grid_pos)
         influence = min(ti.exp(-dist * self.softness[None]), 1)
-        if (self.softness[None] > 0 and influence> 0.1) or dist <= 0.0005:
+        if ((self.softness[None] > 0 and influence> 0.1) or dist <= 0.0003) and self.softness[None] > 0:
             D = self.normal(f, grid_pos)
             collider_v_at_grid = self.collider_v(f, grid_pos, dt)
             v_out = collider_v_at_grid  # Set the object's velocity to the sphere's velocity
@@ -321,6 +321,9 @@ class Primitives:
     def set_softness(self, softness=666.):
         for i in self.primitives:
             i.softness[None] = softness
+    
+    def set_softness1(self, softness):
+        self.primitives[0].softness[None] = softness
 
     def get_softness(self):
         return self.primitives[0].softness[None]
