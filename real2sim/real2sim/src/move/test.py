@@ -61,7 +61,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/real2sim/real2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24/2023-05-20_06-36/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/real2sim/real2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24/2023-05-20_08-55/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -126,6 +126,7 @@ def test(args):
         env.reset()
         pred_E = pred_parameters[0][0] * np.std(E_list) + np.mean(E_list)
         pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
+        print('parameter', pred_E, pred_Poisson, yield_stress)
         env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
 
         frames = []
