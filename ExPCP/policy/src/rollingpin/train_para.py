@@ -192,7 +192,7 @@ def train(args):
                 keras.callbacks.TensorBoard(
                     f'{exp_dir}', update_freq=50),
                 keras.callbacks.ModelCheckpoint(
-                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq='epoch')
+                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True,  save_freq=10)
             ],
 			epochs = 1,
 			verbose = 1
