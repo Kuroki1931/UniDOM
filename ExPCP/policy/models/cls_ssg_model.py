@@ -10,6 +10,77 @@ from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 from pnet2_layers.layers import Pointnet_SA, Pointnet_SA_MSG
 
 
+class MLP(Model):
+
+	def __init__(self, batch_size, action_size, bn=False, activation=None):
+		super(MLP, self).__init__()
+
+		self.activation = activation
+		self.batch_size = batch_size
+		self.action_size = action_size
+		self.bn = bn
+		self.keep_prob = 0.5
+
+		self.kernel_initializer = 'glorot_normal'
+		self.kernel_regularizer = None
+
+		self.init_network()
+
+
+	def init_network(self):
+
+		self.dense1 = Dense(256, activation=self.activation)
+		self.batchnorm1 = BatchNormalization()
+		self.dropout1 = Dropout(self.keep_prob)
+
+		self.last_dense1 = Dense(128, activation=self.activation)
+		self.last_dense2 = Dense(self.action_size, activation=self.activation)
+
+
+	def forward_pass(self, inputs, training, batch_size=None):
+		goal_point, parameters = inputs
+
+		net = tf.concat([goal_point, parameters], axis=1)
+		net = self.dense1(net)
+		net = self.batchnorm1(net)
+		net = self.dropout1(net)
+
+		net = self.last_dense1(net)
+		pred = self.last_dense2(net)
+
+		return pred
+
+	def train_step(self, input):
+
+		with tf.GradientTape() as tape:
+
+			pred = self.forward_pass([input[0], input[1]], True)
+			loss = self.compiled_loss(input[2], pred)
+		
+		gradients = tape.gradient(loss, self.trainable_variables)
+		self.optimizer.apply_gradients(
+			zip(gradients, self.trainable_variables))
+
+		self.compiled_metrics.update_state(input[2], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def test_step(self, input):
+
+		pred = self.forward_pass([input[0], input[1]], False)
+		loss = self.compiled_loss(input[2], pred)
+
+		self.compiled_metrics.update_state(input[2], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def call(self, inputs, training=False):
+
+		return self.forward_pass(inputs, training)
+
+
 class CLS_SSG_Model_PARA(Model):
 
 	def __init__(self, batch_size, action_size, bn=False, activation=None):

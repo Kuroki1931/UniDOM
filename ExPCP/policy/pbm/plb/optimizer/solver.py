@@ -168,7 +168,7 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 1000
+    repeat_time = 100
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
@@ -207,7 +207,7 @@ def solve_action(env, path, logger, args):
             action = np.array([[0, 0.6, 0]]*150)
         elif args.task_name in ['Torus']:
             random.seed(int(args.task_version[1:])*repeat_time+i)
-            ranges = [(0.05, 0.3), (0.1, 0.6), (0.5, 0.5)]
+            ranges = [(0.1, 0.3), (0.1, 0.6), (0.5, 0.5)]
             samples = []
             for r in ranges:
                 samples.append(random.uniform(*r))
@@ -216,8 +216,11 @@ def solve_action(env, path, logger, args):
             init_actions = np.linspace(initial_primitive_pos, start_pos, 200)
             init_actions = np.diff(init_actions, n=1, axis=0)
             init_actions = np.vstack([init_actions, init_actions[0][None, :]])
-            action = np.concatenate([init_actions, np.array([[0, 0, 0]]*300)])
+            action = np.concatenate([init_actions, np.array([[0, 0, 0]]*400)])
             
+            initial_state = env.taichi_env.simulator.get_x(0)
+            rope_bottom_index = np.argmin(initial_state[:, 1])
+
             try:
                 best_max_x = 0
                 env.taichi_env.primitives.set_softness()
@@ -225,21 +228,21 @@ def solve_action(env, path, logger, args):
                 for idx, act in enumerate(action):
                     env.step(act)
                     
-                    if idx == 200:
+                    if idx == 300:
                         release_point = env.taichi_env.primitives[0].get_state(0)[:3]
                         env.taichi_env.primitives.set_softness1(0)
-                    if idx % 5 == 0:
-                        img = env.render(mode='rgb_array')
-                        pimg = Image.fromarray(img)
-                        I1 = ImageDraw.Draw(pimg)
-                        I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                        frames.append(pimg)
+                    # if idx % 5 == 0:
+                    #     img = env.render(mode='rgb_array')
+                    #     pimg = Image.fromarray(img)
+                    #     I1 = ImageDraw.Draw(pimg)
+                    #     I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    #     frames.append(pimg)
 
                     state = env.taichi_env.simulator.get_x(0)
-                    max_x = state.max(axis=0)[0]
+                    max_x = state[rope_bottom_index][0]
                     if max_x > best_max_x:
                         best_max_x = max_x
-                frames[0].save(f'{output_path}/best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+                # frames[0].save(f'{output_path}/best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
 
                 bc_data = {
                     'release_point': release_point,
@@ -253,7 +256,7 @@ def solve_action(env, path, logger, args):
 
                 now = datetime.datetime.now()
                 current_time = now.strftime("%H:%M:%S")
-                with open(f'{experts_output_dir}/expert_{current_time}.pickle', 'wb') as f:
+                with open(f'{experts_output_dir}/expert_best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_{current_time}.pickle', 'wb') as f:
                     pickle.dump(bc_data, f)
             except:
                 print('Nan error')
