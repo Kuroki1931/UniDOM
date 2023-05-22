@@ -9,7 +9,7 @@ import json
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=256, help='batch size in training')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=1000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
@@ -100,6 +100,8 @@ def main(args):
     '''DATA LOADING'''
     file_list = []
     env_count = {}
+    E_value_list = []
+    Poisson_value_list = []
     with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
         for path in files:
             with open(path, 'rb') as f: 
@@ -118,7 +120,14 @@ def main(args):
             # yield_stress = data['yield_stress']
             E_value = (E - np.mean(E_list)) / np.std(E_list)
             Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
-
+            # E_value = (E - np.min(E_list)) / (np.max(E_list) - np.min(E_list))
+            # Poisson_value = (Poisson - np.min(Poisson_list)) / (np.max(Poisson_list) - np.min(Poisson_list))
+            # E_value = E
+            # Poisson_value = Poisson
+            # E_value = (E - np.min(E_list)) / (np.max(E_list) - np.min(E_list)) + np.min(E_list)
+            # Poisson_value = (Poisson - np.min(Poisson_list)) / (np.max(Poisson_list) - np.min(Poisson_list)) + np.min(Poisson_list)
+            E_value_list.append(E_value)
+            Poisson_value_list.append(Poisson_value)
             parameters = np.array([E_value, Poisson_value])
 
             tf_example = create_example(plasticine_pc, parameters)
@@ -134,6 +143,8 @@ def main(args):
         json.dump(env_count, f, indent=4)
     with open(f'{exp_dir}/args.txt', mode="w") as f:
         json.dump(args.__dict__, f, indent=4)
+    np.save(f'{exp_dir}/E_value.npy', np.array(E_value_list))
+    np.save(f'{exp_dir}/Poisson_value.npy', np.array(Poisson_value_list))
 
 
 if __name__ == '__main__':

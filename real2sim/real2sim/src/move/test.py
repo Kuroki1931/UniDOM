@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=256, help='batch size in training')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=1000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
@@ -61,7 +61,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/real2sim/real2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_06-24/2023-05-20_08-55/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/real2sim/real2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-22_03-22/2023-05-22_04-06/model/0003_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -75,6 +75,8 @@ def test(args):
     E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
     Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
     surface_index = np.load(f'data/{BASE_TASK}/{BASE_DATE}/surface_index.npy')
+    E_value_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E_value.npy').tolist()
+    Poisson_value_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson_value.npy').tolist()
 
     parameters_size = 2
     num_point = surface_index.sum()
@@ -102,12 +104,14 @@ def test(args):
     yield_stress = 200
     action = np.array([[0, 0.6, 0]]*150)
 
+    surface_index = np.load(f'data/{BASE_TASK}/{BASE_DATE}/surface_index.npy')
+
     cd_loss = 0
     for rope_type in ['red', 'white', 'yellow']:
         env.reset()
 
         input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
-        output_dir = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/learning'
+        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation/{now}/{rope_type}"
         os.makedirs(output_dir, exist_ok=True)
 
         last_state = np.load(f'{input_path}/real_pcds_modify.npy', allow_pickle=True)[-1]
@@ -119,13 +123,18 @@ def test(args):
             diff = num_point - last_state.shape[0]
             random_index = np.random.choice(last_state.shape[0], diff, replace=True)
             last_state = np.concatenate([last_state, last_state[random_index]], axis=0)
-
         pred_parameters = model.forward_pass(tf.cast(tf.convert_to_tensor(last_state[None]), tf.float32), False, 1)
         pred_parameters = pred_parameters.numpy()
 
         env.reset()
-        pred_E = pred_parameters[0][0] * np.std(E_list) + np.mean(E_list)
-        pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
+        pred_E = np.clip(pred_parameters[0][0], np.min(E_value_list), np.max(E_value_list)) * np.std(E_list) + np.mean(E_list)
+        pred_Poisson = np.clip(pred_parameters[0][1], np.min(Poisson_value_list), np.max(Poisson_value_list)) * np.std(Poisson_list) + np.mean(Poisson_list)
+        # pred_E = pred_parameters[0][0] * (np.max(E_list) - np.min(E_list)) + np.min(E_list)
+        # pred_Poisson = pred_parameters[0][1] * (np.max(Poisson_list) - np.min(Poisson_list)) + np.min(Poisson_list)
+        # pred_E = (pred_parameters[0][0] - np.min(E_list)) * (np.max(E_list) - np.min(E_list)) + np.min(E_list)
+        # pred_Poisson = (pred_parameters[0][1] - np.min(Poisson_list)) * (np.max(Poisson_list) - np.min(Poisson_list)) + np.min(Poisson_list)
+        # pred_E = pred_parameters[0][0]
+        # pred_Poisson = pred_parameters[0][1]
         print('parameter', pred_E, pred_Poisson, yield_stress)
         env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
 
@@ -139,7 +148,7 @@ def test(args):
                 I1.text((5, 5), f'E{pred_E:.2f},Poisson{pred_Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                 frames.append(pimg)
         frames[0].save(f'{output_dir}/pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        pred_last_state = env.taichi_env.simulator.get_x(0)
+        pred_last_state = env.taichi_env.simulator.get_x(0)[surface_index]
 
         def chamfer_distance(A, B):
             # compute distance matrix between A and B
@@ -151,6 +160,7 @@ def test(args):
             # compute Chamfer distance
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
+        # last_state = np.load(f'{input_path}/real_pcds_modify.npy', allow_pickle=True)[-1]
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
         cd_loss += chamfer_dist
 

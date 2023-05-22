@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -41,10 +41,10 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=16, help='batch size in training')
-    parser.add_argument('--epoch', default=10000, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=100, type=int, help='save epoch')
+    parser.add_argument('--epoch', default=1000, type=int, help='number of epoch in training')
+    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
-    parser.add_argument('--num_plasticine_point', type=int, default=3000, help='Point Number of Plasticine')
+    parser.add_argument('--num_plasticine_point', type=int, default=1000, help='Point Number of Plasticine')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
     parser.add_argument("--algo", type=str, default='action')
@@ -62,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/real2sim/sim2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-20_05-31'
+BASE_DIR = '/root/real2sim/sim2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-21_03-07'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -155,7 +155,7 @@ def train(args):
     Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
     yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
-    best_cd_loss = 0
+    best_cd_loss = 10000000
     for epoch in range(args.epoch):
         log_string('Train epoch: %4f' % epoch)
         history = model.fit(
@@ -169,7 +169,7 @@ def train(args):
                 keras.callbacks.TensorBoard(
                     f'{exp_dir}', update_freq=50),
                 keras.callbacks.ModelCheckpoint(
-                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True, save_freq='epoch')
+                    f'{exp_dir}/model/{epoch:04d}_weights.ckpt', 'mean_squared_error', save_weights_only=True, save_best_only=True,  save_freq=10)
             ],
 			epochs = 1,
 			verbose = 1
@@ -178,14 +178,14 @@ def train(args):
 
         cd_loss = 0
         if (epoch+1) % args.save_epoch == 0 or epoch == 0:
-            for i in tqdm(range(10000, 10005)):
+            for i in tqdm(range(10000, 10010)):
                 test_env = args.env_name.split('-')[0]
                 env.reset()
                 output_dir = exp_dir.joinpath(f'{test_env}/')
                 output_dir.mkdir(exist_ok=True)
 
                 # set randam parameter: mu, lam, yield_stress
-                np.random.seed(epoch+i)
+                np.random.seed(i)
                 E = np.random.uniform(E_bottom, E_upper)
                 Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
                 yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
@@ -210,6 +210,7 @@ def train(args):
                 env.reset()
                 pred_E = pred_parameters[0][0] * np.std(E_list) + np.mean(E_list)
                 pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
+                print('pred parameter', pred_E, pred_Poisson, yield_stress)
 
                 env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
 
@@ -241,10 +242,12 @@ def train(args):
                 with open(f'{output_dir}/{epoch}_{i}.txt', 'w') as f:
                     f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {pred_E},{pred_Poisson},{yield_stress}')
 
-        if cd_loss > best_cd_loss:
-            best_cd_loss = cd_loss
-            model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
-        log_string('chamfer_distance: %4f' % cd_loss)
+            if cd_loss < best_cd_loss:
+                best_cd_loss = cd_loss
+                model.save_weights(f'{exp_dir}/model/best_weights.ckpt')
+                log_string('update best chamfer_distance------------------: %4f' % cd_loss)
+            else:
+                log_string('chamfer_distance------------------: %4f' % cd_loss)
 
 if __name__ == '__main__':
 	args = parse_args()

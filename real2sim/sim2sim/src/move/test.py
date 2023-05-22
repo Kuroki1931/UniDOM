@@ -61,7 +61,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/real2sim/sim2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-20_05-31/2023-05-20_05-51/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/real2sim/sim2sim/log/Move_500_10500_0.2_0.4_200_200/2023-05-21_03-07/2023-05-21_03-38/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -104,7 +104,10 @@ def test(args):
     output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
     os.makedirs(output_dir, exist_ok=True)
 
+<<<<<<< HEAD
+=======
     cd_loss = 0
+>>>>>>> 00614fb064aa3eb837d1eaabd7e5aae7118fdbec
     for i in range(2000, 2010):
         env.reset()
 
@@ -161,7 +164,6 @@ def test(args):
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
-        cd_loss += chamfer_dist
 
         with open(f'{output_dir}/{i}.txt', 'w') as f:
             f.write(f'{chamfer_dist}, {E}, {Poisson}, {yield_stress}, {pred_E},{pred_Poisson},{yield_stress}')
