@@ -42,10 +42,8 @@ class Solver:
             env.set_state(sim_state, self.cfg.softness, False)
             env.loss.update_target_density(target_grids)
             print('------------------------------')
-            loss__ = 0
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
-                    loss__ += i*19
                     loss_info = env.compute_loss()
 
                     env.step(action[i])
@@ -54,7 +52,6 @@ class Solver:
                     if self.logger is not None:
                         self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
-            import pdb;pdb.set_trace()
             return loss, env.simulator.get_parameter_grad()
 
         best_parameters = None
@@ -121,7 +118,7 @@ def solve_action(env, path, logger, args):
         cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
         taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-        actions = np.array([[0, 0.6, 0]]*100)
+        actions = np.array([[0, 0.6, 0]]*150)
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
@@ -151,11 +148,6 @@ def solve_action(env, path, logger, args):
                 frames.append(pimg)
         frames[0].save(f'{output_path}/initial_E{init_parameters[0]}_lam{init_parameters[1]}_yield{init_parameters[2]}.gif',
                     save_all=True, append_images=frames[1:], loop=0)
-<<<<<<< HEAD
-        print(grid_loss_sum)
-=======
-        last_state = env.taichi_env.simulator.get_x(0)
->>>>>>> 00614fb064aa3eb837d1eaabd7e5aae7118fdbec
         env.reset()
 
         # optimize
@@ -187,6 +179,7 @@ def solve_action(env, path, logger, args):
             # compute Chamfer distance
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
+        last_state = np.load(f'{input_path}/real_pcds_modify.npy')[-1]
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
         frames[0].save(f'{output_path}/optimized_E{parameters_list[-1][0]}_Poisson{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',

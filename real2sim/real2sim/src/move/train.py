@@ -62,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/real2sim/real2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-21_07-04'
+BASE_DIR = '/root/real2sim/real2sim/data/Move_500_10500_0.2_0.4_200_200/2023-05-22_03-22'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -139,6 +139,8 @@ def train(args):
     E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
     Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
     yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
+    E_value_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E_value.npy').tolist()
+    Poisson_value_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson_value.npy').tolist()
 
     model.build((args.batch_size, num_point, 3))
     print(model.summary())
@@ -203,14 +205,20 @@ def train(args):
                         I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                         frames.append(pimg)
                 frames[0].save(f'{output_dir}/{epoch}_{i}_ground_truth_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-                last_state = env.taichi_env.simulator.get_x(0)
+                last_state = env.taichi_env.simulator.get_x(0)[surface_index]
 
                 pred_parameters = model.forward_pass(tf.cast(tf.convert_to_tensor(last_state[None]), tf.float32), False, 1)
                 pred_parameters = pred_parameters.numpy()
 
                 env.reset()
-                pred_E = pred_parameters[0][0] * np.std(E_list) + np.mean(E_list)
-                pred_Poisson = pred_parameters[0][1] * np.std(Poisson_list) + np.mean(Poisson_list)
+                pred_E = np.clip(pred_parameters[0][0], np.min(E_value_list), np.max(E_value_list)) * np.std(E_list) + np.mean(E_list)
+                pred_Poisson = np.clip(pred_parameters[0][1], np.min(Poisson_value_list), np.max(Poisson_value_list)) * np.std(Poisson_list) + np.mean(Poisson_list)
+                # pred_E = pred_parameters[0][0] * (np.max(E_list) - np.min(E_list)) + np.min(E_list)
+                # pred_Poisson = pred_parameters[0][1] * (np.max(Poisson_list) - np.min(Poisson_list)) + np.min(Poisson_list)
+                # pred_E = (pred_parameters[0][0] - np.min(E_list)) * (np.max(E_list) - np.min(E_list)) + np.min(E_list)
+                # pred_Poisson = (pred_parameters[0][1] - np.min(Poisson_list)) * (np.max(Poisson_list) - np.min(Poisson_list)) + np.min(Poisson_list)
+                # pred_E = pred_parameters[0][0]
+                # pred_Poisson = pred_parameters[0][1]
 
                 env.taichi_env.set_parameter(pred_E, pred_Poisson, yield_stress)
                 print('parameter:', pred_E, pred_Poisson, yield_stress)
@@ -226,7 +234,7 @@ def train(args):
                             I1.text((5, 5), f'E{pred_E:.2f},Poisson{pred_Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
                             frames.append(pimg)
                     frames[0].save(f'{output_dir}/{epoch}_{i}_pred_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-                    pred_last_state = env.taichi_env.simulator.get_x(0)
+                    pred_last_state = env.taichi_env.simulator.get_x(0)[surface_index]
                 except:
                     print('error')
                     break

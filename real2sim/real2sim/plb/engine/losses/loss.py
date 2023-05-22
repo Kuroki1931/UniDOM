@@ -60,7 +60,6 @@ class Loss:
     def update_target_density(self, grids):
         self.new_target_density = ti.field(dtype=self.dtype, shape=(grids.shape[0], self.res[0], self.res[0], self.res[0]))
         self.new_target_density.from_numpy(grids)
-        # self.update_target()
 
     def initialize(self):
         # self.sdf_weight[None] = self.cfg.weight.sdf
@@ -151,8 +150,7 @@ class Loss:
     @ti.kernel
     def compute_density_loss_kernel(self, f:ti.i32):
         for I in ti.grouped(self.grid_mass):
-            # self.density_loss[None] += ti.abs(self.new_target_density[f, I[0], I[1], I[2]] - self.grid_mass[I])
-            self.density_loss[None] += I[1]
+            self.density_loss[None] += ti.abs(self.new_target_density[f, I[0], I[1], I[2]] - self.grid_mass[I])
 
     # @ti.kernel
     # def compute_sdf_loss_kernel(self):
@@ -274,7 +272,6 @@ class Loss:
     #     pass
 
     def _extract_loss(self, f):
-        print(f)
         self.compute_loss_kernel(f)
         # self.iou()
         return {
