@@ -9,7 +9,7 @@ import json
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import numpy as np
 import tensorflow as tf
@@ -90,7 +90,7 @@ def main():
             Poisson = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
             yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
 
-            parameters = np.array([E, Poisson])
+            parameters = np.array([Poisson])
             tf_example = create_example(goal_point, parameters, release_point)
             if random.randint(1, 10) == 1:
                 validation_writer.write(tf_example.SerializeToString())

@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP
+from models.cls_ssg_model import MLP_NO_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -60,7 +60,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22'
+BASE_DIR = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
 
@@ -74,7 +74,6 @@ def load_dataset(in_file, batch_size):
     def _extract_fn(data_record):
         in_features = {
             'goal_point': tf.io.FixedLenFeature([1], tf.float32),
-            'parameters': tf.io.FixedLenFeature([2], tf.float32),
             'release_point': tf.io.FixedLenFeature([2], tf.float32)
         }
 
@@ -82,10 +81,9 @@ def load_dataset(in_file, batch_size):
     
     def _preprocess_fn(sample):
         goal_point = sample['goal_point']
-        parameters = sample['parameters']
         release_point = sample['release_point']
 
-        return goal_point, parameters, release_point
+        return goal_point, release_point
 
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
@@ -101,7 +99,7 @@ def train(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./full_para/')
+    exp_dir = exp_dir.joinpath(f'./no_para/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{BASE_TASK}/')
     exp_dir.mkdir(exist_ok=True)
@@ -132,11 +130,11 @@ def train(args):
    
     output_size = 2
 
-    model = MLP(args.batch_size, output_size)
+    model = MLP_NO_PARA(args.batch_size, output_size)
     train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size)
     validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/validation_experts.tfrecord', args.batch_size)
 
-    model.build([(args.batch_size, 1), (args.batch_size, 2)])
+    model.build([args.batch_size, 1])
     print(model.summary())
     
     E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
@@ -203,12 +201,8 @@ def train(args):
                 E_value = (E - np.mean(E_list)) / np.std(E_list)
                 Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
                 yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
-                parameters = np.array([E_value, Poisson_value])
 
-                release_point = model.forward_pass([
-                    tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
-                    tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
-                ], False, 1)
+                release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
                 start_pos = release_point.numpy()[0]
                 start_pos = np.array([start_pos[0], start_pos[1], 0.5])
                 

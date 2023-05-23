@@ -168,7 +168,7 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 100
+    repeat_time = 500
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]

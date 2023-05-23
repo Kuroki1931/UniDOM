@@ -9,7 +9,7 @@ import json
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import numpy as np
 import tensorflow as tf
@@ -20,11 +20,10 @@ from util import tf_utils
 BASE_NAME = 'Torus_500_10500_0.2_0.4_200_200'
 
 
-def create_example(goal_point, parameters, release_point):
+def create_example(goal_point, release_point):
 
     feature = {
 		'goal_point' : tf_utils.float_list_feature(goal_point.reshape(-1, 1)),
-		'parameters' : tf_utils.float_list_feature(parameters.reshape(-1, 1)),
 		'release_point' : tf_utils.float_list_feature(release_point.reshape(-1, 1))
 	}
 
@@ -90,8 +89,7 @@ def main():
             Poisson = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
             yield_stress = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
 
-            parameters = np.array([E, Poisson])
-            tf_example = create_example(goal_point, parameters, release_point)
+            tf_example = create_example(goal_point, release_point)
             if random.randint(1, 10) == 1:
                 validation_writer.write(tf_example.SerializeToString())
             else:
