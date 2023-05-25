@@ -4,10 +4,178 @@ import sys
 sys.path.insert(0, './')
 
 import tensorflow as tf
+from tensorflow.keras import activations
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 
 from pnet2_layers.layers import Pointnet_SA, Pointnet_SA_MSG
+
+
+class MLP_NO_PARA(Model):
+
+	def __init__(self, batch_size, action_size, bn=False, activation=activations.relu):
+		super(MLP_NO_PARA, self).__init__()
+
+		self.activation = activation
+		self.batch_size = batch_size
+		self.action_size = action_size
+		self.bn = bn
+		self.keep_prob = 0.5
+
+		self.kernel_initializer = 'glorot_normal'
+		self.kernel_regularizer = None
+
+		self.init_network()
+
+
+	def init_network(self):
+
+		self.dense1 = Dense(256, activation=self.activation)
+		self.batchnorm1 = BatchNormalization()
+		self.dropout1 = Dropout(self.keep_prob)
+
+		self.dense2 = Dense(128, activation=self.activation)
+		self.batchnorm2 = BatchNormalization()
+		self.dropout2 = Dropout(self.keep_prob)
+
+		self.dense3 = Dense(32, activation=self.activation)
+		self.batchnorm3 = BatchNormalization()
+		self.dropout3 = Dropout(self.keep_prob)
+
+		self.last_dense = Dense(self.action_size, activation=None)
+
+
+	def forward_pass(self, inputs, training, batch_size=None):
+		net = self.dense1(inputs)
+		net = self.batchnorm1(net)
+		net = self.dropout1(net)
+
+		net = self.dense2(net)
+		net = self.batchnorm2(net)
+		net = self.dropout2(net)
+
+		net = self.dense3(net)
+		net = self.batchnorm3(net)
+		net = self.dropout3(net)
+
+		pred = self.last_dense(net)
+
+		return pred
+
+	def train_step(self, input):
+
+		with tf.GradientTape() as tape:
+
+			pred = self.forward_pass(input[0], True)
+			loss = self.compiled_loss(input[1], pred)
+		
+		gradients = tape.gradient(loss, self.trainable_variables)
+		self.optimizer.apply_gradients(
+			zip(gradients, self.trainable_variables))
+
+		self.compiled_metrics.update_state(input[1], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def test_step(self, input):
+
+		pred = self.forward_pass([input[0]], False)
+		loss = self.compiled_loss(input[1], pred)
+
+		self.compiled_metrics.update_state(input[1], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def call(self, inputs, training=False):
+
+		return self.forward_pass(inputs, training)
+
+
+class MLP(Model):
+
+	def __init__(self, batch_size, action_size, bn=False, activation=activations.relu):
+		super(MLP, self).__init__()
+
+		self.activation = activation
+		self.batch_size = batch_size
+		self.action_size = action_size
+		self.bn = bn
+		self.keep_prob = 0.5
+
+		self.kernel_initializer = 'glorot_normal'
+		self.kernel_regularizer = None
+
+		self.init_network()
+
+
+	def init_network(self):
+
+		self.dense1 = Dense(256, activation=self.activation)
+		self.batchnorm1 = BatchNormalization()
+		self.dropout1 = Dropout(self.keep_prob)
+
+		self.dense2 = Dense(128, activation=self.activation)
+		self.batchnorm2 = BatchNormalization()
+		self.dropout2 = Dropout(self.keep_prob)
+
+		self.dense3 = Dense(32, activation=self.activation)
+		self.batchnorm3 = BatchNormalization()
+		self.dropout3 = Dropout(self.keep_prob)
+
+		self.last_dense = Dense(self.action_size, activation=None)
+
+
+	def forward_pass(self, inputs, training, batch_size=None):
+		goal_point, parameters = inputs
+
+		net = tf.concat([goal_point, parameters], axis=1)
+		net = self.dense1(net)
+		net = self.batchnorm1(net)
+		net = self.dropout1(net)
+
+		net = self.dense2(net)
+		net = self.batchnorm2(net)
+		net = self.dropout2(net)
+
+		net = self.dense3(net)
+		net = self.batchnorm3(net)
+		net = self.dropout3(net)
+
+		pred = self.last_dense(net)
+
+		return pred
+
+	def train_step(self, input):
+
+		with tf.GradientTape() as tape:
+
+			pred = self.forward_pass([input[0], input[1]], True)
+			loss = self.compiled_loss(input[2], pred)
+		
+		gradients = tape.gradient(loss, self.trainable_variables)
+		self.optimizer.apply_gradients(
+			zip(gradients, self.trainable_variables))
+
+		self.compiled_metrics.update_state(input[2], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def test_step(self, input):
+
+		pred = self.forward_pass([input[0], input[1]], False)
+		loss = self.compiled_loss(input[2], pred)
+
+		self.compiled_metrics.update_state(input[2], pred)
+
+		return {m.name: m.result() for m in self.metrics}
+
+
+	def call(self, inputs, training=False):
+
+		return self.forward_pass(inputs, training)
 
 
 class CLS_SSG_Model_PARA(Model):
