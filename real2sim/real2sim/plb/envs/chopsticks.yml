@@ -1,25 +1,22 @@
 SIMULATOR:
-  n_particles: 10000
+  n_particles: 1000
   yield_stress: 200.
   ground_friction: 0.
   gravity: (0, -5, 0)
 SHAPES:
   - shape: box
-    width: (0.04, 0.04, 0.6)
-    init_pos: (0.5, 0.02, 0.5)
+    width: (0.20, 0.02, 0.20)
+    init_pos: (0.5, 0.01, 0.5)
+    n_particles: 1000
     color: 100
 PRIMITIVES:
-  - shape: Chopsticks
-    h: 0.2
-    r: 0.02
-    init_pos: (0.5, 0.15, 0.5)
-    init_rot: (1., 0., 0., 0.)
-    init_gap: 0.06
-    color: (0.8, 0.8, 0.8)
-    friction: 10.
+  - shape: Sphere
+    radius: 0.025
+    init_pos: (0.58, 0.04, 0.42)
+    color: (0.7, 0.7, 0.7)
     action:
-      dim: 7
-      scale: (0.02, 0.02, 0.02, 0.0000004, 0.0000004, 0.0000004, 0.02)
+      dim: 3
+      scale: (0.005, 0.005, 0.005)
 ENV:
   loss:
     target_path: envs/assets/Chopsticks3D-v1.npy

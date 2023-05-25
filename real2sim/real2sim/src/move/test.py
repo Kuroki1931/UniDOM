@@ -102,7 +102,7 @@ def test(args):
 
     now = datetime.datetime.now()
     yield_stress = 200
-    action = np.array([[0, 0.6, 0]]*150)
+    action = np.array([[0, 0.2, 0]]*300)
 
     surface_index = np.load(f'data/{BASE_TASK}/{BASE_DATE}/surface_index.npy')
 

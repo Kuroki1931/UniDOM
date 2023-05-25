@@ -113,7 +113,7 @@ def solve_action(env, path, logger, args):
     E_bottom, E_upper = 2000, 8000
     Poisson_bottom, Poisson_upper = 0.2, 0.4
     yield_stress_bottom, yield_stress_upper = 200, 200
-    action = np.array([[0, 0.6, 0]]*150)
+    action = np.array([[0, 0.2, 0]]*300)
 
     t = args.seed
     print('seed', t)

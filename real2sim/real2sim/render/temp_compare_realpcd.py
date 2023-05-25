@@ -86,7 +86,7 @@ def main():
             nu = float(setting[5])
             env.taichi_env.set_parameter(E, nu, 200)
             print('parameter', E, nu, 200)
-            actions = np.array([[0, 0.6, 0]]*150)
+            actions = np.array([[0, 0.2, 0]]*300)
 
             for act in actions:
                env.step(act)
