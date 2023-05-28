@@ -2,7 +2,7 @@
 import rospy
 import tf
 import math
-from xarm_gripper.msg import MoveActionGoal
+# from xarm_gripper.msg import MoveActionGoal
 from moveit_commander import MoveGroupCommander
 import geometry_msgs.msg
 from sensor_msgs.msg import Image, JointState

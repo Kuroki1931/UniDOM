@@ -3,13 +3,22 @@ import rospy
 from setup import Setup
 import math
 
+EEF_GRIP = 0.15
+
+
 def main():
     s = Setup()
     
     s.reset()
     # yoko x 
     # tate y
-    s.grab_and_release(delta_x=0.1, delta_y=0.2, delta_theta=45)
+    gripper_x, gripper_z = 0.25, 0.25
+    delta_theta = 45
+    radians = math.radians(delta_theta)
+    offset_x, offset_z = EEF_GRIP*math.cos(radians), EEF_GRIP*math.sin(radians)
+    eef_x, eef_z = gripper_x + offset_x, gripper_z + offset_z
+    print(eef_x, eef_z)
+    s.grab_and_release(delta_x=eef_x, delta_y=eef_z, delta_theta=delta_theta)
     
     
 if __name__ == '__main__':

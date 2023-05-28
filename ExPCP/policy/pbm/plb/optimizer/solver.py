@@ -204,7 +204,7 @@ def solve_action(env, path, logger, args):
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         elif args.task_name in ['Move', 'Chopsticks']:
-            action = np.array([[0, 0.2, 0]]*300)
+            action = np.array([[0, 0.6, 0]]*150)
         elif args.task_name in ['Torus']:
             random.seed(int(args.task_version[1:])*repeat_time+i)
             ranges = [(0.1, 0.3), (0.1, 0.6), (0.5, 0.5)]

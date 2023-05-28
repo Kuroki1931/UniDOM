@@ -119,7 +119,7 @@ def solve_action(env, path, logger, args):
         cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
         taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-        actions = np.array([[0, 0.2, 0]]*300)
+        actions = np.array([[0, 0.6, 0]]*150)
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
