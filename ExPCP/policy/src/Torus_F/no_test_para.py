@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP_NO_PARA
+from models.cls_ssg_model_F import MLP_NO_PARA
 from PIL import Image
 from PIL import ImageDraw
 

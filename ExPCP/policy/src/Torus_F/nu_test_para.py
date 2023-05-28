@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import numpy as np
 import torch
@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP_NO_PARA
+from models.cls_ssg_model_F import MLP
 from PIL import Image
 from PIL import ImageDraw
 
@@ -59,7 +59,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/no_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14/2023-05-23_15-22/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/nu_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_14-15/2023-05-23_14-24/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -71,9 +71,9 @@ def test(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
     output_size = 2
-    model = MLP_NO_PARA(args.batch_size, output_size)
+    model = MLP(args.batch_size, output_size)
    
-    model.build([args.batch_size, 1])
+    model.build([(args.batch_size, 1), (args.batch_size, 1)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -124,8 +124,12 @@ def test(args):
         E_value = (E - np.mean(E_list)) / np.std(E_list)
         Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
         yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+        parameters = np.array([Poisson_value])
 
-        release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
+        release_point = model.forward_pass([
+            tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
+            tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
+        ], False, 1)
         start_pos = release_point.numpy()[0]
         start_pos = np.array([start_pos[0], start_pos[1], 0.5])
         
