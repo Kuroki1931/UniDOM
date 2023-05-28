@@ -76,7 +76,7 @@ class Robot():
             target_pose = move_group.get_current_pose(end_effector_link)
             target_pose.pose.position.x = initial_arm_position.x
             target_pose.pose.position.y = initial_arm_position.y
-            target_pose.pose.position.z = z_axis - 0.14
+            target_pose.pose.position.z = z_axis - 0.125
             target_pose.pose.orientation = initial_orientation
    
             pose_goal = copy.deepcopy(target_pose)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         bf_pcd = pcd
 
     pcds_array = np.array(fill_pcds_list)
-    rope_type = 'yellow'
+    rope_type = 'navy'
     output_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
     os.makedirs(output_path, exist_ok=True)
     np.save(f'{output_path}/real_pcds.npy', pcds_array)

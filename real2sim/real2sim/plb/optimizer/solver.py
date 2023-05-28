@@ -44,13 +44,14 @@ class Solver:
             print('------------------------------')
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
-                    loss_info = env.compute_loss()
+                    if i == 149:
+                        loss_info = env.compute_loss()
 
                     env.step(action[i])
                     self.total_steps += 1
 
-                    if self.logger is not None:
-                        self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
+                    # if self.logger is not None:
+                    #     self.logger.step(None, None, loss_info['reward'], None, i==len(action)-1, loss_info)
             loss = env.loss.loss[None]
             return loss, env.simulator.get_parameter_grad()
 
@@ -118,7 +119,7 @@ def solve_action(env, path, logger, args):
         cv2.imwrite(f"{output_path}/init.png", img[..., ::-1])
         taichi_env: TaichiEnv = env.unwrapped.taichi_env
 
-        actions = np.array([[0, 0.6, 0]]*150)
+        actions = np.array([[0, 0.2, 0]]*300)
         target_grids = np.load(f'{input_path}/real_densities.npy')
         target_grids = np.repeat(target_grids, env.taichi_env.simulator.substeps, axis=0)
         T = actions.shape[0]
