@@ -201,13 +201,7 @@ def solve_action(env, path, logger, args):
         if not os.path.exists(experts_output_dir):
             os.makedirs(experts_output_dir, exist_ok=True)
 
-        if args.task_name in ['Rope']:
-            action = rope_action(env, output_path)
-        elif args.task_name in ['Pinch']:
-            T = 5
-            action_value = np.random.uniform(0.01, 0.015)
-            action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
-        elif args.task_name in ['Move', 'Chopsticks']:
+        if args.task_name in ['Move']:
             action = np.array([[0, 0.6, 0]]*150)
         elif args.task_name in ['Torus']:
             random.seed(int(args.task_version[1:])*repeat_time+i)
