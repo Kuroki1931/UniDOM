@@ -9,7 +9,7 @@ modify jax -> from jax.numpy import isin
 https://daxbench.readthedocs.io/en/latest/basics/getting-started.html
 cd DaXBench -> 
 
-python -m daxbench.algorithms.apg.apg \
+python3 -m daxbench.algorithms.apg.apg \
        --env fold_cloth3 \
        --ep_len 3 \
        --num_envs 4 \
