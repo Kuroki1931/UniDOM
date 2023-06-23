@@ -1,4 +1,4 @@
-FROM nvidia/cudagl:11.3.1-devel-ubuntu20.04
+FROM nvidia/cudagl:11.4.0-devel-ubuntu20.04
 
 SHELL ["/bin/bash", "-c"]
 
@@ -51,7 +51,7 @@ RUN apt-get update && \
 	ros-noetic-ros-control \
 	ros-noetic-ros-controllers \
 	ros-noetic-gazebo-ros-control \
-	# ros-noetic-moveit* \
+	ros-noetic-moveit* \
 	ros-noetic-geometry2 
 
 RUN cd /root/xarm_catkin_ws/src && \
@@ -72,8 +72,10 @@ RUN pip install -U scikit-learn
 RUN pip install tensorflow==2.11.0
 RUN pip install nvidia-pyindex
 RUN pip install nvidia-tensorrt
-RUN apt-get install libcudnn8=8.2.0.53-1+cuda11.3   
-RUN apt-get install libcudnn8-dev=8.2.0.53-1+cuda11.3  
+# RUN apt-get install libcudnn8=8.2.0.53-1+cuda11.3   
+# RUN apt-get install libcudnn8-dev=8.2.0.53-1+cuda11.3  
+RUN apt-get install libcudnn8=8.6.0.163-1+cuda11.8
+RUN apt-get install libcudnn8-dev=8.6.0.163-1+cuda11.8 
 
 # difftaichi
 RUN git clone https://github.com/openai/baselines.git && cd baselines && pip install -e .
@@ -85,17 +87,15 @@ RUN pip install opencv-contrib-python
 RUN pip install open3d
 RUN pip install numpy==1.23.1
 
-# video clip
-RUN git clone https://github.com/pytorch/fairseq && cd fairseq && pip install -e . && cd examples/MMPT && pip install -e . && mkdir pretrained_models && \
-    cd pretrained_models && wget https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_howto100m.pth && wget https://www.rocq.inria.fr/cluster-willow/amiech/howto100m/s3d_dict.npy && \
-    cd .. && mkdir -p runs/retri/videoclip && cd runs/retri/videoclip && wget https://dl.fbaipublicfiles.com/MMPT/retri/videoclip/checkpoint_best.pt && \
-    cd ../../.. && python3 locallaunch.py projects/retri/videoclip.yaml --dryrun
-RUN pip install transformers==3.4
-
-# clip
-RUN pip install regex
-RUN pip install ftfy
-RUN pip install git+https://github.com/openai/CLIP.git
+RUN pip install optax==0.1.5
+RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# jax                           0.4.13                
+# jaxlib                        0.4.13+cuda11.cudnn86 
+# from jax.numpy import isin
+RUN pip install flax==0.3.6
+RUN git clone https://github.com/fogleman/sdf.git && cd sdf && pip install -e .
+RUN pip install git+https://github.com/google/brax.git@0ebb33219033d324bc56ebf80a6d6702c694951b
+RUN pip install protobuf==3.20.*
 
 # Copy the helper scripts to the working directory.
 COPY ./docker/scripts/. /root/xarm/docker/scripts/

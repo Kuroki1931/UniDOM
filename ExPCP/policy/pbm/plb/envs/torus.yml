@@ -24,6 +24,8 @@ PRIMITIVES:
     friction: 0.9
 RENDERER:
   use_directional_light: True
+  camera_pos: (0.5, 0.27, 2.5)
+  camera_rot: (0., 0.)
 VARIANTS:
   - ENV:
       loss:

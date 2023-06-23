@@ -174,8 +174,12 @@ def solve_action(env, path, logger, args):
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        E_bottom, E_upper = 500, 10500
-        Poisson_bottom, Poisson_upper = 0.2, 0.4
+        # E_bottom, E_upper = 1779.38, 1779.38
+        # Poisson_bottom, Poisson_upper = 0.35, 0.35
+        # E_bottom, E_upper = 3276.12, 3276.12
+        # Poisson_bottom, Poisson_upper = 0.346, 0.346
+        E_bottom, E_upper = 1500, 1500
+        Poisson_bottom, Poisson_upper = 0.36, 0.36
         yield_stress_bottom, yield_stress_upper = 200, 200
         output_path = f'{path}/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
@@ -211,7 +215,10 @@ def solve_action(env, path, logger, args):
             samples = []
             for r in ranges:
                 samples.append(random.uniform(*r))
-            start_pos = np.array(samples)
+            # start_pos = np.array(samples)
+            # start_pos = np.array([0.1, 0.5, 0.5])
+            # start_pos = np.array([0.2, 0.4, 0.5])
+            start_pos = np.array([0.2, 0.3, 0.5])
             initial_primitive_pos = env.taichi_env.primitives[0].get_state(0)[:3]
             init_actions = np.linspace(initial_primitive_pos, start_pos, 200)
             init_actions = np.diff(init_actions, n=1, axis=0)
@@ -231,18 +238,19 @@ def solve_action(env, path, logger, args):
                     if idx == 300:
                         release_point = env.taichi_env.primitives[0].get_state(0)[:3]
                         env.taichi_env.primitives.set_softness1(0)
-                    # if idx % 5 == 0:
-                    #     img = env.render(mode='rgb_array')
-                    #     pimg = Image.fromarray(img)
-                    #     I1 = ImageDraw.Draw(pimg)
-                    #     I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                    #     frames.append(pimg)
+                    if idx % 5 == 0:
+                        img = env.render(mode='rgb_array')
+                        cv2.imwrite(f"{output_path}/{idx}.png", img[..., ::-1])
+                        pimg = Image.fromarray(img)
+                        I1 = ImageDraw.Draw(pimg)
+                        I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                        frames.append(pimg)
 
                     state = env.taichi_env.simulator.get_x(0)
                     max_x = state[rope_bottom_index][0]
                     if max_x > best_max_x:
                         best_max_x = max_x
-                # frames[0].save(f'{output_path}/best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+                frames[0].save(f'{output_path}/best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
 
                 bc_data = {
                     'release_point': release_point,
