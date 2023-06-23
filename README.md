@@ -9,13 +9,5 @@ modify jax -> from jax.numpy import isin
 https://daxbench.readthedocs.io/en/latest/basics/getting-started.html
 cd DaXBench -> 
 
-python3 -m daxbench.algorithms.apg.apg \
-       --env fold_cloth3 \
-       --ep_len 3 \
-       --num_envs 4 \
-       --lr 1e-4 \
-       --gpus 1 \
-       --max_grad_norm 0.3 \
-       --seed 0 \
-       --eval_freq 20
+python3 -m daxbench.algorithms.apg.apg --env fold_cloth3 --ep_len 3 --num_envs 4 --lr 1e-4 --gpus 1 --max_grad_norm 0.3 --seed 0 --eval_freq 20
 
