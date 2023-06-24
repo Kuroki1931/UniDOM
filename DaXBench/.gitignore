@@ -417,3 +417,4 @@ tags
 *.out
 events.out*
 **/logs*/**/*.gif
+logs
