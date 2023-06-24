@@ -168,14 +168,21 @@ def rope_action(env, output_path, flag=None, T=12, step_num=50):
     return best_action
 
 def solve_action(env, path, logger, args):
-    repeat_time = 1
+    repeat_time = 2000
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
         args.task_version = args.env_name[(idx+1):]
         now = datetime.datetime.now()
-        E_bottom, E_upper = 500, 10500
-        Poisson_bottom, Poisson_upper = 0.2, 0.4
+        
+        index = i % 3
+        index = 0
+        # E_bottom, E_upper = 3276.12, 3276.12
+        # Poisson_bottom, Poisson_upper = 0.346, 0.346
+        EEE_list = [1779.38, 3276.12, 8000.31]
+        PPP_list = [0.35, 0.346, 0.36]
+        E_bottom, E_upper = EEE_list[index], EEE_list[index]
+        Poisson_bottom, Poisson_upper = PPP_list[index], PPP_list[index]
         yield_stress_bottom, yield_stress_upper = 200, 200
         output_path = f'{path}/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
@@ -204,7 +211,7 @@ def solve_action(env, path, logger, args):
             action_value = np.random.uniform(0.01, 0.015)
             action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
         elif args.task_name in ['Move', 'Chopsticks']:
-            action = np.array([[0, 0.2, 0]]*300)
+            action = np.array([[0, 0.6, 0]]*150)
         elif args.task_name in ['Torus']:
             random.seed(int(args.task_version[1:])*repeat_time+i)
             ranges = [(0.1, 0.3), (0.1, 0.6), (0.5, 0.5)]

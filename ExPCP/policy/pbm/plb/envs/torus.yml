@@ -23,6 +23,8 @@ PRIMITIVES:
     color: (0.7, 0.7, 0.7)
     friction: 0.9
 RENDERER:
+  camera_pos: (0.5, 0.27, 2.5)
+  camera_rot: (0., 0.)
   use_directional_light: True
 VARIANTS:
   - ENV:

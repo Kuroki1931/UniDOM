@@ -59,6 +59,8 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
+MODEL_WEIGHT_PATH = '/root/ExPCP/policy/log/R2S2R_id/R2S2R_id/2023-06-05_02-34/2023-06-05_02-36/model/best_weights.ckpt'
+
 CHECK_POINT_PATH = '/root/ExPCP/policy/log/no_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14/2023-05-23_15-22/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
@@ -81,7 +83,7 @@ def test(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
-    model.load_weights(CHECK_POINT_PATH).expect_partial()
+    model.load_weights(MODEL_WEIGHT_PATH).expect_partial()
     
     '''env'''
     set_random_seed(args.seed)
@@ -89,24 +91,30 @@ def test(args):
 								density_loss=args.density_loss, contact_loss=args.contact_loss,
 								soft_contact_loss=args.soft_contact_loss)
     env.seed(args.seed)
-
     E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
     Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
     yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
     goal_point_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/goal_point.npy').tolist()
-    
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
     sum_diff = 0
-    for i in range(10000000, 10000050):
+    # for i in range(10000000, 10000060):
+    # for i in range(9999990, 10000000):
+    for i in range(9999970, 9999990):
         env.reset()
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(i)
+        index = random.randint(0, 2)
+        print(index)
+        # EEE_list = [1779.38, 3276.12, 8000.31]
+        # PPP_list = [0.35, 0.346, 0.36]
+        # name = 'id'
+        # E_bottom, E_upper = EEE_list[index], EEE_list[index]
+        # Poisson_bottom, Poisson_upper = PPP_list[index], PPP_list[index]
+        E_bottom, E_upper = 500, 1500
+        name = 'ood'
+        Poisson_bottom, Poisson_upper = 0.3, 0.34
+        yield_stress_bottom, yield_stress_upper = 200, 200
         E = np.random.uniform(E_bottom, E_upper)
         Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
@@ -116,14 +124,11 @@ def test(args):
         upper_E = lower_E + 500
         indices = [i for i, val in enumerate(E_list) if lower_E <= val <= upper_E]
         E_goal_point_list = np.array(goal_point_list)[indices].tolist()
-        conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        # conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        conditioned_goal_point = np.array([np.random.uniform(0.45, np.max(E_goal_point_list))])
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+        output_dir = f"{'/'.join(MODEL_WEIGHT_PATH.split('/')[:-2])}/evaluation_{name}"
         os.makedirs(output_dir, exist_ok=True)
-        
-        E_value = (E - np.mean(E_list)) / np.std(E_list)
-        Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
-        yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
 
         release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
         start_pos = release_point.numpy()[0]

@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP_NO_PARA
+from models.cls_ssg_model import MLP
 from PIL import Image
 from PIL import ImageDraw
 
@@ -59,7 +59,9 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/no_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14/2023-05-23_15-22/model/best_weights.ckpt'
+MODEL_WEIGHT_PATH = '/root/ExPCP/policy/log/full_para_id/full_id/2023-06-05_02-23/2023-06-05_02-27/model/best_weights.ckpt'
+
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/full_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22/2023-05-23_14-06/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -71,9 +73,9 @@ def test(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
     output_size = 2
-    model = MLP_NO_PARA(args.batch_size, output_size)
+    model = MLP(args.batch_size, output_size)
    
-    model.build([args.batch_size, 1])
+    model.build([(args.batch_size, 1), (args.batch_size, 2)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -81,7 +83,7 @@ def test(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
-    model.load_weights(CHECK_POINT_PATH).expect_partial()
+    model.load_weights(MODEL_WEIGHT_PATH).expect_partial()
     
     '''env'''
     set_random_seed(args.seed)
@@ -94,19 +96,26 @@ def test(args):
     Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
     yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
     goal_point_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/goal_point.npy').tolist()
-    
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
     sum_diff = 0
-    for i in range(10000000, 10000050):
+    # for i in range(10000000, 10000060):
+    # for i in range(9999990, 10000000):
+    for i in range(9999970, 10000060):
         env.reset()
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(i)
+        index = random.randint(0, 2)
+        print(index)
+        # EEE_list = [1779.38, 3276.12, 8000.31]
+        # PPP_list = [0.35, 0.346, 0.36]
+        # name = 'id'
+        # E_bottom, E_upper = EEE_list[index], EEE_list[index]
+        # Poisson_bottom, Poisson_upper = PPP_list[index], PPP_list[index]
+        E_bottom, E_upper = 500, 1500
+        name = 'ood'
+        Poisson_bottom, Poisson_upper = 0.3, 0.34
+        yield_stress_bottom, yield_stress_upper = 200, 200
         E = np.random.uniform(E_bottom, E_upper)
         Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
@@ -116,16 +125,21 @@ def test(args):
         upper_E = lower_E + 500
         indices = [i for i, val in enumerate(E_list) if lower_E <= val <= upper_E]
         E_goal_point_list = np.array(goal_point_list)[indices].tolist()
-        conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        # conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        conditioned_goal_point = np.array([np.random.uniform(0.45, np.max(E_goal_point_list))])
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+        output_dir = f"{'/'.join(MODEL_WEIGHT_PATH.split('/')[:-2])}/evaluation_{name}"
         os.makedirs(output_dir, exist_ok=True)
         
         E_value = (E - np.mean(E_list)) / np.std(E_list)
         Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
         yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+        parameters = np.array([E_value, Poisson_value])
 
-        release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
+        release_point = model.forward_pass([
+            tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
+            tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
+        ], False, 1)
         start_pos = release_point.numpy()[0]
         start_pos = np.array([start_pos[0], start_pos[1], 0.5])
         
@@ -148,17 +162,23 @@ def test(args):
                 if idx == 300:
                     release_point = env.taichi_env.primitives[0].get_state(0)[:3]
                     env.taichi_env.primitives.set_softness1(0)
-                # if idx % 5 == 0:
-                #     img = env.render(mode='rgb_array')
-                #     pimg = Image.fromarray(img)
-                #     I1 = ImageDraw.Draw(pimg)
-                #     I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
-                #     frames.append(pimg)
+                if idx % 5 == 0:
+                    img = env.render(mode='rgb_array')
+                    pimg = Image.fromarray(img)
+                    I1 = ImageDraw.Draw(pimg)
+                    I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    width, height = pimg.size
+                    tem_goal_coordinate = conditioned_goal_point[0] - 0.5
+                    tem_goal_coordinate = width/2 + width * (2.8 * (tem_goal_coordinate/0.25)) / 10.2 # to pixel
+                    I1.rectangle((tem_goal_coordinate, 0, tem_goal_coordinate, height), fill=128, width=100)
+                    frames.append(pimg)
                 state = env.taichi_env.simulator.get_x(0)
                 max_x = state[rope_bottom_index][0]
                 if max_x > best_max_x:
+                    index = idx
                     best_max_x = max_x
-            # frames[0].save(f'{output_dir}/{epoch}_{i}_best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+            index = index // 5
+            frames[0].save(f'{output_dir}/{i}_condition{conditioned_goal_point[0]:.4f}_best_x{best_max_x:.2f}_x{start_pos[0]:.2f}_y{start_pos[1]:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:index+1])
             diff = conditioned_goal_point[0] - best_max_x
             print(i, diff)
             sum_diff += np.abs(diff)

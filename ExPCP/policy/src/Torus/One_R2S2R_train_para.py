@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model_F import MLP
+from models.cls_ssg_model import MLP_NO_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
     parser.add_argument('--epoch', default=300, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
@@ -60,9 +60,13 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_14-15'
+BASE_DIR = '/root/ExPCP/policy/data/One_R2S2R/2023-06-05_08-55'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
+
+BASE_DIR_BASE = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22'
+BASE_TASK_BASE = BASE_DIR_BASE.split('/')[-2]
+BASE_DATE_BASE = BASE_DIR_BASE.split('/')[-1]
 
 
 def load_dataset(in_file, batch_size):
@@ -74,7 +78,6 @@ def load_dataset(in_file, batch_size):
     def _extract_fn(data_record):
         in_features = {
             'goal_point': tf.io.FixedLenFeature([1], tf.float32),
-            'parameters': tf.io.FixedLenFeature([1], tf.float32),
             'release_point': tf.io.FixedLenFeature([2], tf.float32)
         }
 
@@ -82,10 +85,9 @@ def load_dataset(in_file, batch_size):
     
     def _preprocess_fn(sample):
         goal_point = sample['goal_point']
-        parameters = sample['parameters']
         release_point = sample['release_point']
 
-        return goal_point, parameters, release_point
+        return goal_point, release_point
 
     dataset = tf.data.TFRecordDataset(in_file)
     dataset = dataset.shuffle(shuffle_buffer)
@@ -101,7 +103,7 @@ def train(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./nu_para/')
+    exp_dir = exp_dir.joinpath(f'./One_R2S2R/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{BASE_TASK}/')
     exp_dir.mkdir(exist_ok=True)
@@ -132,17 +134,17 @@ def train(args):
    
     output_size = 2
 
-    model = MLP(args.batch_size, output_size)
+    model = MLP_NO_PARA(args.batch_size, output_size)
     train_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/train_experts.tfrecord', args.batch_size)
     validation_ds = load_dataset(f'data/{BASE_TASK}/{BASE_DATE}/validation_experts.tfrecord', args.batch_size)
 
-    model.build([(args.batch_size, 1), (args.batch_size, 1)])
+    model.build([args.batch_size, 1])
     print(model.summary())
     
-    E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
-    Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
-    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
-    goal_point_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/goal_point.npy').tolist()
+    E_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/E.npy').tolist()
+    Poisson_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/Poisson.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/yield_stress.npy').tolist()
+    goal_point_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/goal_point.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -150,12 +152,6 @@ def train(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
-    
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
     best_sum_diff = 999999999999999999
     for epoch in range(args.epoch):
@@ -186,6 +182,13 @@ def train(args):
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(i)
+                index = 0
+                EEE_list = [1779.38, 3276.12, 8000.31]
+                PPP_list = [0.35, 0.346, 0.36]
+                E_bottom, E_upper = EEE_list[index], EEE_list[index]
+                Poisson_bottom, Poisson_upper = PPP_list[index], PPP_list[index]
+                yield_stress_bottom, yield_stress_upper = 200, 200
+                
                 E = np.random.uniform(E_bottom, E_upper)
                 Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
                 yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
@@ -199,16 +202,8 @@ def train(args):
 
                 output_dir = exp_dir.joinpath(f'{test_env}/')
                 output_dir.mkdir(exist_ok=True)
-                
-                E_value = (E - np.mean(E_list)) / np.std(E_list)
-                Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
-                yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
-                parameters = np.array([Poisson_value])
 
-                release_point = model.forward_pass([
-                    tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
-                    tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
-                ], False, 1)
+                release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
                 start_pos = release_point.numpy()[0]
                 start_pos = np.array([start_pos[0], start_pos[1], 0.5])
                 

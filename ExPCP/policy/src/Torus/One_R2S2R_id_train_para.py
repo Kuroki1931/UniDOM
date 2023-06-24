@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model_F import MLP_NO_PARA
+from models.cls_ssg_model import MLP_NO_PARA
 from PIL import Image
 from PIL import ImageDraw
 
@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size in training')
     parser.add_argument('--epoch', default=300, type=int, help='number of epoch in training')
-    parser.add_argument('--save_epoch', default=20, type=int, help='save epoch')
+    parser.add_argument('--save_epoch', default=10, type=int, help='save epoch')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
     
@@ -60,9 +60,13 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-BASE_DIR = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14'
+BASE_DIR = '/root/ExPCP/policy/data/One_R2S2R_id/2023-06-05_02-54'
 BASE_TASK = BASE_DIR.split('/')[-2]
 BASE_DATE = BASE_DIR.split('/')[-1]
+
+BASE_DIR_BASE = '/root/ExPCP/policy/data/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22'
+BASE_TASK_BASE = BASE_DIR_BASE.split('/')[-2]
+BASE_DATE_BASE = BASE_DIR_BASE.split('/')[-1]
 
 
 def load_dataset(in_file, batch_size):
@@ -99,7 +103,7 @@ def train(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     exp_dir = Path('./log/')
     exp_dir.mkdir(exist_ok=True)
-    exp_dir = exp_dir.joinpath(f'./no_para/')
+    exp_dir = exp_dir.joinpath(f'./One_R2S2R_id/')
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath(f'./{BASE_TASK}/')
     exp_dir.mkdir(exist_ok=True)
@@ -137,10 +141,10 @@ def train(args):
     model.build([args.batch_size, 1])
     print(model.summary())
     
-    E_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/E.npy').tolist()
-    Poisson_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/Poisson.npy').tolist()
-    yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
-    goal_point_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/goal_point.npy').tolist()
+    E_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/E.npy').tolist()
+    Poisson_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/Poisson.npy').tolist()
+    yield_stress_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/yield_stress.npy').tolist()
+    goal_point_list = np.load(f'data/{BASE_TASK_BASE}/{BASE_DATE_BASE}/goal_point.npy').tolist()
 
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -148,12 +152,6 @@ def train(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
-    
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
 
     best_sum_diff = 999999999999999999
     for epoch in range(args.epoch):
@@ -184,6 +182,14 @@ def train(args):
 
                 # set randam parameter: mu, lam, yield_stress
                 np.random.seed(i)
+                index = random.randint(0, 2)
+                print(index)
+                EEE_list = [1779.38, 3276.12, 8000.31]
+                PPP_list = [0.35, 0.346, 0.36]
+                E_bottom, E_upper = EEE_list[index], EEE_list[index]
+                Poisson_bottom, Poisson_upper = PPP_list[index], PPP_list[index]
+                yield_stress_bottom, yield_stress_upper = 200, 200
+                
                 E = np.random.uniform(E_bottom, E_upper)
                 Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
                 yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
@@ -197,10 +203,6 @@ def train(args):
 
                 output_dir = exp_dir.joinpath(f'{test_env}/')
                 output_dir.mkdir(exist_ok=True)
-                
-                E_value = (E - np.mean(E_list)) / np.std(E_list)
-                Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
-                yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
 
                 release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
                 start_pos = release_point.numpy()[0]

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from util import tf_utils
 
-BASE_NAME = 'Torus_500_10500_0.2_0.4_200_200'
+BASE_NAME = 'R2S2R_id'
 
 
 def create_example(goal_point, release_point):
@@ -44,17 +44,15 @@ def main():
     Poisson_list = []
     yield_stress_list = []
     goal_point_list = []
-    
-    files = glob.glob(f'/root/ExPCP/policy/pbm/experts/{BASE_NAME}/*/expert*.pickle')
 
-    with tf.io.TFRecordWriter(f'{exp_dir}/train_experts.tfrecord') as train_writer, tf.io.TFRecordWriter(f'{exp_dir}/validation_experts.tfrecord') as validation_writer:
-        for path in files:
-            with open(path, 'rb') as f: 
-                data = pickle.load(f)           
-            E_list.append(data['E'])
-            Poisson_list.append(data['Poisson'])
-            yield_stress_list.append(data['yield_stress'])
-            goal_point_list.append(data['max_x'])
+    files_tem = glob.glob(f'/root/ExPCP/policy/pbm/experts/Torus_500_10500_0.2_0.4_200_200/*/expert*.pickle')
+    for path in files_tem:
+        with open(path, 'rb') as f: 
+            data = pickle.load(f)           
+        E_list.append(data['E'])
+        Poisson_list.append(data['Poisson'])
+        yield_stress_list.append(data['yield_stress'])
+        goal_point_list.append(data['max_x'])
     E_array = np.array(E_list)
     Poisson_array = np.array(Poisson_list)
     yield_stress_array = np.array(yield_stress_list)
@@ -63,6 +61,11 @@ def main():
     np.save(f'{exp_dir}/Poisson.npy', Poisson_array)
     np.save(f'{exp_dir}/yield_stress.npy', yield_stress_array)
     np.save(f'{exp_dir}/goal_point.npy', goal_point_array)
+    
+    files1 = glob.glob(f'/root/ExPCP/policy/pbm/experts/Torus_1779.38_1779.38_0.35_0.35_200_200/*/expert*.pickle')[:757]
+    files2 = glob.glob(f'/root/ExPCP/policy/pbm/experts/Torus_3276.12_3276.12_0.346_0.346_200_200/*/expert*.pickle')[:757]
+    files3 = glob.glob(f'/root/ExPCP/policy/pbm/experts/Torus_8000.31_8000.31_0.36_0.36_200_200/*/expert*.pickle')[:757]
+    files = files1 + files2 + files3
 
     '''DATA LOADING'''
     file_list = []
@@ -93,11 +96,7 @@ def main():
             if random.randint(1, 10) == 1:
                 validation_writer.write(tf_example.SerializeToString())
             else:
-                train_writer.write(tf_example.SerializeToString())    
-    with open(f'{exp_dir}/file.txt', 'w') as fp:
-        for item in file_list:
-            # write each item on a new line
-            fp.write("%s\n" % item)
+                train_writer.write(tf_example.SerializeToString())
     with open(f'{exp_dir}/env_count.txt', mode="w") as f:
         json.dump(env_count, f, indent=4)
 

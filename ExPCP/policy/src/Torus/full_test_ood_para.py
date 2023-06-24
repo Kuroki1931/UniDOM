@@ -6,7 +6,7 @@ import datetime
 
 sys.path.insert(0, './')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import numpy as np
 import torch
@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP_NO_PARA
+from models.cls_ssg_model import MLP
 from PIL import Image
 from PIL import ImageDraw
 
@@ -59,7 +59,9 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/no_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14/2023-05-23_15-22/model/best_weights.ckpt'
+MODEL_WEIGHT_PATH = '/root/ExPCP/policy/log/Full_para_ood/Full_para_ood/2023-06-04_05-45/2023-06-04_12-28/model/best_weights.ckpt'
+
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/full_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22/2023-05-23_14-06/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -71,9 +73,9 @@ def test(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
     output_size = 2
-    model = MLP_NO_PARA(args.batch_size, output_size)
+    model = MLP(args.batch_size, output_size)
    
-    model.build([args.batch_size, 1])
+    model.build([(args.batch_size, 1), (args.batch_size, 2)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -81,7 +83,7 @@ def test(args):
 		metrics='mean_squared_error',
 		weighted_metrics='mean_squared_error'
 	)
-    model.load_weights(CHECK_POINT_PATH).expect_partial()
+    model.load_weights(MODEL_WEIGHT_PATH).expect_partial()
     
     '''env'''
     set_random_seed(args.seed)
@@ -95,14 +97,14 @@ def test(args):
     yield_stress_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/yield_stress.npy').tolist()
     goal_point_list = np.load(f'data/{BASE_TASK}/{BASE_DATE}/goal_point.npy').tolist()
     
-    parameter_list = BASE_TASK.split('_')[1:]
-    parameter_list = [float(parameter) for parameter in parameter_list]
-    E_bottom, E_upper = parameter_list[0], parameter_list[1]
-    Poisson_bottom, Poisson_upper = parameter_list[2], parameter_list[3]
-    yield_stress_bottom, yield_stress_upper = parameter_list[4], parameter_list[5]
+    # E_bottom, E_upper = 500, 3000
+    # Poisson_bottom, Poisson_upper = 0.3, 0.33
+    E_bottom, E_upper = 8200, 10500
+    Poisson_bottom, Poisson_upper = 0.36, 0.37
+    yield_stress_bottom, yield_stress_upper = 200, 200
 
     sum_diff = 0
-    for i in range(10000000, 10000050):
+    for i in range(10000025, 10000050):
         env.reset()
 
         # set randam parameter: mu, lam, yield_stress
@@ -118,14 +120,18 @@ def test(args):
         E_goal_point_list = np.array(goal_point_list)[indices].tolist()
         conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+        output_dir = f"{'/'.join(MODEL_WEIGHT_PATH.split('/')[:-2])}/evaluation_combine"
         os.makedirs(output_dir, exist_ok=True)
         
         E_value = (E - np.mean(E_list)) / np.std(E_list)
         Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
         yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+        parameters = np.array([E_value, Poisson_value])
 
-        release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
+        release_point = model.forward_pass([
+            tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
+            tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
+        ], False, 1)
         start_pos = release_point.numpy()[0]
         start_pos = np.array([start_pos[0], start_pos[1], 0.5])
         

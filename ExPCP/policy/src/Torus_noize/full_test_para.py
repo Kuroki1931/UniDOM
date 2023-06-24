@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model import MLP_NO_PARA
+from models.cls_ssg_model import MLP
 from PIL import Image
 from PIL import ImageDraw
 
@@ -59,7 +59,7 @@ def parse_args():
     return parser.parse_args()
 
 tf.random.set_seed(1234)
-CHECK_POINT_PATH = '/root/ExPCP/policy/log/no_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_15-14/2023-05-23_15-22/model/best_weights.ckpt'
+CHECK_POINT_PATH = '/root/ExPCP/policy/log/full_para/Torus_500_10500_0.2_0.4_200_200/2023-05-23_13-22/2023-05-23_14-06/model/best_weights.ckpt'
 BASE_TASK = CHECK_POINT_PATH.split('/')[-5]
 BASE_DATE = CHECK_POINT_PATH.split('/')[-4]
 
@@ -71,9 +71,9 @@ def test(args):
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
 
     output_size = 2
-    model = MLP_NO_PARA(args.batch_size, output_size)
+    model = MLP(args.batch_size, output_size)
    
-    model.build([args.batch_size, 1])
+    model.build([(args.batch_size, 1), (args.batch_size, 2)])
     print(model.summary())
     model.compile(
 		optimizer=keras.optimizers.Adam(args.lr, clipnorm=0.1),
@@ -116,16 +116,26 @@ def test(args):
         upper_E = lower_E + 500
         indices = [i for i, val in enumerate(E_list) if lower_E <= val <= upper_E]
         E_goal_point_list = np.array(goal_point_list)[indices].tolist()
-        conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        # conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
+        conditioned_goal_point = np.array([np.random.uniform(np.min(goal_point_list), np.max(goal_point_list))])
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation_noize_goal_range_1300_0.05"
         os.makedirs(output_dir, exist_ok=True)
         
-        E_value = (E - np.mean(E_list)) / np.std(E_list)
-        Poisson_value = (Poisson - np.mean(Poisson_list)) / np.std(Poisson_list)
+        # add noize
+        E_noize = np.clip(E + np.random.uniform(-1300, 1300), 500, 10500)
+        Poisson_noize = np.clip(Poisson + np.random.uniform(-0.05, 0.05), 0.2, 0.4)
+        # E_noize = np.clip(E + np.random.choice([-1000, 1000]), 500, 10500)
+        # Poisson_noize = np.clip(Poisson + np.random.choice([-0.05, 0.05]), 0.2, 0.4)
+        E_value = (E_noize - np.mean(E_list)) / np.std(E_list)
+        Poisson_value = (Poisson_noize - np.mean(Poisson_list)) / np.std(Poisson_list)
         yield_stress_value = (yield_stress - np.mean(yield_stress_list)) / np.std(yield_stress_list)
+        parameters = np.array([E_value, Poisson_value])
 
-        release_point = model.forward_pass(tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32), False, 1)
+        release_point = model.forward_pass([
+            tf.cast(tf.convert_to_tensor(conditioned_goal_point[None]), tf.float32),
+            tf.cast(tf.convert_to_tensor(parameters[None]), tf.float32)
+        ], False, 1)
         start_pos = release_point.numpy()[0]
         start_pos = np.array([start_pos[0], start_pos[1], 0.5])
         
@@ -163,7 +173,7 @@ def test(args):
             print(i, diff)
             sum_diff += np.abs(diff)
             with open(f'{output_dir}/{i}.txt', 'w') as f:
-                f.write(f'{diff}, {conditioned_goal_point[0]}, {best_max_x}, {start_pos[0]}, {start_pos[1]}, {E}, {Poisson}')
+                f.write(f'{diff}, {conditioned_goal_point[0]}, {best_max_x}, {start_pos[0]}, {start_pos[1]}, {E}, {Poisson}, {E_noize}, {Poisson_noize}')
         except:
             print('error')
             break

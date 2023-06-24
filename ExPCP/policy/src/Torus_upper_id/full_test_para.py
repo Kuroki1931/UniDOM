@@ -18,7 +18,7 @@ from tensorflow import keras
 from pathlib import Path
 
 from tqdm import tqdm
-from models.cls_ssg_model_F import MLP
+from models.cls_ssg_model import MLP
 from PIL import Image
 from PIL import ImageDraw
 
@@ -107,18 +107,18 @@ def test(args):
 
         # set randam parameter: mu, lam, yield_stress
         np.random.seed(i)
-        E = np.random.uniform(E_bottom, E_upper)
-        Poisson = np.random.uniform(Poisson_bottom, Poisson_upper)
+        E = np.random.uniform(10300, 10500)
+        Poisson = np.random.uniform(0.38, 0.4)
         yield_stress = np.random.uniform(yield_stress_bottom, yield_stress_upper)
         env.taichi_env.set_parameter(E, Poisson, yield_stress)
         
-        lower_E = E // 500 * 500  # Floor division by 1000 then multiply by 1000 to get the lower bound
-        upper_E = lower_E + 500
+        lower_E = E // 1000 * 1000  # Floor division by 1000 then multiply by 1000 to get the lower bound
+        upper_E = lower_E + 1000
         indices = [i for i, val in enumerate(E_list) if lower_E <= val <= upper_E]
         E_goal_point_list = np.array(goal_point_list)[indices].tolist()
         conditioned_goal_point = np.array([np.random.uniform(np.min(E_goal_point_list), np.max(E_goal_point_list))])
 
-        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation"
+        output_dir = f"{'/'.join(CHECK_POINT_PATH.split('/')[:-2])}/evaluation_upper_id"
         os.makedirs(output_dir, exist_ok=True)
         
         E_value = (E - np.mean(E_list)) / np.std(E_list)
