@@ -22,9 +22,9 @@ services:
       # Map repository sources.
       - ..:/root/xarm/
       # - ../../LDOM:/root/LDOM/
-      - ../../real2sim:/root/real2sim/
-      - ../../ExPCP:/root/ExPCP/
-      # - ../../RL:/root/RL/
+      - ../../PlasticineLab:/root/PlasticineLab/
+      # - ../../ExPCP:/root/ExPCP/
+      - ../../GenORM:/root/GenORM/
       - ../../DaXBench:/root/DaXBench/
       # Use anaconda
       - /home/robot_dev/anaconda3:/home/robot_dev/anaconda3
