@@ -17,7 +17,7 @@ class DefaultConf:
     N = 80
     cell_size = 1.0 / N
     gravity = 0.5
-    stiffness = 900
+    stiffness = 9
     damping = 2
     dt = 2e-3
     max_v = 2.
@@ -38,9 +38,10 @@ FoldCloth1Conf = DefaultConf
 
 class FoldCloth1Env(ClothEnv):
 
-    def __init__(self, batch_size, conf=None, aux_reward=False, seed=1):
+    def __init__(self, batch_size, conf=None, aux_reward=False, seed=1, stiffness=900):
         conf = DefaultConf() if conf is None else conf
         max_steps = 3
+        conf.stiffness = stiffness
         super().__init__(conf, batch_size, max_steps, aux_reward)
         self.observation_size = 1544
 

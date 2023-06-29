@@ -266,6 +266,9 @@ class ClothSimulator:
 
             force = state.stiffness * relative_pos.reshape((-1, 8, 3)) / current_length * (
                     current_length - self.original_length) / self.original_length
+            # force = 100 * relative_pos.reshape((-1, 8, 3)) / current_length * (
+            #         current_length - self.original_length) / self.original_length
+            
 
             force *= self.ori_len_is_not_0
 

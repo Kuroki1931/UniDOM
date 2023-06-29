@@ -1,4 +1,5 @@
 from daxbench.core.envs.fold_cloth1_env import FoldCloth1Env
+from daxbench.core.envs.fold_cloth1_para_env import FoldCloth1ParaEnv
 from daxbench.core.envs.fold_cloth3_env import FoldCloth3Env
 from daxbench.core.envs.fold_cloth_tshirt_env import FoldTshirtEnv
 from daxbench.core.envs.pour_soup_env import PourSoupEnv
@@ -11,6 +12,7 @@ from daxbench.core.envs.whip_rope_env import WhipRopeEnv
 
 env_functions = {
     "fold_cloth1": FoldCloth1Env,
+    "fold_cloth1_para": FoldCloth1ParaEnv,
     "fold_cloth3": FoldCloth3Env,
     "fold_tshirt": FoldTshirtEnv,
     "shape_rope": ShapeRopeEnv,

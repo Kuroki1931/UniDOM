@@ -18,4 +18,5 @@ python3 -m daxbench.algorithms.apg.apg \
     --gpus 1 \
     --max_grad_norm 0.3 \
     --seed ${1} \
-    --eval_freq 20
+    --eval_freq 100 \
+    --max_it 1000

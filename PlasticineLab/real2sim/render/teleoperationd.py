@@ -61,7 +61,6 @@ class Robot():
         initial_arm_position = move_group.get_current_pose(end_effector_link).pose.position
         initial_orientation = move_group.get_current_pose(end_effector_link).pose.orientation
         print('initial_arm_position', initial_arm_position)
-        import pdb; pdb.set_trace()
 
         steps = 0
         z_axis = 0
