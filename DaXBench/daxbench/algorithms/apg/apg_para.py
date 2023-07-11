@@ -298,7 +298,7 @@ def train(
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(300, 1400)
+        core_env_stiffness = np.random.uniform(400, 1300)
         
         # recreate env function
         core_env = environment_fn(
@@ -357,7 +357,7 @@ def train(
                 )
                 test_reward = jnp.mean(reward_list.sum(0))
                 # test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
-                logging.info("Test reward %s", test_reward)
+                logging.info("Test reward %s %s", eval_env_stiffness, test_reward)
                 writer.add_scalar(f"test_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
                 writer.add_scalar(f"last_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
             file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl", "wb")
