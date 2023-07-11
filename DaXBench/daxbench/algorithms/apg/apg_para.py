@@ -298,7 +298,7 @@ def train(
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(400, 1300)
+        core_env_stiffness = np.random.uniform(200, 1400)
         
         # recreate env function
         core_env = environment_fn(
@@ -342,7 +342,7 @@ def train(
         t = time.time()
 
         if it % args.eval_freq == 0 and it != 0:
-            test_range = 100
+            test_range = 20
             for test_step in range(test_range):
                 test_it = it*test_range + test_step
                 np.random.seed((it*test_step)+test_step)
