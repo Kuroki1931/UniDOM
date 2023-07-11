@@ -51,11 +51,11 @@ def train(
     truncation_length: Optional[int] = None,
 ):
     xt = time.time()
-    args.logdir = (
-        f"/root/DaXBench/logs/apg/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
-        f"_max_it{args.max_it}_max_grad_norm{args.max_grad_norm}/seed{args.seed}"
-    )
-    writer = SummaryWriter(args.logdir)
+    # args.logdir = (
+    #     f"logs/apg_para/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
+    #     f"_max_it{args.max_it}_max_grad_norm{args.max_grad_norm}/seed{args.seed}"
+    # )
+    # writer = SummaryWriter(args.logdir)
 
     process_count = jax.process_count()
     process_id = jax.process_index()
@@ -105,6 +105,10 @@ def train(
     )
 
     # init optimizer
+    params_path = '/root/DaXBench/logs/apg_para/fold_cloth1_para/fold_cloth1_para_ep_len3_num_envs2_lr0.0001_max_it2000_max_grad_norm0.3/seed0/apg_fold_cloth1_para_2000_890.340257286776.pkl'
+    with open(params_path, "rb") as f:
+        policy_params = pickle.load(f)
+    args.lodir = '/'.join(params_path.split('/')[:-1])
     policy_params = policy_model.init(key_models)
     optimizer = optax.adam(learning_rate=learning_rate)
     optimizer_state = optimizer.init(policy_params)
@@ -124,182 +128,15 @@ def train(
     """
     Evaluation functions
     """
-
-    def do_one_step_eval(carry, unused_target_t):
-        state, params, normalizer_params, key = carry
-        key, key_sample = jax.random.split(key)
-
-        obs = eval_env.get_obs(state)
-        logits = policy_model.apply(params, obs)
-        actions = parametric_action_distribution.sample(logits, key_sample)
-        if not isinstance(core_env, MPMEnv) or isinstance(core_env, ShapeRopeEnv):
-            actions = jax.nn.sigmoid(actions)
-        obs, reward, done, info = eval_step_fn(actions, state)
-        nstate = info["state"]
-        return (nstate, params, normalizer_params, key), (actions, state, reward)
-
-    @jax.jit
-    def run_eval(params, state, normalizer_params, key):
-        params = jax.tree_util.tree_map(lambda x: x[0], params)
-
-        (state, _, _, key), (action_list, state_list, reward_list) = jax.lax.scan(
-            do_one_step_eval,
-            (state, params, normalizer_params, key),
-            (),
-            length=core_env.max_steps // action_repeat,
-        )
-        return state, key, action_list, state_list, reward_list
-
-    def eval_policy(it, test_it, training_state, eval_first_state, key_debug):
-        if process_id == 0:
-            eval_state, key_debug, action_list, state_list, reward_list = run_eval(
-                training_state.policy_params,
-                eval_first_state,
-                training_state.normalizer_params,
-                key_debug,
-            )
-            rgb_list = []
-            for i in range(core_env.max_steps):
-                state = jax.tree_util.tree_map(lambda x: x[i], state_list)
-                obs, reward, done, info = eval_env.step_with_render(
-                    action_list[i], state, visualize=False
-                )
-                rgb_list.extend(info["img_list"])
-
-            # save rgb_list into gif file named "fold_cloth_{it}.gif"
-            os.makedirs(args.logdir, exist_ok=True)
-            imageio.mimsave(f"{args.logdir}/{args.env}_{it}_{test_it}_{jnp.mean(reward_list.sum(0))}_{eval_env.simulator.stiffness}.gif", rgb_list, fps=20)
-
-            return action_list, reward_list
-
-    """
-    Training functions
-    """
-
-    def do_one_step(carry, step_index):
-        state, params, normalizer_params, key = carry
-        key, key_sample = jax.random.split(key)
-
-        obs = core_env.get_obs(state)
-        # normalized_obs = normalizer_apply_fn(normalizer_params, obs)
-        logits = policy_model.apply(params, obs)
-        actions = parametric_action_distribution.sample(logits, key_sample)
-        if not isinstance(core_env, MPMEnv) or isinstance(core_env, ShapeRopeEnv):
-            actions = jax.nn.sigmoid(actions)
-
-        obs, reward, done, info = step_fn(actions, state)
-        nstate = info["state"]
-
-        if truncation_length is not None and truncation_length > 0:
-            nstate = jax.lax.cond(
-                jnp.mod(step_index + 1, truncation_length) == 0.0,
-                jax.lax.stop_gradient,
-                lambda x: x,
-                nstate,
-            )
-
-        return (nstate, params, normalizer_params, key), (
-            nstate,
-            logits,
-            actions,
-            reward,
-        )
-
-    @jax.jit
-    def loss(params, normalizer_params, state, key):
-        _, (state_list, logit_list, action_list, reward_list) = jax.lax.scan(
-            do_one_step,
-            (state, params, normalizer_params, key),
-            (jnp.array(range(episode_length // action_repeat))),
-            length=episode_length // action_repeat,
-        )
-
-        return -jnp.mean(reward_list), (reward_list, state_list, action_list)
-
-    def _minimize(training_state: TrainingState, state: envs.State):
-        synchro = pmap.is_replicated(
-            (
-                training_state.optimizer_state,
-                training_state.policy_params,
-                training_state.normalizer_params,
-            ),
-            axis_name="i",
-        )
-        key, key_grad = jax.random.split(training_state.key)
-        grad_raw, (reward_list, state_list, action_list) = loss_grad(
-            training_state.policy_params,
-            training_state.normalizer_params,
-            state,
-            key_grad,
-        )
-        grad_raw = jax.tree_util.tree_map(lambda t: jnp.nan_to_num(t), grad_raw)
-        grad = clip_by_global_norm(grad_raw)
-        grad = jax.lax.pmean(grad, axis_name="i")
-
-        params_update, optimizer_state = optimizer.update(
-            grad, training_state.optimizer_state
-        )
-        policy_params = optax.apply_updates(training_state.policy_params, params_update)
-
-        metrics = {
-            "grad_norm": optax.global_norm(grad_raw),
-            "params_norm": optax.global_norm(policy_params),
-            "reward": reward_list,
-        }
-        return (
-            TrainingState(
-                key=key,
-                optimizer_state=optimizer_state,
-                normalizer_params=normalizer_params,
-                policy_params=policy_params,
-            ),
-            metrics,
-            state_list,
-            action_list,
-            synchro,
-        )
-
-    def clip_by_global_norm(updates):
-        g_norm = optax.global_norm(updates)
-        trigger = g_norm < max_gradient_norm
-        updates = jax.tree_util.tree_map(
-            lambda t: jnp.where(trigger, t, (t / g_norm) * max_gradient_norm), updates
-        )
-
-        return updates
-
-    loss_grad = jax.grad(loss, has_aux=True, allow_int=True)
-    minimize = jax.jit(_minimize)
-    minimize = jax.pmap(minimize, axis_name="i")
-
     # prepare training
-    training_walltime = 0
-    training_state = TrainingState(
-        key=key,
-        optimizer_state=optimizer_state,
-        normalizer_params=normalizer_params,
-        policy_params=policy_params,
-    )
-    key = jnp.stack(jax.random.split(key, local_devices_to_use))
-    training_state = jax.device_put_replicated(
-        training_state, jax.local_devices()[:local_devices_to_use]
-    )
-
-    key_debug, key_eval = jax.random.split(key_eval)
-    # _, first_state = reset_fn(key_env)
-    # if not isinstance(core_env, MPMEnv) or isinstance(core_env, ShapeRopeEnv):
-    #     reset_fn = jax.vmap(reset_fn)
-    # first_state = jax.tree_util.tree_map(
-    #     lambda x: jnp.stack([x] * local_devices_to_use), first_state
-    # )
-    # _, eval_first_state = eval_reset_fn(key_eval)
-
+   
     t = time.time()
-    # test_reward_dict = {}
+    test_reward_dict = {}
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(300, 1400)
+        core_env_stiffness = np.random.uniform(100, 1500)
+        eval_env_stiffness = np.random.uniform(100, 1500)
         
         # recreate env function
         core_env = environment_fn(
@@ -309,6 +146,9 @@ def train(
         reset_fn = core_env.reset
         if isinstance(core_env, MPMEnv) and not isinstance(core_env, ShapeRopeEnv):
             auto_reset = jax.pmap(core_env.auto_reset)
+        eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
+        eval_step_fn = eval_env.step_diff
+        eval_reset_fn = eval_env.reset
 
         # reset function
         _, first_state = reset_fn(key_env)
@@ -317,6 +157,7 @@ def train(
         first_state = jax.tree_util.tree_map(
             lambda x: jnp.stack([x] * local_devices_to_use), first_state
         )
+        _, eval_first_state = eval_reset_fn(key_eval)
 
         if not isinstance(core_env, MPMEnv) or isinstance(core_env, ShapeRopeEnv):
             key_debug, key_eval = jax.random.split(key_eval)
@@ -342,26 +183,16 @@ def train(
         )
         t = time.time()
 
-        if it % args.eval_freq == 0 and it != 0:
-            test_range = 100
-            for test_step in range(test_range):
-                test_it = it*test_range + test_step
-                np.random.seed((it*test_step)+test_step)
-                eval_env_stiffness = np.random.uniform(100, 1600)
-                eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
-                eval_step_fn = eval_env.step_diff
-                eval_reset_fn = eval_env.reset
-                _, eval_first_state = eval_reset_fn(key_eval)
-
-                _, reward_list = eval_policy(
-                    it, test_it, training_state, eval_first_state, key_debug
-                )
-                test_reward = jnp.mean(reward_list.sum(0))
-                # test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
-                logging.info("Test reward %s", test_reward)
-                writer.add_scalar(f"test_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
-                writer.add_scalar(f"last_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
-            file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl", "wb")
+        if it % args.eval_freq == 0:
+            _, reward_list = eval_policy(
+                it, training_state, eval_first_state, key_debug
+            )
+            test_reward = jnp.mean(reward_list.sum(0))
+            test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
+            logging.info("Test reward %s", test_reward)
+            writer.add_scalar("test_reward", test_reward, it)
+            writer.add_scalar("last_reward", reward_list[-1].mean(), it)
+            file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{eval_env.simulator.stiffness}.pkl", "wb")
             single_param = jax.tree_util.tree_map(
                 lambda x: x[0], training_state.policy_params
             )
@@ -374,7 +205,7 @@ def train(
         )
 
         jax.tree_util.tree_map(lambda x: x.block_until_ready(), metrics)
-        logging.info("Training reward %s %s", core_env_stiffness, jnp.mean(metrics["reward"].sum(0)))
+        logging.info("Training reward %s", jnp.mean(metrics["reward"].sum(0)))
         writer.add_scalar("grad_norm", metrics["grad_norm"].mean(), it)
         sps = (episode_length * num_envs) / (time.time() - t)
         training_walltime += time.time() - t
@@ -387,10 +218,9 @@ def train(
     inference = make_inference_fn(
         core_env.observation_size, core_env.action_size, normalize_observations
     )
-
-    # with open(f"{args.logdir}/apg_reward_dict.pkl", "wb") as f:
-    #     pickle.dump(test_reward_dict, f)
-
+    
+    with open(f"{args.logdir}/apg_reward_dict.pkl", "wb") as f:
+        pickle.dump(test_reward_dict, f)
 
 def make_direct_optimization_model(parametric_action_distribution, obs_size):
     return networks.make_model(

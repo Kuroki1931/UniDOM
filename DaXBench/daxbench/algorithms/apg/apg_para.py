@@ -52,7 +52,7 @@ def train(
 ):
     xt = time.time()
     args.logdir = (
-        f"logs/apg_para/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
+        f"/root/DaXBench/logs/apg_para/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
         f"_max_it{args.max_it}_max_grad_norm{args.max_grad_norm}/seed{args.seed}"
     )
     writer = SummaryWriter(args.logdir)
@@ -149,7 +149,7 @@ def train(
         )
         return state, key, action_list, state_list, reward_list
 
-    def eval_policy(it, training_state, eval_first_state, key_debug):
+    def eval_policy(it, test_it, training_state, eval_first_state, key_debug):
         if process_id == 0:
             eval_state, key_debug, action_list, state_list, reward_list = run_eval(
                 training_state.policy_params,
@@ -167,7 +167,7 @@ def train(
 
             # save rgb_list into gif file named "fold_cloth_{it}.gif"
             os.makedirs(args.logdir, exist_ok=True)
-            imageio.mimsave(f"{args.logdir}/{args.env}_{it}_{eval_env.simulator.stiffness}.gif", rgb_list, fps=20)
+            imageio.mimsave(f"{args.logdir}/{args.env}_{it}_{test_it}_{jnp.mean(reward_list.sum(0))}_{eval_env.simulator.stiffness}.gif", rgb_list, fps=20)
 
             return action_list, reward_list
 
@@ -294,12 +294,11 @@ def train(
     # _, eval_first_state = eval_reset_fn(key_eval)
 
     t = time.time()
-    test_reward_dict = {}
+    # test_reward_dict = {}
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(100, 1500)
-        eval_env_stiffness = np.random.uniform(100, 1500)
+        core_env_stiffness = np.random.uniform(300, 1400)
         
         # recreate env function
         core_env = environment_fn(
@@ -309,9 +308,6 @@ def train(
         reset_fn = core_env.reset
         if isinstance(core_env, MPMEnv) and not isinstance(core_env, ShapeRopeEnv):
             auto_reset = jax.pmap(core_env.auto_reset)
-        eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
-        eval_step_fn = eval_env.step_diff
-        eval_reset_fn = eval_env.reset
 
         # reset function
         _, first_state = reset_fn(key_env)
@@ -320,7 +316,6 @@ def train(
         first_state = jax.tree_util.tree_map(
             lambda x: jnp.stack([x] * local_devices_to_use), first_state
         )
-        _, eval_first_state = eval_reset_fn(key_eval)
 
         if not isinstance(core_env, MPMEnv) or isinstance(core_env, ShapeRopeEnv):
             key_debug, key_eval = jax.random.split(key_eval)
@@ -346,16 +341,26 @@ def train(
         )
         t = time.time()
 
-        if it % args.eval_freq == 0:
-            _, reward_list = eval_policy(
-                it, training_state, eval_first_state, key_debug
-            )
-            test_reward = jnp.mean(reward_list.sum(0))
-            test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
-            logging.info("Test reward %s", test_reward)
-            writer.add_scalar("test_reward", test_reward, it)
-            writer.add_scalar("last_reward", reward_list[-1].mean(), it)
-            file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{eval_env.simulator.stiffness}.pkl", "wb")
+        if it % args.eval_freq == 0 and it != 0:
+            test_range = 100
+            for test_step in range(test_range):
+                test_it = it*test_range + test_step
+                np.random.seed((it*test_step)+test_step)
+                eval_env_stiffness = np.random.uniform(100, 1600)
+                eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
+                eval_step_fn = eval_env.step_diff
+                eval_reset_fn = eval_env.reset
+                _, eval_first_state = eval_reset_fn(key_eval)
+
+                _, reward_list = eval_policy(
+                    it, test_it, training_state, eval_first_state, key_debug
+                )
+                test_reward = jnp.mean(reward_list.sum(0))
+                # test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
+                logging.info("Test reward %s", test_reward)
+                writer.add_scalar(f"test_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
+                writer.add_scalar(f"last_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
+            file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl", "wb")
             single_param = jax.tree_util.tree_map(
                 lambda x: x[0], training_state.policy_params
             )
@@ -368,7 +373,7 @@ def train(
         )
 
         jax.tree_util.tree_map(lambda x: x.block_until_ready(), metrics)
-        logging.info("Training reward %s", jnp.mean(metrics["reward"].sum(0)))
+        logging.info("Training reward %s %s", core_env_stiffness, jnp.mean(metrics["reward"].sum(0)))
         writer.add_scalar("grad_norm", metrics["grad_norm"].mean(), it)
         sps = (episode_length * num_envs) / (time.time() - t)
         training_walltime += time.time() - t
@@ -382,8 +387,8 @@ def train(
         core_env.observation_size, core_env.action_size, normalize_observations
     )
     
-    with open(f"{args.logdir}/apg_reward_dict.pkl", "wb") as f:
-        pickle.dump(test_reward_dict, f)
+    # with open(f"{args.logdir}/apg_reward_dict.pkl", "wb") as f:
+    #     pickle.dump(test_reward_dict, f)
 
 def make_direct_optimization_model(parametric_action_distribution, obs_size):
     return networks.make_model(
