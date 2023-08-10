@@ -51,11 +51,10 @@ def train(
 ):
     xt = time.time()
     args.logdir = (
-        f"logs/apg/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
+        f"/root/DaXBench/logs/apg/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
         f"_max_it{args.max_it}_max_grad_norm{args.max_grad_norm}/seed{args.seed}"
     )
     writer = SummaryWriter(args.logdir)
-
     process_count = jax.process_count()
     process_id = jax.process_index()
     local_device_count = jax.local_device_count()

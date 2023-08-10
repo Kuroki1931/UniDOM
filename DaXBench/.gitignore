@@ -418,3 +418,5 @@ tags
 events.out*
 **/logs*/**/*.gif
 logs
+
+wandb/

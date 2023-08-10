@@ -289,38 +289,38 @@ class Renderer:
                         pos += step
 
 
-        # if self.visualize_target[None]:
-        #     # ------------------------ target density ----------------------------
-        #     intersect, tnear, tfar = ray_aabb_intersection(ti.Vector([0.0, 0.0, 0.0]), ti.Vector([1.0, 1.0, 1.0]), o, d)
-        #     if intersect:
-        #         tnear = max(tnear, 0.)
-        #         pos = o + d * (tnear + 1e-4)
-        #         step = ti.Vector([0., 0., 0.])
-        #         total_forward = 0.0
+        if self.visualize_target[None]:
+            # ------------------------ target density ----------------------------
+            intersect, tnear, tfar = ray_aabb_intersection(ti.Vector([0.0, 0.0, 0.0]), ti.Vector([1.0, 1.0, 1.0]), o, d)
+            if intersect:
+                tnear = max(tnear, 0.)
+                pos = o + d * (tnear + 1e-4)
+                step = ti.Vector([0., 0., 0.])
+                total_forward = 0.0
         
-        #         for j in range(500):
-        #             if total_forward + tnear > tfar:
-        #                 break
-        #             s = self.sample_target_density(pos)
-        #             if s<0:
-        #                 back_step = step
-        #                 for k in range(20):
-        #                     back_step = back_step * 0.5
-        #                     if self.sample_target_density(pos - back_step) < 0:
-        #                         pos -= back_step
+                for j in range(500):
+                    if total_forward + tnear > tfar:
+                        break
+                    s = self.sample_target_density(pos)
+                    if s<0:
+                        back_step = step
+                        for k in range(20):
+                            back_step = back_step * 0.5
+                            if self.sample_target_density(pos - back_step) < 0:
+                                pos -= back_step
                 
-        #                 dist = (o - pos).norm()
-        #                 if dist < closest:
-        #                     closest = dist
-        #                     normal = self.sample_normal(self.sample_target_density, pos)
-        #                     color = self.target_density_color
-        #                     material = DIFFUSE
-        #                 break
-        #             else:
-        #                 step_length = (1.0 / self.target_res[0])
-        #                 step = d * step_length
-        #                 total_forward += step_length
-        #                 pos += step
+                        dist = (o - pos).norm()
+                        if dist < closest:
+                            closest = dist
+                            normal = self.sample_normal(self.sample_target_density, pos)
+                            color = self.target_density_color
+                            material = DIFFUSE
+                        break
+                    else:
+                        step_length = (1.0 / self.target_res[0])
+                        step = d * step_length
+                        total_forward += step_length
+                        pos += step
 
         return closest, normal, color, roughness, material
 
@@ -438,9 +438,8 @@ class Renderer:
             [1.0000000, 0.0000000, 0.0000000],
             [0.0000000, np.cos(self.camera_rot[0]), np.sin(self.camera_rot[0])],
             [0.0000000, -np.sin(self.camera_rot[0]), np.cos(self.camera_rot[0])],
-        ]))
-        for u, v in self.color_buffer:
-            pos = self.camera_pos
+        ]))rope_ep_len3_num_envs4_lr0.0001_max_it2000_max_grad_norm0.3/seed0# cd ..
+root@xarm-dual:~/xarm/logs/apg/whip_rope/whip_
             d = ti.Vector([
                 (2 * fov * (u + ti.random(ti.f32)) / self.image_res[1] -
                  fov * self.aspect_ratio - 1e-5),

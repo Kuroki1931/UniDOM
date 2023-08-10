@@ -123,7 +123,7 @@ class ClothEnv:
                     # state.v.flatten(),
                     state.primitive0,
                     state.primitive1,
-                    (jnp.expand_dims(state.stiffness, axis=-1) - 100)/(1500 - 100)
+                    (jnp.expand_dims(state.stiffness, axis=-1) - 100)/(1800 - 100) # TODO takanami
                 ],
                 axis=-1,
             )

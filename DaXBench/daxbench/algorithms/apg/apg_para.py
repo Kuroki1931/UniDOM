@@ -23,6 +23,8 @@ from daxbench.core.envs.basic.mpm_env import MPMEnv
 from daxbench.core.envs.shape_rope_env import ShapeRopeEnv
 from daxbench.core.envs.registration import env_functions
 
+import wandb
+
 logging.set_verbosity(logging.INFO)
 best_reward = 0
 
@@ -49,7 +51,7 @@ def train(
     seed=0,
     log_frequency=10,
     truncation_length: Optional[int] = None,
-):
+):  
     xt = time.time()
     args.logdir = (
         f"/root/DaXBench/logs/apg_para/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
@@ -73,6 +75,18 @@ def train(
         local_devices_to_use,
     )
     logging.info("Available devices %s", jax.devices())
+    wandb.login()
+
+    run = wandb.init(
+        # Set the project where this run will be logged
+        project="test_para",
+        config = {
+            "device_conunt": jax.device_count(), 
+            "process_count": process_count, 
+            "process_id": process_id, 
+            "local_device_count": local_device_count,
+            "local_devices_to_use": local_devices_to_use}
+    )
 
     # seeds
     key = jax.random.PRNGKey(seed)
@@ -298,7 +312,7 @@ def train(
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(200, 1400)
+        core_env_stiffness = np.random.uniform(100, 1800) # TODO takanami
         
         # recreate env function
         core_env = environment_fn(
@@ -340,13 +354,13 @@ def train(
             "starting iteration %s %s %s", it, time.time() - xt, time.time() - t
         )
         t = time.time()
-
-        if it % args.eval_freq == 0 and it != 0:
-            test_range = 20
+        test_stiff_and_rewards = {}
+        if it % args.eval_freq == 0:
+            test_range = 10
             for test_step in range(test_range):
                 test_it = it*test_range + test_step
                 np.random.seed((it*test_step)+test_step)
-                eval_env_stiffness = np.random.uniform(100, 1600)
+                eval_env_stiffness = np.random.uniform(100, 1800) # TODO takanami
                 eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
                 eval_step_fn = eval_env.step_diff
                 eval_reset_fn = eval_env.reset
@@ -358,6 +372,8 @@ def train(
                 test_reward = jnp.mean(reward_list.sum(0))
                 # test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
                 logging.info("Test reward %s %s", eval_env_stiffness, test_reward)
+                test_stiff_and_rewards[f"eval_env_stiffness_{test_step}"] = eval_env_stiffness
+                test_stiff_and_rewards[f"test_reward_{test_step}"] = test_reward                
                 writer.add_scalar(f"test_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
                 writer.add_scalar(f"last_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
             file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl", "wb")
@@ -374,6 +390,13 @@ def train(
 
         jax.tree_util.tree_map(lambda x: x.block_until_ready(), metrics)
         logging.info("Training reward %s %s", core_env_stiffness, jnp.mean(metrics["reward"].sum(0)))
+        log_dict = {
+            "iter": it,
+            "core_env_stiffness": core_env_stiffness,
+            "train_reward": jnp.mean(metrics["reward"].sum(0))
+        }
+        log_dict.update(test_stiff_and_rewards)
+        wandb.log(log_dict, step=it)
         writer.add_scalar("grad_norm", metrics["grad_norm"].mean(), it)
         sps = (episode_length * num_envs) / (time.time() - t)
         training_walltime += time.time() - t
