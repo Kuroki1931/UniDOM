@@ -2,7 +2,7 @@
 
 ## task name
 Table -> lift cloth  
-Move -> lift rope
+Move -> lift rope  
 Torus -> release rope
 
 ## required
