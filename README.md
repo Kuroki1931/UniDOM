@@ -2,6 +2,7 @@
 
 ## task name
 Table -> lift cloth  
+Rope -> unfold cloth
 Move -> lift rope  
 Torus -> release rope
 
