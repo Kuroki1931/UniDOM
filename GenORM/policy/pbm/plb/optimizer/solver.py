@@ -113,62 +113,8 @@ def tell_rope_break(image):
     return num_pink_objects > 1
 
 
-def rope_action(env, output_path, flag=None, T=12, step_num=50):
-    # first step: 10 time step same action (0, 1]
-    for action_value in np.linspace(0.1, 1, 10):
-        env.reset()
-        first_action = np.array([[action_value, 0, 0]]*T)
-        if flag:
-            dummy_action = np.zeros((T, 4))
-            first_action = np.concatenate([first_action, dummy_action], axis=1)
-        # frames = []
-        for idx, act in enumerate(first_action):
-            env.step(act)
-            if idx+1 == T:
-                img = env.render(mode='rgb_array')
-        #     img = env.render(mode='rgb_array')
-        #     pimg = Image.fromarray(img)
-        #     frames.append(pimg)
-        # frames[0].save(f'{output_path}/first_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        rope_state = env.taichi_env.simulator.get_x(0)
-        rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
-        possible = tell_rope_break(img)
-        if possible:
-            action_value -= 0.1
-            break
-
-    # second step: 10 time step action [action_value - 0.1, action_value + 0.1]
-    if flag:
-        actions_list = np.random.normal(action_value, 0.05, (step_num, T, 7))
-    else:
-        actions_list = np.random.normal(action_value, 0.05, (step_num, T, 3))
-
-    best_rope_length = 0
-    best_action = None
-
-    for step, second_action in enumerate(actions_list):
-        print(step,'/', step_num)
-        second_action = np.concatenate([second_action])
-        env.reset()
-        # frames = []
-        for idx, act in enumerate(second_action):
-            env.step(act)
-            if idx+1 == T:
-                img = env.render(mode='rgb_array')
-        #     img = env.render(mode='rgb_array')
-        #     pimg = Image.fromarray(img)
-        #     frames.append(pimg)
-        # frames[0].save(f'{output_path}/second_{action_value}_demo.gif', save_all=True, append_images=frames[1:], loop=0)
-        rope_state = env.taichi_env.simulator.get_x(0)
-        rope_length = rope_state.max(axis=0)[0] - rope_state.min(axis=0)[0] 
-        possible = tell_rope_break(img)
-        if rope_length > best_rope_length and not possible:
-            best_rope_length = rope_length
-            best_action = second_action
-    return best_action
-
 def solve_action(env, path, logger, args):
-    repeat_time = 1
+    repeat_time = 1000
     for i in range(repeat_time):
         idx = args.env_name.find('-')
         args.task_name = args.env_name[:idx]
@@ -178,8 +124,8 @@ def solve_action(env, path, logger, args):
         # Poisson_bottom, Poisson_upper = 0.35, 0.35
         # E_bottom, E_upper = 3276.12, 3276.12
         # Poisson_bottom, Poisson_upper = 0.346, 0.346
-        E_bottom, E_upper = 1500, 1500
-        Poisson_bottom, Poisson_upper = 0.36, 0.36
+        E_bottom, E_upper = 500, 10500
+        Poisson_bottom, Poisson_upper = 0.2, 0.4
         yield_stress_bottom, yield_stress_upper = 200, 200
         output_path = f'{path}/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}/{now}'
         os.makedirs(output_path, exist_ok=True)
@@ -197,12 +143,150 @@ def solve_action(env, path, logger, args):
         print('parameter', E, Poisson, yield_stress)
         env.taichi_env.set_parameter(E, Poisson, yield_stress)
         
-        experts_output_dir = f'/root/ExPCP/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
+        experts_output_dir = f'/root/GenORM/policy/pbm/experts/{args.task_name}_{E_bottom}_{E_upper}_{Poisson_bottom}_{Poisson_upper}_{yield_stress_bottom}_{yield_stress_upper}/{env.spec.id}'
         if not os.path.exists(experts_output_dir):
             os.makedirs(experts_output_dir, exist_ok=True)
 
-        if args.task_name in ['Move']:
+        if args.task_name in ['Table', 'Move']:
             action = np.array([[0, 0.6, 0]]*150)
+        if args.task_name in ['Rope']:
+            height = 0.32
+            window = 30
+            steps = 16
+            scale= 0.005
+            # up
+            action_up = np.array([[0, (height / window / steps) / scale, 0]]*window*steps)
+            
+            # down
+            mask_sum_list = []
+            acxel_list = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
+            for acxel_value in acxel_list:
+                # sum 16. 
+                unit_action = height / window / steps
+                acxel_rate_list = [
+                    1-acxel_value*4, 1-acxel_value*3.5, 1-acxel_value*3, 1-acxel_value*2.5, 1-acxel_value*2, 1-acxel_value*1.5, 1-acxel_value*1, 1-acxel_value*0.5,
+                    1+acxel_value*0.5, 1+acxel_value*1, 1+acxel_value*1.5, 1+acxel_value*2, 1+acxel_value*2.5, 1+acxel_value*3, 1+acxel_value*3.5, 1+acxel_value*4
+                ]
+                action_list = np.array(acxel_rate_list) * unit_action
+                action_list = np.clip(action_list, 0, 1000000)
+                action_list = np.repeat(action_list, window)
+                # scale
+                action_list = action_list / scale
+                action_down = np.array([[0, -i, 0] for i in action_list[::-1]])
+                
+                action = np.concatenate([action_up, action_down])
+                action = np.concatenate([action, np.array([[0, 0, 0]]*100)])
+           
+                env.reset()
+                env.taichi_env.primitives.set_softness()
+                frames = []
+                for idx, act in enumerate(action):
+                    env.step(act)
+                    if idx == window * steps - 1:
+                        state = env.taichi_env.simulator.get_x(0)
+                    # if idx % 5 == 0:
+                    #     img = env.render(mode='rgb_array')
+                    #     pimg = Image.fromarray(img)
+                    #     I1 = ImageDraw.Draw(pimg)
+                    #     I1.text((5, 5), f'axcel{acxel_value:.3f},E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                    #     frames.append(pimg)
+                img = env.render(mode='rgb_array')
+                hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+                # Define blue color range in HSV
+                lower_blue = np.array([120, 150, 150])
+                upper_blue = np.array([140, 255, 255])
+
+                # Create a mask for pink color
+                mask = cv2.inRange(hsv, lower_blue, upper_blue)
+                mask_sum = mask.sum()
+                mask_sum_list.append(mask_sum)
+                # frames[0].save(f'{output_path}/axcel{acxel_value:.3f}_mask_sum{mask_sum}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+                
+                if mask_sum > 9000000:
+                    bc_data = {
+                    'max_acxel': acxel_value,
+                    'bf_state': state,
+                    'E': E,
+                    'Poisson': Poisson,
+                    'yield_stress': yield_stress,
+                    'env_name': args.env_name,
+                    'height': height,
+                    'window': window,
+                    'steps': steps,
+                    'scale': scale
+                }
+                    now = datetime.datetime.now()
+                    current_time = now.strftime("%H:%M:%S")
+                    with open(f'{experts_output_dir}/expert_acxel{acxel_value:.3f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_{current_time}.pickle', 'wb') as f:
+                        pickle.dump(bc_data, f)
+            
+            max_index = np.argmax(mask_sum_list)
+            max_acxel = acxel_list[max_index]
+            
+            bc_data = {
+                   'max_acxel': max_acxel,
+                   'bf_state': state,
+                   'E': E,
+                   'Poisson': Poisson,
+                   'yield_stress': yield_stress,
+                   'env_name': args.env_name,
+                   'height': height,
+                   'window': window,
+                   'steps': steps,
+                   'scale': scale
+               }
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            with open(f'{experts_output_dir}/expert_acxel{max_acxel:.3f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_{current_time}.pickle', 'wb') as f:
+                pickle.dump(bc_data, f)
+            continue
+
+        elif args.task_name in ['Pinch']:
+           T = 5
+           action_value = np.random.uniform(0.01, 0.02)
+           action = np.concatenate([np.array([[action_value, 0, 0]]*T), np.array([[0, 0, 0]]*50)])
+          
+           initial_state = env.taichi_env.simulator.get_x(0)
+           rope_bottom_index = np.argmin(initial_state[:, 1])
+
+           try:
+               best_max_y = 0
+               best_max_x = 0
+               env.taichi_env.primitives.set_softness()
+               frames = []
+               for idx, act in enumerate(action):
+                   env.step(act)
+                   # if idx % 1 == 0:
+                   #     img = env.render(mode='rgb_array')
+                   #     pimg = Image.fromarray(img)
+                   #     I1 = ImageDraw.Draw(pimg)
+                   #     I1.text((5, 5), f'E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}', fill=(255, 0, 0))
+                   #     frames.append(pimg)
+                   state = env.taichi_env.simulator.get_x(0)
+                   max_x = state[rope_bottom_index][0]
+                   max_y = state[rope_bottom_index][1]
+                   if max_y > best_max_y:
+                       best_max_y = max_y
+                       best_max_x = max_x
+               # frames[0].save(f'{output_path}/action{action_value:.3f}_best_x{best_max_x:.2f}_best_y{best_max_y:.2f}_E{E:.2f},Poisson{Poisson:.2f},yield_stress{yield_stress:.2f}_.gif', save_all=True, append_images=frames[1:], loop=0)
+
+               bc_data = {
+                   'max_x': best_max_x,
+                   'max_y': best_max_y,
+                   'action': action,
+                   'E': E,
+                   'Poisson': Poisson,
+                   'yield_stress': yield_stress,
+                   'env_name': args.env_name,
+               }
+               now = datetime.datetime.now()
+               current_time = now.strftime("%H:%M:%S")
+               with open(f'{experts_output_dir}/expert_action{action_value:.3f}_best_x{best_max_x:.2f}_best_y{best_max_y:.2f}_{current_time}.pickle', 'wb') as f:
+                   pickle.dump(bc_data, f)
+           except:
+               print('Nan error', E, Poisson, yield_stress)
+               pass
+           continue
         elif args.task_name in ['Torus']:
             random.seed(int(args.task_version[1:])*repeat_time+i)
             ranges = [(0.1, 0.3), (0.1, 0.6), (0.5, 0.5)]
@@ -297,6 +381,7 @@ def solve_action(env, path, logger, args):
             reward_list = []
             loss_info_list = []
 
+            env.taichi_env.primitives.set_softness()
             for i in range(len(action)):
                 action_list.append(action[i])
 

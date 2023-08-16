@@ -25,14 +25,14 @@ class TaichiEnv:
         idx = self.args.env_name.find('-')
         self.args.task_name = self.args.env_name[:idx]
         self.args.task_version = self.args.env_name[(idx+1):]
-        if self.args.task_name in ['Table']:
-            import json
-            with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{self.args.task_version[1:]}/randam_value.txt', mode="r") as f:
-                stick_pos = json.load(f)
-                try:
-                    cfg.PRIMITIVES[2]['init_pos'] = str(tuple(np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])))
-                except IndexError:
-                    pass
+        # if self.args.task_name in ['Table']:
+        #     import json
+        #     with open(f'/root/ExPCP/policy/pbm/goal_state/goal_state1/{self.args.task_version[1:]}/randam_value.txt', mode="r") as f:
+        #         stick_pos = json.load(f)
+        #         try:
+        #             cfg.PRIMITIVES[2]['init_pos'] = str(tuple(np.array([stick_pos['add_stick_x'], 0, stick_pos['add_stick_y']])))
+        #         except IndexError:
+        #             pass
        
         self.cfg = cfg.ENV
         self.primitives = Primitives(cfg.PRIMITIVES)

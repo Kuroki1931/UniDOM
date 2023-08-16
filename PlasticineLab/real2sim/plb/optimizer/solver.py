@@ -40,13 +40,13 @@ class Solver:
             # set parameter
             env.set_parameter(parameter[0], parameter[1], YIELD_STRESS) # mu, lam, yield_stress
             env.set_state(sim_state, self.cfg.softness, False)
-            env.loss.update_target_density(target_grids)
+            # env.loss.update_target_density(np.clip(target_grids, 0, 1))
             print('------------------------------')
             with ti.Tape(loss=env.loss.loss):
                 for i in range(len(action)):
-                    if i == 149:
-                        loss_info = env.compute_loss()
-
+                    # if i == 149:
+                    #     loss_info = env.compute_loss()
+                    loss_info = env.compute_loss()
                     env.step(action[i])
                     self.total_steps += 1
 
@@ -108,10 +108,11 @@ def solve_action(env, path, logger, args):
     import matplotlib.pyplot as plt
     from PIL import Image
     now = datetime.datetime.now()
-    for t in range(2000, 2010):
+    for t in range(2007, 2010):
+    # for t in range(2002, 2003):
         rope_type = args.rope_type
-        input_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
-        output_path = f'/root/real2sim/real2sim/real_points/{rope_type}/{now}/{t}'
+        input_path = f'/root/PlasticineLab/real2sim/real_points/cloth/{rope_type}'
+        output_path = f'/root/PlasticineLab/real2sim/real_points/cloth/{rope_type}/{now}/{t}'
         os.makedirs(output_path, exist_ok=True)
 
         env.reset()
@@ -162,13 +163,16 @@ def solve_action(env, path, logger, args):
         # save optimized gif
         env.taichi_env.set_parameter(parameters_list[-1][0], parameters_list[-1][1], parameters_list[-1][2])
         frames = []
+        state_list = []
         for idx, act in enumerate(actions):
             env.step(act)
             if idx % 5 == 0:
                 img = env.render(mode='rgb_array')
                 pimg = Image.fromarray(img)
                 frames.append(pimg)
-        pred_last_state = env.taichi_env.simulator.get_x(0)
+            state = env.taichi_env.simulator.get_x(0)
+            state_list.append(state)
+        pred_last_state = state_list[-1]
 
         def chamfer_distance(A, B):
             # compute distance matrix between A and B
@@ -180,9 +184,10 @@ def solve_action(env, path, logger, args):
             # compute Chamfer distance
             chamfer_dist = np.mean(dist_A) + np.mean(dist_B)
             return chamfer_dist
-        last_state = np.load(f'{input_path}/real_pcds_modify.npy')[-1]
+        last_state = np.load(f'{input_path}/modified_real_pcds.npy', allow_pickle=True)[-1]
         chamfer_dist = chamfer_distance(last_state, pred_last_state)
 
+        np.save(f"{output_path}/state.npy", np.array(state_list))
         frames[0].save(f'{output_path}/optimized_E{parameters_list[-1][0]}_Poisson{parameters_list[-1][1]}_yield{parameters_list[-1][2]}.gif',
             save_all=True, append_images=frames[1:], loop=0)
         with open(f'{output_path}/setting.txt', 'w') as f:

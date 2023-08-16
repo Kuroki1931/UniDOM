@@ -1,8 +1,6 @@
 SIMULATOR:
   yield_stress: 1762.2
   gravity: (0, -0.4, 0)
-  mu: 354.0
-  lam: 2220.4
   ground_friction: 0.5
 SHAPES:
   - shape: box

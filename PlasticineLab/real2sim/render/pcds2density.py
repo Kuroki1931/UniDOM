@@ -36,7 +36,7 @@ def set_random_seed(seed):
 def get_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--algo", type=str, default='action')
-    parser.add_argument("--env_name", type=str, default="Move-v1")
+    parser.add_argument("--env_name", type=str, default="Table-v1")
     parser.add_argument("--path", type=str, default='./output')
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--sdf_loss", type=float, default=500)
@@ -65,13 +65,14 @@ def main():
     env.seed(args.seed)
     env.reset()
 
-    output_path = '/root/real2sim/real2sim/real_points/white'
+    output_path = '/root/PlasticineLab/real2sim/real_points/cloth/black'
 
-    pcds = np.load(f'{output_path}/real_pcds_modify.npy', allow_pickle=True)
+    pcds = np.load(f'{output_path}/modified_real_pcds.npy', allow_pickle=True)
     grid_mass_list = []
     default_grid_mass = env.taichi_env.simulator.get_grid_mass(0)
     default_density = default_grid_mass.sum()
     print('defualt density', default_density)
+    # pcd = pcds[i][:155]; env.taichi_env.simulator.reset(pcd); state = env.taichi_env.get_state(); env.taichi_env.set_state(**state); grid_mass = env.taichi_env.get_grid_mass(0)
     for i in range(pcds.shape[0]):
         print(i, '----------------------------------------')
         env.taichi_env.initialize()
@@ -80,7 +81,6 @@ def main():
         state = env.taichi_env.get_state()
         env.taichi_env.set_state(**state)
         grid_mass = env.taichi_env.get_grid_mass(0)
-        x = env.taichi_env.simulator.get_x(0)
         grid_mass[:5] = 0
         density = grid_mass.sum()
         print('late', density)

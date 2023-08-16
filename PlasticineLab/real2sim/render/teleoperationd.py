@@ -119,9 +119,10 @@ if __name__ == '__main__':
                 fill_pcds_list.append(bf_pcd)
         bf_pcd = pcd
 
+    import pdb;pdb.set_trace()
     pcds_array = np.array(fill_pcds_list)
-    rope_type = 'navy'
-    output_path = f'/root/real2sim/real2sim/real_points/{rope_type}'
+    rope_type = 'black'
+    output_path = f'/root/PlasticineLab/real2sim/real_points/cloth/{rope_type}'
     os.makedirs(output_path, exist_ok=True)
     np.save(f'{output_path}/real_pcds.npy', pcds_array)
     while not rospy.is_shutdown():
