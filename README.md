@@ -1,5 +1,5 @@
 # GenDOM: Generalizable One-shot Deformable Object Manipulation with Parameter-Aware Policy
-(arXiv)[https://arxiv.org/abs/2309.09051] / (Project page)[https://sites.google.com/view/gendom/home]
+[arXiv](https://arxiv.org/abs/2309.09051) / [Project page](https://sites.google.com/view/gendom/home)
 
 ## task name
 Table -> lift cloth  
