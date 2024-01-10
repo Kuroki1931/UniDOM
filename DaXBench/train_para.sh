@@ -1,0 +1,14 @@
+CUDA_VISIBLE_DEVICES=1 python3 -m daxbench.algorithms.apg.apg_para \
+                               --env fold_cloth1_para \
+                               --ep_len 3 \
+                               --num_envs 4 \
+                               --lr 1e-4 \
+                               --gpus 1 \
+                               --max_grad_norm 0.3 \
+                               --seed 0 \
+                               --eval_freq 100 \
+                               --max_it 2000 \
+                               --train_min_stiff 1000 \
+                               --train_max_stiff 1600 \
+                               --eval_min_stiff 10 \
+                               --eval_max_stiff 1800

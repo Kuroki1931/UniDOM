@@ -22,7 +22,7 @@ class ClothEnv:
     DEPTH = "DEPTH"
     RGB = "RGB"
 
-    def __init__(self, conf, batch_size, max_steps, aux_reward=False):
+    def __init__(self, conf, batch_size, max_steps, aux_reward=False, eval_min_max_stiff=[100, 2000]):
 
         assert conf
         cloth_mask = self.create_cloth_mask(conf)
@@ -31,6 +31,7 @@ class ClothEnv:
 
         self.conf = conf
         self.aux_reward = aux_reward
+        self.eval_min_max_stiff = eval_min_max_stiff
         self.simulator = simulator
         self.cloth_mask = simulator.cloth_mask
         self.max_steps = max_steps
@@ -91,10 +92,13 @@ class ClothEnv:
 
         return np.array(heightmap)
 
+    # def get_obs(self, state: ClothState, obs_type=PARTICLE):
+    #     return self._get_obs(state, obs_type, self.eval_min_max_stiff)
+
     @staticmethod
     @vmap
     @jax.jit
-    def get_obs(state: ClothState, obs_type=PARTICLE):
+    def get_obs(state: ClothState, eval_min_max_stiff: list, obs_type=PARTICLE):
 
         if obs_type == ClothEnv.DEPTH:
             pixel_size = 0.003125
@@ -123,7 +127,7 @@ class ClothEnv:
                     # state.v.flatten(),
                     state.primitive0,
                     state.primitive1,
-                    (jnp.expand_dims(state.stiffness, axis=-1) - 100)/(1800 - 100) # TODO takanami
+                    (jnp.expand_dims(state.stiffness, axis=-1) - eval_min_max_stiff[0])/(eval_min_max_stiff[1] - eval_min_max_stiff[0]) # TODO takanami
                 ],
                 axis=-1,
             )
@@ -183,7 +187,8 @@ class ClothEnv:
             key, _ = random.split(key)
             new_x = init_state.x.at[..., [0, 2]].add(random.normal(key, (2,)) * 0.05)
             state = init_state._replace(x=new_x)
-            return self.get_obs(state), state
+            eval_min_max_stiff = np.tile(np.array(self.eval_min_max_stiff), (state.x.shape[0], 1))
+            return self.get_obs(state, eval_min_max_stiff=eval_min_max_stiff), state
 
         return reset
 
@@ -212,10 +217,15 @@ class ClothEnv:
             state, state_list = jax.lax.scan(self.simulator.step_jax, state, actions, length=actions.shape[0])
 
             state = state._replace(cur_step=state.cur_step + 1)
-            obs = self.get_obs(state)
+            eval_min_max_stiff = np.tile(np.array(self.eval_min_max_stiff), (state.x.shape[0], 1))
+            obs = self.get_obs(state, eval_min_max_stiff=eval_min_max_stiff)
 
             if self.conf.use_substep_obs:
-                obs_list = get_obs_list(state_list)
+                # print(len(state_list))
+                # print(state_list.x.shape)
+                # print(state.x.shape)
+                eval_min_max_stiff_list = np.tile(np.array(self.eval_min_max_stiff), (state_list.x.shape[0], state_list.x.shape[1], 1))
+                obs_list = get_obs_list(state_list, eval_min_max_stiff=eval_min_max_stiff_list)
             else:
                 obs_list = obs
             reward, done, info = 0, state.cur_step >= self.max_steps, {"state": state, "obs_list": obs_list,

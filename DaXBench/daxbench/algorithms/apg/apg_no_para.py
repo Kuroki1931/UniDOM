@@ -54,7 +54,7 @@ def train(
 ):
     xt = time.time()
     args.logdir = (
-        f"/root/DaXBench/logs/apg/{args.env}/{args.env}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
+        f"/root/DaXBench/logs/apg/{args.env}/{args.env}_train_{args.train_min_stiff}_{args.train_max_stiff}_eval_{args.eval_min_stiff}_{args.eval_max_stiff}_ep_len{args.ep_len}_num_envs{args.num_envs}_lr{args.lr}"
         f"_max_it{args.max_it}_max_grad_norm{args.max_grad_norm}/seed{args.seed}"
     )
     writer = SummaryWriter(args.logdir)
@@ -75,18 +75,20 @@ def train(
         local_devices_to_use,
     )
     logging.info("Available devices %s", jax.devices())
-    
+
     wandb.login()
 
     run = wandb.init(
         # Set the project where this run will be logged
         project="test_no_para",
-        config = {
-            "device_conunt": jax.device_count(), 
-            "process_count": process_count, 
-            "process_id": process_id, 
+        name=f"train={args.train_min_stiff}_{args.train_max_stiff}_eval={args.eval_min_stiff}_{args.eval_max_stiff}_ep_len={args.ep_len}_max_it={args.max_it}",
+        config={
+            "device_conunt": jax.device_count(),
+            "process_count": process_count,
+            "process_id": process_id,
             "local_device_count": local_device_count,
-            "local_devices_to_use": local_devices_to_use}
+            "local_devices_to_use": local_devices_to_use,
+        },
     )
 
     # seeds
@@ -183,7 +185,11 @@ def train(
 
             # save rgb_list into gif file named "fold_cloth_{it}.gif"
             os.makedirs(args.logdir, exist_ok=True)
-            imageio.mimsave(f"{args.logdir}/{args.env}_{it}_{test_it}_{jnp.mean(reward_list.sum(0))}_{eval_env.simulator.stiffness}.gif", rgb_list, fps=20)
+            imageio.mimsave(
+                f"{args.logdir}/{args.env}_{it}_{test_it}_{jnp.mean(reward_list.sum(0))}_{eval_env.simulator.stiffness}.gif",
+                rgb_list,
+                fps=20,
+            )
 
             return action_list, reward_list
 
@@ -314,11 +320,17 @@ def train(
     for it in range(args.max_it + 1):
         # radomize parameters
         np.random.seed(it)
-        core_env_stiffness = np.random.uniform(100, 1800)
-        
+        core_env_stiffness = np.random.uniform(
+            args.train_min_stiff, args.train_max_stiff
+        )
+        # core_env_stiffness = np.random.uniform(100, 1800) # TODO takanami
+
         # recreate env function
         core_env = environment_fn(
-            batch_size=num_envs // local_devices_to_use, seed=seed, aux_reward=True, stiffness=core_env_stiffness
+            batch_size=num_envs // local_devices_to_use,
+            seed=seed,
+            aux_reward=True,
+            stiffness=core_env_stiffness,
         )
         step_fn = core_env.step_diff
         reset_fn = core_env.reset
@@ -344,9 +356,8 @@ def train(
                 (local_devices_to_use, args.num_envs // local_devices_to_use, -1)
             )
             train_first_state = auto_reset(first_state, first_state, key_envs)
-        
+
         # first state parameter modify
-        
 
         actor_lr = (1e-5 - args.lr) * float(it / args.max_it) + args.lr
         optimizer = optax.adam(learning_rate=actor_lr)
@@ -360,10 +371,17 @@ def train(
         if it % args.eval_freq == 0:
             test_range = 10
             for test_step in range(test_range):
-                test_it = it*test_range + test_step
-                np.random.seed((it*test_step)+test_step)
-                eval_env_stiffness = np.random.uniform(100, 1800)
-                eval_env = environment_fn(batch_size=num_eval_envs, seed=seed + 666, stiffness=eval_env_stiffness)
+                test_it = it * test_range + test_step
+                np.random.seed((it * test_step) + test_step)
+                eval_env_stiffness = np.random.uniform(
+                    args.eval_min_stiff, args.eval_max_stiff
+                )
+                # eval_env_stiffness = np.random.uniform(100, 1800) # TODO takanami
+                eval_env = environment_fn(
+                    batch_size=num_eval_envs,
+                    seed=seed + 666,
+                    stiffness=eval_env_stiffness,
+                )
                 eval_step_fn = eval_env.step_diff
                 eval_reset_fn = eval_env.reset
                 _, eval_first_state = eval_reset_fn(key_eval)
@@ -374,11 +392,26 @@ def train(
                 test_reward = jnp.mean(reward_list.sum(0))
                 # test_reward_dict[it] = [test_reward._value.max(), eval_env.simulator.stiffness]
                 logging.info("Test reward %s %s", eval_env_stiffness, test_reward)
-                test_stiff_and_rewards[f"eval_env_stiffness_{test_step}"] = eval_env_stiffness
+                test_stiff_and_rewards[
+                    f"eval_env_stiffness_{test_step}"
+                ] = eval_env_stiffness
                 test_stiff_and_rewards[f"test_reward_{test_step}"] = test_reward
-                writer.add_scalar(f"test_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
-                writer.add_scalar(f"last_reward_{it}_{test_it}_{test_step}", eval_env_stiffness, test_reward, it)
-            file_to_save = open(f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl", "wb")
+                writer.add_scalar(
+                    f"test_reward_{it}_{test_it}_{test_step}",
+                    eval_env_stiffness,
+                    test_reward,
+                    it,
+                )
+                writer.add_scalar(
+                    f"last_reward_{it}_{test_it}_{test_step}",
+                    eval_env_stiffness,
+                    test_reward,
+                    it,
+                )
+            file_to_save = open(
+                f"{args.logdir}/apg_{args.env}_{it}_{test_it}_{test_reward}_{eval_env.simulator.stiffness}.pkl",
+                "wb",
+            )
             single_param = jax.tree_util.tree_map(
                 lambda x: x[0], training_state.policy_params
             )
@@ -391,11 +424,15 @@ def train(
         )
 
         jax.tree_util.tree_map(lambda x: x.block_until_ready(), metrics)
-        logging.info("Training reward %s %s", core_env_stiffness, jnp.mean(metrics["reward"].sum(0)))
+        logging.info(
+            "Training reward %s %s",
+            core_env_stiffness,
+            jnp.mean(metrics["reward"].sum(0)),
+        )
         log_dict = {
             "iter": it,
             "core_env_stiffness": core_env_stiffness,
-            "train_reward": jnp.mean(metrics["reward"].sum(0))
+            "train_reward": jnp.mean(metrics["reward"].sum(0)),
         }
         log_dict.update(test_stiff_and_rewards)
         wandb.log(log_dict, step=it)
@@ -493,6 +530,30 @@ if __name__ == "__main__":
         default=20,
         type=int,
         help="number of iterations for each evaluation (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--train_min_stiff",
+        default=200,
+        type=int,
+        help="min of cloth stiffness while training (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--train_max_stiff",
+        default=1800,
+        type=int,
+        help="max of cloth stiffness while training (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--eval_min_stiff",
+        default=100,
+        type=int,
+        help="min of cloth stiffness while eval (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--eval_max_stiff",
+        default=2000,
+        type=int,
+        help="max of cloth stiffness while eval (default: %(default)s)",
     )
 
     args = parser.parse_args()

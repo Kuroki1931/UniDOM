@@ -38,11 +38,11 @@ FoldCloth1Conf = DefaultConf
 
 class FoldCloth1ParaEnv(ClothEnv):
 
-    def __init__(self, batch_size, conf=None, aux_reward=False, seed=1, stiffness=900):
+    def __init__(self, batch_size, conf=None, aux_reward=False, seed=1, stiffness=900, eval_min_max_stiff=[100, 2000]):
         conf = DefaultConf() if conf is None else conf
         max_steps = 3
         conf.stiffness = stiffness
-        super().__init__(conf, batch_size, max_steps, aux_reward)
+        super().__init__(conf, batch_size, max_steps, aux_reward, eval_min_max_stiff)
         self.observation_size = 1545
 
     def create_cloth_mask(self, conf):
