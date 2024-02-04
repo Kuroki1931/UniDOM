@@ -1,5 +1,5 @@
 # GenDOM: Generalizable One-shot Deformable Object Manipulation with Parameter-Aware Policy
-So Kuroki, Jiaxian Guo, Tatsuya Matsushima, Takuya Okubo, Masato Kobayashi, Yuya Ikeda, Ryosuke Takanami, Paul Yoo, Yutaka Matsuo, Yusuke Iwasawa  
+[So Kuroki](https://sites.google.com/view/sokuroki/home), Jiaxian Guo, Tatsuya Matsushima, Takuya Okubo, Masato Kobayashi, Yuya Ikeda, Ryosuke Takanami, Paul Yoo, Yutaka Matsuo, Yusuke Iwasawa  
 ICRA 2024  
 [arXiv](https://arxiv.org/abs/2309.09051) / [Project page](https://sites.google.com/view/gendom/home)
 
